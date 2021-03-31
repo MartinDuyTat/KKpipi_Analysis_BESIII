@@ -4,6 +4,9 @@
  * @param 1 Filename of ROOT file with TTree
  * @param 2 Name of TTree
  * @param 3 Name of text file where parameters are saved
+ * @param 4 Tag mode label in plots
+ * @param 5 Filename for plots
+ * @param 6 Input "yes" to do an unbinned fit after the binned fit
  */
 
 #include<iostream>
@@ -12,8 +15,8 @@
 #include"DeltaEFit.h"
 
 int main(int argc, char *argv[]) {
-  if(argc != 4) {
-    std::cout << "Need 3 input arguments\n";
+  if(argc != 6 && argc != 7) {
+    std::cout << "Need 5 or 6 input arguments\n";
     return 0;
   }
   std::cout << "Fit of Delta E\n";
@@ -23,7 +26,8 @@ int main(int argc, char *argv[]) {
   Infile.GetObject(argv[2], Tree);
   std::cout << "TTree ready to be analyzed\n";
   DeltaEFit deltaEFit(Tree);
-  deltaEFit.FitDeltaE();
+  bool DoUnbinnedFit = argc == 7 && std::string(argv[6]) == "yes";
+  deltaEFit.FitDeltaE(std::string(argv[5]), std::string(argv[4]), DoUnbinnedFit);
   deltaEFit.SaveParameters(std::string(argv[3]));
   Infile.Close();
   return 0;

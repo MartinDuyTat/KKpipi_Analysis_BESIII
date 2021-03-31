@@ -23,9 +23,12 @@ class DeltaEFit {
     DeltaEFit(TTree *Tree);
     /**
      * Function for doing a fit of the \f$\Delta E\f$ distribution
-     * First a binned fit with 200 bins is performed, then a more accurate unbinned fit is performed
+     * First a binned fit with 1000 bins is performed, then a more accurate unbinned fit is performed if necessary
+     * @param Filename Save a plot of the fit with this filename
+     * @param TagMode Name of tag mode to label plot
+     * @param DoUnbinnedFit If true, an unbinned fit is performed after the binned fit for more accurate results
      */
-    void FitDeltaE();
+    void FitDeltaE(const std::string &Filename, const std::string &TagMode, bool DoUnbinnedFit = false);
     /**
      * Function for saving the fitted parameters to a text file
      * @param Filename Name of output text file
