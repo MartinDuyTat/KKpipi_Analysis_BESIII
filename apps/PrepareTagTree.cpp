@@ -34,7 +34,6 @@ int main(int argc, char *argv[]) {
   InitialCuts Cuts(TagMode, TagType);
   ApplyCuts applyCuts(Cuts.GetInitialCuts());
   std::cout << "Cuts ready\n";
-  std::cout << Cuts.GetInitialCuts().GetTitle() << std::endl;
   std::cout << "Loading TChain...\n";
   TChain Chain;
   Utilities::LoadChain(&Chain, std::atoi(argv[3]), std::string(argv[4]), std::string(argv[5]));
@@ -42,7 +41,7 @@ int main(int argc, char *argv[]) {
   std::cout << "Applying cuts...\n";
   TFile OutputFile(argv[6], "RECREATE");
   TTree *OutputTree = applyCuts(&Chain);
-  OutputTree->SetDirectory(0);
+  OutputTree->SetDirectory(&OutputFile);
   OutputTree->Write();
   OutputFile.Close();
   std::cout << "Cuts applied and events saved to file\n";

@@ -23,7 +23,7 @@ TCut InitialCuts::GetInitialCuts() const {
       }
     }
   } else {
-    std::cout << "Could not find file " << std::string(INITIAL_CUTS_DIR) + "/InitialCuts/" + m_TagMode + ".cut\n";
+    std::cout << "Could not find file " << std::string(INITIAL_CUTS_DIR) + m_TagMode + ".cut\n";
   }
   return Cuts;
 }

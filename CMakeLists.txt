@@ -18,3 +18,5 @@ add_compile_options(-O3)
 add_subdirectory(${CMAKE_SOURCE_DIR}/apps)
 include_directories(${CMAKE_SOURCE_DIR}/include)
 add_subdirectory(${CMAKE_SOURCE_DIR}/src)
+
+target_compile_definitions(KKpipiStrongPhase PUBLIC INITIAL_CUTS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/InitialCuts/")
