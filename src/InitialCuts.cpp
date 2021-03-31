@@ -10,7 +10,7 @@ InitialCuts::InitialCuts(const std::string &TagMode, const std::string &TagType)
 }
 
 TCut InitialCuts::GetInitialCuts() const {
-  std::ifstream CutFile(INITIAL_CUTS_DIR + "/InitialCuts/" + m_TagMode + ".cut");
+  std::ifstream CutFile(INITIAL_CUTS_DIR + m_TagMode + ".cut");
   TCut Cuts;
   if(CutFile.is_open()) {
     std::string line;
