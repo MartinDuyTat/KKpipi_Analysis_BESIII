@@ -10,7 +10,7 @@ InitialCuts::InitialCuts(const std::string &TagMode, const std::string &TagType)
 }
 
 TCut InitialCuts::GetInitialCuts() const {
-  std::ifstream CutFile(INITIAL_CUTS_DIR + m_TagMode + ".cut");
+  std::ifstream CutFile(std::string(INITIAL_CUTS_DIR) + m_TagMode + ".cut");
   TCut Cuts;
   if(CutFile.is_open()) {
     std::string line;
@@ -23,12 +23,12 @@ TCut InitialCuts::GetInitialCuts() const {
       }
     }
   } else {
-    std::cout << "Could not find file " << INITIAL_CUTS_DIR + "/InitialCuts/" + m_TagMode + ".cut\n";
+    std::cout << "Could not find file " << std::string(INITIAL_CUTS_DIR) + "/InitialCuts/" + m_TagMode + ".cut\n";
   }
   return Cuts;
 }
 
-std::string InitialCuts::ReplaceTagMode(std::string Cuts) {
+std::string InitialCuts::ReplaceTagMode(std::string Cuts) const {
   std::string ReplaceThis("SignalTag");
   while(true) {
     std::string::size_type Position = Cuts.find(ReplaceThis);

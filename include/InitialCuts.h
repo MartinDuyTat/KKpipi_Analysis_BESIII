@@ -36,7 +36,7 @@ class InitialCuts {
      * @param Input string with cuts
      * @return Returns a string with the correct tag mode
      */
-    std::string ReplaceTagMode(std::string Cuts);
+    std::string ReplaceTagMode(std::string Cuts) const;
 };
 
 #endif

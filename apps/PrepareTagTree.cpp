@@ -10,7 +10,7 @@
  */
 
 #include<iostream>
-#include<stdlib>
+#include<cstdlib>
 #include"TFile.h"
 #include"TChain.h"
 #include"TTree.h"
@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
   TChain Chain;
   Utilities::LoadChain(&Chain, std::atoi(argv[3]), std::string(argv[4]), std::string(argv[5]));
   std::cout << "TChain full of events\n";
-  std::cout << "Applying cuts...\n"
+  std::cout << "Applying cuts...\n";
   TFile OutputFile(argv[6], "RECREATE");
   TTree *OutputTree = applyCuts(&Chain);
   OutputTree->SetDirectory(0);
