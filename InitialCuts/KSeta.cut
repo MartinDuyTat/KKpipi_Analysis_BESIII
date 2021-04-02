@@ -1,0 +1,4 @@
+SignalTagKSDecayLengthFit/SignalTagKSDecayLengthErrorFit > 2
+SignalTagEtaChi2Fit < 20
+sqrt((SignalTagHighEEtaenergy + SignalTagLowEEtaenergy)^2 - (SignalTagHighEEtapx + SignalTagLowEEtapx)^2 - (SignalTagHighEEtapy + SignalTagLowEEtapy)^2 - (SignalTagHighEEtapz + SignalTagLowEEtapz)^2) > 0.480
+sqrt((SignalTagHighEEtaenergy + SignalTagLowEEtaenergy)^2 - (SignalTagHighEEtapx + SignalTagLowEEtapx)^2 - (SignalTagHighEEtapy + SignalTagLowEEtapy)^2 - (SignalTagHighEEtapz + SignalTagLowEEtapz)^2) < 0.580

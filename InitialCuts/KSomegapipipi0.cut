@@ -1,0 +1,4 @@
+SignalTagKSDecayLengthFit/SignalTagKSDecayLengthErrorFit > 2
+SignalTagPi0Chi2Fit < 20
+sqrt((SignalTagPiPlusenergy + SignalTagPiMinusenergy + HighEPi0Constrainedenergy + LowEPi0Constrainedenergy)^2 - (SignalTagPiPluspx + SignalTagPiMinuspx + HighEPi0Constrainedpx + LowEPi0Constrainedpx)^2 - (SignalTagPiPluspy + SignalTagPiMinuspy + HighEPi0Constrainedpy + LowEPi0Constrainedpy)^2 - (SignalTagPiPluspz + SignalTagPiMinuspz + HighEPi0Constrainedpz + LowEPi0Constrainedpz)^2 > 0.750
+sqrt((SignalTagPiPlusenergy + SignalTagPiMinusenergy + HighEPi0Constrainedenergy + LowEPi0Constrainedenergy)^2 - (SignalTagPiPluspx + SignalTagPiMinuspx + HighEPi0Constrainedpx + LowEPi0Constrainedpx)^2 - (SignalTagPiPluspy + SignalTagPiMinuspy + HighEPi0Constrainedpy + LowEPi0Constrainedpy)^2 - (SignalTagPiPluspz + SignalTagPiMinuspz + HighEPi0Constrainedpz + LowEPi0Constrainedpz)^2 < 0.820
