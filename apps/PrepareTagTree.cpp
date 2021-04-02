@@ -37,7 +37,6 @@ int main(int argc, char *argv[]) {
   std::cout << "Loading TChain...\n";
   TChain Chain;
   Utilities::LoadChain(&Chain, std::atoi(argv[3]), std::string(argv[4]), std::string(argv[5]));
-  std::cout << "TChain full of events\n";
   std::cout << "Applying cuts...\n";
   TFile OutputFile(argv[6], "RECREATE");
   TTree *OutputTree = applyCuts(&Chain);
