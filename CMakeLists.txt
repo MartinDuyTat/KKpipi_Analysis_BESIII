@@ -20,3 +20,4 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 add_subdirectory(${CMAKE_SOURCE_DIR}/src)
 
 target_compile_definitions(KKpipiStrongPhase PUBLIC INITIAL_CUTS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/InitialCuts/")
+target_compile_definitions(KKpipiStrongPhase PUBLIC DELTAE_CUTS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/DeltaECuts/")

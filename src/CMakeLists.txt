@@ -1,4 +1,4 @@
-add_library(KKpipiStrongPhase ApplyCuts.cpp DeltaEFit.cpp InitialCuts.cpp Utilities.cpp)
+add_library(KKpipiStrongPhase ApplyCuts.cpp DeltaECut.cpp DeltaEFit.cpp InitialCuts.cpp Utilities.cpp)
 
 target_include_directories(KKpipiStrongPhase PUBLIC ../include)
 
