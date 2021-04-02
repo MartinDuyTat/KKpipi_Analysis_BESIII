@@ -19,6 +19,13 @@ namespace Utilities {
    * @param TreeName Name of the TTree we want to load, if this is not given it is assumed the name of the TChain has already been set
    */
   void LoadChain(TChain *Chain, int NumberFiles, const std::string &Filename, const std::string &TreeName = std::string());
+  /**
+   * This is an overload which will load a TChain by reading the filenames from a text file
+   * @param Chain TChain pointer where TTree objects are loaded
+   * @param Filename Filename of text file containing all the individual ROOT files
+   * @param TreeName Name of the TTree we want to load, if this is not given it is assumed the name of the TChain has already been set
+   */
+  void LoadChain(TChain *Chain, const std::string &Filename, const std::string &TreeName = std::string());
 }
 
 #endif

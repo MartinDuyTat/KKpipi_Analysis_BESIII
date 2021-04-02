@@ -1,4 +1,3 @@
 SignalTagKSDecayLengthFit/SignalTagKSDecayLengthErrorFit > 2
-SignalTagEtaChi2Fit < 20
-sqrt((SignalTagPiPlusenergy + SignalTagPiMinusenergy + Gammaenergy)^2 - (SignalTagPiPluspx + SignalTagPiMinuspx + Gammapx)^2 - (SignalTagPiPluspy + SignalTagPiMinuspy + Gammapy)^2 - (SignalTagPiPluspz + SignalTagPiMinuspz + Gammapz)^2 > 0.940
-sqrt((SignalTagPiPlusenergy + SignalTagPiMinusenergy + Gammaenergy)^2 - (SignalTagPiPluspx + SignalTagPiMinuspx + Gammapx)^2 - (SignalTagPiPluspy + SignalTagPiMinuspy + Gammapy)^2 - (SignalTagPiPluspz + SignalTagPiMinuspz + Gammapz)^2 < 0.970
+sqrt((SignalTagPiPlusenergy + SignalTagPiMinusenergy + Gammaenergy)^2 - (SignalTagPiPluspx + SignalTagPiMinuspx + Gammapx)^2 - (SignalTagPiPluspy + SignalTagPiMinuspy + Gammapy)^2 - (SignalTagPiPluspz + SignalTagPiMinuspz + Gammapz)^2) > 0.940
+sqrt((SignalTagPiPlusenergy + SignalTagPiMinusenergy + Gammaenergy)^2 - (SignalTagPiPluspx + SignalTagPiMinuspx + Gammapx)^2 - (SignalTagPiPluspy + SignalTagPiMinuspy + Gammapy)^2 - (SignalTagPiPluspz + SignalTagPiMinuspz + Gammapz)^2) < 0.970

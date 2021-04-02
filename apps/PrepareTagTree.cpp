@@ -7,6 +7,7 @@
  * @param 4 Filename of the ROOT files with BESIII data, without the final number and .root part
  * @param 5 Name of TTree
  * @param 6 Filename of the output ROOT file
+ * @param 7 If this is an MC sample, specify the luminosity scale, otherwise it's assumed to be 1
  */
 
 #include<iostream>
@@ -19,8 +20,8 @@
 #include"ApplyCuts.h"
 
 int main(int argc, char *argv[]) {
-  if(argc != 7) {
-    std::cout << "Need 6 input aguments\n";
+  if(argc != 7 && argc != 8) {
+    std::cout << "Need 6 or 7 input aguments\n";
     return 0;
   }
   std::string TagMode(argv[1]), TagType(argv[2]);
@@ -40,6 +41,9 @@ int main(int argc, char *argv[]) {
   std::cout << "Applying cuts...\n";
   TFile OutputFile(argv[6], "RECREATE");
   TTree *OutputTree = applyCuts(&Chain);
+  if(argc == 8) {
+    OutputTree->SetWeight(1.0/std::atof(argv[7]));
+  }
   OutputTree->SetDirectory(&OutputFile);
   OutputTree->Write();
   OutputFile.Close();
