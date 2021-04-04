@@ -41,8 +41,10 @@ int main(int argc, char *argv[]) {
   std::cout << "Applying cuts...\n";
   TFile OutputFile(argv[7], "RECREATE");
   TTree *OutputTree = applyCuts(&Chain);
-  if(argc == 8) {
-    OutputTree->SetWeight(1.0/std::atof(argv[8]));
+  if(argc == 9) {
+    double Weight = 1.0/std::atof(argv[8]);
+    std::cout << "Weighting the events by " << Weight << " to account for luminosity scale\n";
+    OutputTree->SetWeight(Weight);
   }
   OutputTree->SetDirectory(&OutputFile);
   OutputTree->Write();
