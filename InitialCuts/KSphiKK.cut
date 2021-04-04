@@ -1,0 +1,3 @@
+SignalTagKSDecayLengthFit/SignalTagKSDecayLengthErrorFit > 2
+sqrt((SignalTagKPlusenergy + SignalTagKMinusenergy)^2 - (SignalTagKPluspx + SignalTagKMinuspx)^2 - (SignalTagKPluspy + SignalTagKMinuspy)^2 - (SignalTagKPluspz + SignalTagKMinuspz)^2) > 1.004461
+sqrt((SignalTagKPlusenergy + SignalTagKMinusenergy)^2 - (SignalTagKPluspx + SignalTagKMinuspx)^2 - (SignalTagKPluspy + SignalTagKMinuspy)^2 - (SignalTagKPluspz + SignalTagKMinuspz)^2) < 1.034461

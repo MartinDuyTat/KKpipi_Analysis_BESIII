@@ -1,0 +1,2 @@
+SignalTag12KSFitSuccess == 0 || (SignalTag12KSFitSuccess == 1 && SignalTag12KSDecayLengthFit/SignalTag12KSDecayLengthErrorFit < 2)
+SignalTag13KSFitSuccess == 0 || (SignalTag13KSFitSuccess == 1 && SignalTag13KSDecayLengthFit/SignalTag13KSDecayLengthErrorFit < 2)
