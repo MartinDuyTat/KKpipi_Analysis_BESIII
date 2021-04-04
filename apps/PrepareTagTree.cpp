@@ -20,8 +20,8 @@
 #include"ApplyCuts.h"
 
 int main(int argc, char *argv[]) {
-  if(argc != 7 && argc != 8) {
-    std::cout << "Need 6 or 7 input aguments\n";
+  if(argc != 8 && argc != 9) {
+    std::cout << "Need 7 or 8 input aguments\n";
     return 0;
   }
   std::string TagMode(argv[1]), TagType(argv[2]), CutType(argv[3]);
