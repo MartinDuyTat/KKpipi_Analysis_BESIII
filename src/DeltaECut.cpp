@@ -12,7 +12,17 @@ DeltaECut::DeltaECut(const std::string &TagMode, const std::string &TagType): m_
 }
 
 TCut DeltaECut::GetDeltaECut() const {
-  std::ifstream CutFile(std::string(DELTAE_CUTS_DIR) + m_TagMode + ".cut");
+  if(m_TagType == "ST") {
+    return GetDeltaECutFromFile(m_TagMode);
+  } else if(m_TagType == "DT") {
+    return GetDeltaECutFromFile("KKpipi", "Signal") && GetDeltaECutFromFile(m_TagMode, "Tag");
+  } else {
+    return TCut();
+  }
+}
+
+TCut DeltaECut::GetDeltaECutFromFile(const std::string &TagMode, const std::string &TagSide) const {
+  std::ifstream CutFile(std::string(DELTAE_CUTS_DIR) + TagMode + ".cut");
   if(CutFile.is_open()) {
     std::string line;
     std::getline(CutFile, line);
@@ -22,7 +32,7 @@ TCut DeltaECut::GetDeltaECut() const {
     if(Lower > Upper) {
       std::swap(Lower, Upper);
     }
-    std::string Cut = std::string(m_TagType + "DeltaE > " + std::to_string(Lower) + " && " + m_TagType + "DeltaE < " + std::to_string(Upper));
+    std::string Cut = std::string(TagSide + "DeltaE > " + std::to_string(Lower) + " && " + TagSide + "DeltaE < " + std::to_string(Upper));
     return TCut(Cut.c_str());
   } else {
     std::cout << "Could not find file " << std::string(INITIAL_CUTS_DIR) + m_TagMode + ".cut\n";

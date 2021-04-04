@@ -2,7 +2,7 @@
 /**
  * PrepareTagTree is an application that takes in BESIII events selected in BOSS and applies initial cuts to a TTree, which is saved to a separate file
  * @param 1 Tag Mode that we want to study
- * @param 2 Type of tag mode, input "ST" for single tag, "DTSignal" for signal side of a double tag and "DTTag" for the tag side of a double tag
+ * @param 2 Type of tag mode, input "ST" for single tag, "DT" for double tag
  * @param 3 Type "DeltaECuts" to use standard initial cuts plus \f$\Delta E\f$ cuts, type "NoDeltaECuts" to use standard inital cuts only, and "TruthMatchingCuts" to truth match the sample
  * @param 4 Number of input ROOT files
  * @param 5 Filename of the ROOT files with BESIII data, without the final number and .root part
@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
     return 0;
   }
   std::string TagMode(argv[1]), TagType(argv[2]), CutType(argv[3]);
-  if(TagType != "ST" && TagType != "DTSignal" && TagType != "DTTag") {
+  if(TagType != "ST" && TagType != "DT") {
     std::cout << "Tag type " << argv[2] << " not recognized\n";
     return 0;
   }
