@@ -3,7 +3,7 @@
  * PrepareTagTree is an application that takes in BESIII events selected in BOSS and applies initial cuts to a TTree, which is saved to a separate file
  * @param 1 Tag Mode that we want to study
  * @param 2 Type of tag mode, input "ST" for single tag, "DTSignal" for signal side of a double tag and "DTTag" for the tag side of a double tag
- * @param 3 Type "DeltaECut" to include \f$\Delta E\f$ cuts, type "NoDeltaECut" to leave this out
+ * @param 3 Type "DeltaECuts" to use standard initial cuts plus \f$\Delta E\f$ cuts, type "NoDeltaECuts" to use standard inital cuts only, and "TruthMatchingCuts" to truth match the sample
  * @param 4 Number of input ROOT files
  * @param 5 Filename of the ROOT files with BESIII data, without the final number and .root part
  * @param 6 Name of TTree
@@ -17,29 +17,21 @@
 #include"TChain.h"
 #include"TTree.h"
 #include"Utilities.h"
-#include"InitialCuts.h"
 #include"ApplyCuts.h"
-#include"DeltaECut.h"
 
 int main(int argc, char *argv[]) {
   if(argc != 7 && argc != 8) {
     std::cout << "Need 6 or 7 input aguments\n";
     return 0;
   }
-  std::string TagMode(argv[1]), TagType(argv[2]);
+  std::string TagMode(argv[1]), TagType(argv[2]), CutType(argv[3]);
   if(TagType != "ST" && TagType != "DTSignal" && TagType != "DTTag") {
     std::cout << "Tag type " << argv[2] << " not recognized\n";
     return 0;
   }
   std::cout << "Sample preparation of " << TagMode << " tags of type " << TagType << "\n";
   std::cout << "Reading cuts...\n";
-  TagType.erase(0, 2);
-  InitialCuts initialCuts(TagMode, TagType);
-  TCut Cuts = initialCuts.GetInitialCuts();
-  if(std::string(argv[3]) == "DeltaECut") {
-    DeltaECut deltaECut(TagMode, TagType);
-    Cuts = Cuts && deltaECut.GetDeltaECut();
-  }
+  TCut Cuts = Utilities::LoadCuts(CutType, TagMode, TagType);
   std::cout << "Cuts ready, will apply the following cuts:\n" << Cuts.GetTitle() << "\n";
   ApplyCuts applyCuts(Cuts);
   std::cout << "Cuts ready\n";
