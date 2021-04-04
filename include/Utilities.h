@@ -5,6 +5,7 @@
 
 #include<string>
 #include"TChain.h"
+#include"TCut.h"
 
 #ifndef UTILITIES
 #define UTILITIES
@@ -26,6 +27,13 @@ namespace Utilities {
    * @param TreeName Name of the TTree we want to load, if this is not given it is assumed the name of the TChain has already been set
    */
   void LoadChain(TChain *Chain, const std::string &Filename, const std::string &TreeName = std::string());
+  /**
+   * This is a helper function for loading the correct cuts
+   * @param CutType "DeltaECuts" for standard initial cuts plus \f$\Delta E\f$ cuts, "NoDeltaECuts" for standard initial cuts only, "TruthMatchingCuts" for truth matching cuts
+   * @param TagMode "KKpipi", "Kpi", etc
+   * @param TagType "ST" for single tag and "DT" for double tag
+   */
+  TCut LoadCuts(const std::string &CutType, const std::string &TagMode, const std::string &TagType);
 }
 
 #endif

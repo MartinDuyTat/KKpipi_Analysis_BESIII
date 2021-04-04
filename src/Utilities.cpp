@@ -5,6 +5,9 @@
 #include<string>
 #include"TChain.h"
 #include"Utilities.h"
+#include"InitialCuts.h"
+#include"DeltaECut.h"
+#include"TruthMatchingCuts.h"
 
 namespace Utilities {
   void LoadChain(TChain *Chain, int NumberFiles, const std::string &Filename, const std::string &TreeName) {
@@ -36,5 +39,21 @@ namespace Utilities {
     Infile.close();
     std::cout << "ROOT files added to TChain\n";
     return;
+  }
+
+  TCut LoadCuts(const std::string &CutType, const std::string &TagMode, const std::string &TagType) {
+    if(CutType == "DeltaECuts") {
+      InitialCuts initialCuts(TagMode, TagType);
+      DeltaECut deltaECut(TagMode, TagType);
+      return initialCuts.GetInitialCuts() && deltaECut.GetDeltaECut();
+    } else if(CutType == "NoDeltaECuts") {
+      InitialCuts initialCuts(TagMode, TagType);
+      return initialCuts.GetInitialCuts();
+    } else if(CutType == "TruthMatchingCuts") {
+      TruthMatchingCuts truthMatchingCuts(TagType);
+      return truthMatchingCuts.GetTruthMatchingCuts();
+    } else {
+      return TCut();
+    }
   }
 }
