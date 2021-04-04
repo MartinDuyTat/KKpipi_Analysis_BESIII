@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
   TFile DataFile(argv[1], "READ");
   TTree *DataTree = nullptr;
   DataFile.GetObject(argv[3], DataTree);
-  TFile MCFile(argv[1], "READ");
+  TFile MCFile(argv[2], "READ");
   TTree *MCTree = nullptr;
   MCFile.GetObject(argv[3], MCTree);
   std::cout << "Trees ready\n";

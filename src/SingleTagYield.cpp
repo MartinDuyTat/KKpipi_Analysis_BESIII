@@ -4,6 +4,8 @@
 #include<fstream>
 #include"TTree.h"
 #include"TCanvas.h"
+#include"TPad.h"
+#include"TAxis.h"
 #include"RooRealVar.h"
 #include"RooDataSet.h"
 #include"RooArgList.h"
@@ -13,6 +15,7 @@
 #include"RooFFTConvPdf.h"
 #include"RooAddPdf.h"
 #include"RooPlot.h"
+#include"RooHist.h"
 #include"SingleTagYield.h"
 
 SingleTagYield::SingleTagYield(TTree *DataTree, TTree *MCSignalTree):
@@ -29,7 +32,7 @@ SingleTagYield::SingleTagYield(TTree *DataTree, TTree *MCSignalTree):
   m_DataTree->SetBranchStatus("MBC", 1);
   m_MCSignalTree->SetBranchStatus("*", 0);
   m_MCSignalTree->SetBranchStatus("MBC", 1);
-  m_MBC.setBins(10000, "fft");
+  m_MBC.setBins(10000, "cache");
 }
 
 void SingleTagYield::FitYield(const std::string &TagMode, const std::string &Filename) {
@@ -41,16 +44,39 @@ void SingleTagYield::FitYield(const std::string &TagMode, const std::string &Fil
   RooArgusBG Argus("Argus", "Argus", m_MBC, m_End, m_c);
   RooAddPdf Model("Model", "Model", RooArgList(SignalShapeConv, Argus), RooArgList(m_Nsig, m_Nbkg));
   RooDataSet Data("Data", "Data", m_DataTree, RooArgList(m_MBC));
-  //Model.fitTo(Data, PrintEvalErrors(-1));
-  Model.fitTo(Data);
+  Model.fitTo(Data, PrintEvalErrors(-1));
+  TCanvas c1("c1", "c1", 1600, 1200);
+  TPad Pad1("Pad1", "Pad1", 0.0, 0.25, 1.0, 1.0);
+  TPad Pad2("Pad2", "Pad2", 0.0, 0.0, 1.0, 0.25);
+  Pad1.Draw();
+  Pad2.Draw();
+  Pad1.SetBottomMargin(0.1);
+  Pad1.SetTopMargin(0.1);
+  Pad1.SetBorderMode(0);
+  Pad2.SetBorderMode(0);
+  Pad2.SetBottomMargin(0.1);
+  Pad2.SetTopMargin(0.05);
+  Pad1.cd();
   RooPlot *Frame = m_MBC.frame();
   Frame->SetTitle((TagMode + std::string(" Single Tag M_{BC}; M_{BC} (GeV); Events")).c_str());
   Data.plotOn(Frame, Binning(100));
-  Model.plotOn(Frame, Color(kBlue));
-  Model.plotOn(Frame, Color(kBlue), Components(Argus), LineStyle(kDashed));
-  Model.plotOn(Frame, Color(kRed), Components(SignalShapeConv));
-  TCanvas c1("c1", "c1", 1600, 1200);
+  Model.plotOn(Frame, LineColor(kBlue));
+  RooHist *Pull = Frame->pullHist();
+  Model.plotOn(Frame, LineColor(kBlue), Components(Argus), LineStyle(kDashed));
+  Model.plotOn(Frame, LineColor(kRed), Components(SignalShapeConv));
   Frame->Draw();
+  Pad2.cd();
+  RooPlot *PullFrame = m_MBC.frame();
+  PullFrame->addObject(Pull);
+  PullFrame->SetMinimum(-5);
+  PullFrame->SetMaximum(5);
+  PullFrame->SetTitle(";;");
+  PullFrame->GetXaxis()->SetLabelFont(0);
+  PullFrame->GetXaxis()->SetLabelSize(0);
+  PullFrame->GetYaxis()->SetLabelFont(62);
+  PullFrame->GetYaxis()->SetLabelSize(0.1);
+  PullFrame->Draw();
+  c1.cd();
   c1.SaveAs(Filename.c_str());
 }
 
