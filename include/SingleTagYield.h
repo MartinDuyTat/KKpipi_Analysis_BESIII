@@ -1,7 +1,7 @@
 // Martin Duy Tat 4th April 2021
 /** 
  * SingleTagYield is a class for fitting the single tag yield
- * The yield is fitted with a signal shape from an exclusive signal MC sample and an Argus PDF for the combinatorial background
+ * The yield is fitted with a signal shape from an exclusive signal MC sample, convolved with a Gaussian, and an Argus PDF for the combinatorial background
  * Any peaking backgrounds are fixed by Gaussians
  */
 
@@ -21,6 +21,21 @@ class SingleTagYield {
      * @param TreeName Name of the TTree
      */
     SingleTagYield(TTree *DataTree, TTree *MCSignalTree);
+    /**
+     * Function that performs the fit of the single tag yield in RooFit
+     * @param TagMode Plot label tag mode (#pi#pi for pipi etc)
+     * @param Filename Filename to save plot to
+     */
+    void FitYield(const std::string &TagMode, const std::string &Filename);
+    /**
+     * Function that saves the fit parameters to a text file
+     * @param Filename Filename of text file
+     */
+    void SaveFitParameters(const std::string &Filename) const;
+    /**
+     * Function that returns fitted yield, only call this after fit
+     */
+    double GetYield() const;
   private:
     /**
      * TTree with signal events
@@ -42,6 +57,14 @@ class SingleTagYield {
      * Endpoint of Argus PDF shape
      */
     RooRealVar m_End;
+    /**
+     * Mean of Gaussian modelling detector resolution
+     */
+    RooRealVar m_Mean;
+    /**
+     * Width of Gaussian modelling detector resolution
+     */
+    RooRealVar m_Sigma;
     /**
      * Signal yield
      */
