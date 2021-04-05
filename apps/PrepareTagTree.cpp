@@ -32,6 +32,8 @@ int main(int argc, char *argv[]) {
   std::cout << "Sample preparation of " << TagMode << " tags of type " << TagType << "\n";
   std::cout << "Reading cuts...\n";
   TCut Cuts = Utilities::LoadCuts(CutType, TagMode, TagType);
+  // This cut removes empty NTuples
+  Cuts = Cuts && TCut("!(Run == 0 && Event == 0)");
   std::cout << "Cuts ready, will apply the following cuts:\n" << Cuts.GetTitle() << "\n";
   ApplyCuts applyCuts(Cuts);
   std::cout << "Cuts ready\n";
