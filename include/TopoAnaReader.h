@@ -10,6 +10,8 @@
 
 #include<string>
 #include<vector>
+#include<tuple>
+#include<utility>
 
 class TopoAnaReader {
   public:
@@ -29,20 +31,22 @@ class TopoAnaReader {
      * Function that creates the .cut files that separates the different components
      * The filenames will be the label and a .cut extension
      */
-    void SaveComponentCuts() const;
+    void SaveAllComponentCuts() const;
+    /**
+     * Helper function that creates a .cut file with the appropriate cuts from a vector
+     * @param Label Component label
+     * @param DecayTopologies Vector of decay topology numbers from TopoAna
+     */
+    void SaveComponentCuts(const std::string &Label, const std::vector<int> &DecayTopologies) const;
   private:
     /**
-     * A vector with the different labels, not including the "Other" label
+     * A vector that a tuple that connects the label, for example "Signal" or "Other", to the decay descriptor and a vector of all the topology numbers from TopoAna for that particular component
      */
-    std::vector<std::string> ComponentLabels;
+    std::vector<std::tuple<std::string, std::string, std::vector<int>>> m_DecayComponents;
     /**
-     * Label for all other components not included in the list
+     * Tuple with label for all other components not included in the list, by default it's "Other", and the topology numbers from TopoAna
      */
-    std::string OtherLabel;
-    /**
-     * Map connecting the label to a vector containing all the decay topology numbers from TopoAna for that particular component
-     */
-    std::map<std::string, std::vector<int>> DecayTopologyNumbers;
+    std::pair<std::string, std::vector<int>> m_OtherComponent;
 };
 
 #endif
