@@ -12,6 +12,7 @@
 #include<vector>
 #include<tuple>
 #include<utility>
+#include"TTree.h"
 
 class TopoAnaReader {
   public:
@@ -37,7 +38,21 @@ class TopoAnaReader {
      * @param Label Component label
      * @param DecayTopologies Vector of decay topology numbers from TopoAna
      */
-    void SaveComponentCuts(const std::string &Label, const std::vector<int> &DecayTopologies) const;
+    void SaveComponentCuts( const std::string &Label, const std::vector<int> &DecayTopologies) const;
+    /**
+     * Function that save the TTree for a component
+     * @param InTree Original TTree
+     * @param TreeName Name of TTree
+     * @param Label Component label
+     * @param DecayTopologies Vector of decay topology numbers from TopoAna
+     */
+    void SaveTree(TTree *InTree, const std::string &Label, const std::vector<int> &DecayTopologies) const;
+    /**
+     * Function that saves a TTrees for each component
+     * @param InTree Original TTree
+     * @param TreeName Name of TTree
+     */
+    void SaveAllTrees(TTree *InTree) const;
   private:
     /**
      * A vector that a tuple that connects the label, for example "Signal" or "Other", to the decay descriptor and a vector of all the topology numbers from TopoAna for that particular component

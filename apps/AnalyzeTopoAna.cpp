@@ -3,14 +3,18 @@
  * AnalyzeTopoAna takes in a list of particular decay components in a TopoAna file and finds all the decay topology numbers that match those decay components, the rest are classified as "Other" decay components
  * @param 1 Filename of TopoAna txt output file
  * @param 2 Filename with decay components
+ * @param 3 Filename of original ROOT file
+ * @param 4 Name of TTree
  */
 
 #include<iostream>
+#include"TFile.h"
+#include"TTree.h"
 #include"TopoAnaReader.h"
 
 int main(int argc, char *argv[]) {
-  if(argc != 3) {
-    std::cout << "Need 2 input arguments\n";
+  if(argc != 5) {
+    std::cout << "Need 4 input arguments\n";
     return 0;
   }
   std::cout << "Loading the decay components...\n";
@@ -22,5 +26,11 @@ int main(int argc, char *argv[]) {
   std::cout << "Saving cut files...\n";
   Reader.SaveAllComponentCuts();
   std::cout << "Cuts safely stored in files\n";
+  std::cout << "Saving TTrees...\n";
+  TFile f(argv[3], "READ");
+  TTree *Tree;
+  f.GetObject(argv[4], Tree);
+  Reader.SaveAllTrees(Tree);
+  std::cout << "All trees saved\n";
   return 0;
 }

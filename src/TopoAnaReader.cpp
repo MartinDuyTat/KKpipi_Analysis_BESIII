@@ -8,6 +8,8 @@
 #include<cctype>
 #include<tuple>
 #include<utility>
+#include"TFile.h"
+#include"TTree.h"
 #include"TopoAnaReader.h"
 
 TopoAnaReader::TopoAnaReader(const std::string &Filename) {
@@ -81,5 +83,32 @@ void TopoAnaReader::SaveComponentCuts(const std::string &Label, const std::vecto
       Outfile << " || ";
     }
     Outfile << "iDcyTr == " << *iter;
+  }
+}
+
+void TopoAnaReader::SaveTree(TTree *InTree, const std::string &Label, const std::vector<int> &DecayTopologies) const {
+  TFile OutputFile((Label + std::string(".root")).c_str(), "RECREATE");
+  TTree *Tree = InTree->CloneTree(0);
+  int iDcyTr;
+  InTree->SetBranchAddress("iDcyTr", &iDcyTr);
+  for(int i = 0; i < InTree->GetEntries(); i++) {
+    InTree->GetEntry(i);
+    if(std::find(DecayTopologies.begin(), DecayTopologies.end(), iDcyTr) != DecayTopologies.end()) {
+      Tree->Fill();
+    }
+  }
+  Tree->Write();
+  OutputFile.Close();
+}
+    
+
+void TopoAnaReader::SaveAllTrees(TTree *InTree) const {
+  for(auto iter = m_DecayComponents.begin(); iter != m_DecayComponents.end(); iter++) {
+    if(std::get<2>(*iter).size() != 0) {
+      SaveTree(InTree, std::get<0>(*iter), std::get<2>(*iter));
+    }
+  }
+  if(m_OtherComponent.second.size() != 0) {
+    SaveTree(InTree, m_OtherComponent.first, m_OtherComponent.second);
   }
 }

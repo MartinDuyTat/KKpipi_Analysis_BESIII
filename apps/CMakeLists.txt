@@ -5,6 +5,7 @@ add_executable(MakeDeltaECuts MakeDeltaECuts.cpp)
 add_executable(PrepareTagTree PrepareTagTree.cpp)
 
 target_link_libraries(AnalyzeTopoAna PUBLIC KKpipiStrongPhase)
+target_link_libraries(AnalyzeTopoAna PUBLIC ROOT::Physics ROOT::RIO ROOT::Tree)
 
 target_link_libraries(FitDeltaE PUBLIC KKpipiStrongPhase)
 target_link_libraries(FitDeltaE PUBLIC ROOT::Physics ROOT::RIO ROOT::Tree)

@@ -24,10 +24,10 @@ DeltaEFit::DeltaEFit(TTree *Tree):
                      m_Nsig1(RooRealVar("Nsig1", "Nsig1", m_Tree->GetEntries()/2, 0, m_Tree->GetEntries())),
                      m_Nsig2(RooRealVar("Nsig2", "Nsig2", m_Tree->GetEntries()/3, 0, m_Tree->GetEntries())),
 		     m_Nbkg(RooRealVar("Nbkg", "Nbkg", m_Tree->GetEntries()/2, 0, m_Tree->GetEntries())),
-		     m_Mean1(RooRealVar("Mean1", "Mean1", 0.0, -0.02, 0.02)),
-		     m_Mean2(RooRealVar("Mean2", "Mean2", 0.0, -0.02, 0.02)),
-		     m_Sigma1(RooRealVar("Sigma1", "Sigma1", 0.00001, 0.03)),
-                     m_Sigma2(RooRealVar("Sigma2", "Sigma2", 0.00001, 0.03)),
+		     m_Mean1(RooRealVar("Mean1", "Mean1", 0.0, -0.015, 0.02)),
+		     m_Mean2(RooRealVar("Mean2", "Mean2", 0.0, -0.015, 0.02)),
+		     m_Sigma1(RooRealVar("Sigma1", "Sigma1", 0.00001, 0.05)),
+                     m_Sigma2(RooRealVar("Sigma2", "Sigma2", 0.00001, 0.05)),
                      m_a(RooRealVar("a", "a", 0.0, -1000.0, 1000.0)),
                      m_b(RooRealVar("b", "b", 0.0, -1000.0, 1000.0)) {
   m_Tree->SetBranchStatus("*", 0);
