@@ -12,7 +12,8 @@
 #include"RooArgList.h"
 #include"RooArgList.h"
 #include"RooGaussian.h"
-#include"RooPolynomial.h"
+//#include"RooPolynomial.h"
+#include"RooGenericPdf.h"
 #include"RooAddPdf.h"
 #include"RooPlot.h"
 #include"RooHist.h"
@@ -21,30 +22,43 @@
 DeltaEFit::DeltaEFit(TTree *Tree):
                      m_Tree(Tree),
 		     m_DeltaE(RooRealVar("DeltaE", "DeltaE", -0.08, 0.08)),
-                     m_Nsig1(RooRealVar("Nsig1", "Nsig1", m_Tree->GetEntries()/2, 0, m_Tree->GetEntries())),
-                     m_Nsig2(RooRealVar("Nsig2", "Nsig2", m_Tree->GetEntries()/3, 0, m_Tree->GetEntries())),
-		     m_Nbkg(RooRealVar("Nbkg", "Nbkg", m_Tree->GetEntries()/2, 0, m_Tree->GetEntries())),
-		     m_Mean1(RooRealVar("Mean1", "Mean1", 0.0, -0.015, 0.02)),
-		     m_Mean2(RooRealVar("Mean2", "Mean2", 0.0, -0.015, 0.02)),
-		     m_Sigma1(RooRealVar("Sigma1", "Sigma1", 0.00001, 0.05)),
-                     m_Sigma2(RooRealVar("Sigma2", "Sigma2", 0.00001, 0.05)),
-                     m_a(RooRealVar("a", "a", 0.0, -1000.0, 1000.0)),
-                     m_b(RooRealVar("b", "b", 0.0, -1000.0, 1000.0)) {
+		     m_Mean1(RooRealVar("Mean1", "Mean1", 0.0, -0.001, 0.001)),
+		     m_Mean2(RooRealVar("Mean2", "Mean2", 0.0, -0.001, 0.001)),
+		     m_Sigma1(RooRealVar("Sigma1", "Sigma1", 0.001, 0.00001, 0.01)),
+                     m_Sigma2(RooRealVar("Sigma2", "Sigma2", 0.001, 0.00001, 0.01)),
+                     m_a1(RooRealVar("a1", "a1", 0.0, -100.0, 100.0)),
+                     m_b1(RooRealVar("b1", "b1", 0.0, -1000.0, 1000.0)),
+                     m_a2(RooRealVar("a2", "a2", 0.0, -100.0, 100.0)),
+                     m_b2(RooRealVar("b2", "b2", 0.0, -1000.0, 1000.0)),
+                     m_LuminosityWeight("LuminosityWeight", "LuminosityWeight", 1.0, 0.0, 10.0) {
   m_Tree->SetBranchStatus("*", 0);
   m_Tree->SetBranchStatus("DeltaE" , 1);
+  m_Tree->SetBranchStatus("DataSetType", 1);
+  m_Tree->SetBranchStatus("IsSameDMother", 1);
+  m_Tree->SetBranchStatus("LuminosityWeight", 1);
+  // Count the number of weighted events
+  double N = 0;
+  double LuminosityWeight;
+  m_Tree->SetBranchAddress("LuminosityWeight", &LuminosityWeight);
+  for(int i = 0; i < m_Tree->GetEntries(); i++) {
+    m_Tree->GetEntry(i);
+    N += LuminosityWeight;
+  }
+  m_Nsig1 = RooRealVar("Nsig1", "Nsig1", N/2, 0.0, N);
+  m_Nsig2 = RooRealVar("Nsig2", "Nsig2", N/3, 0.0, N);
+  m_Nbkg = RooRealVar("Nbkg", "Nbkg", N/2, 0.0, N);
 }
 
 void DeltaEFit::FitDeltaE(const std::string &Filename, const std::string &TagMode, bool DoUnbinnedFit) {
   using namespace RooFit;
   TH1D h1("h1", "h1", 1000, 0.08, 0.08);
-  m_Tree->Draw("DeltaE >> h1", "", "goff");
-  m_Sigma1.setVal(h1.GetStdDev());
-  m_Sigma2.setVal(h1.GetStdDev());
+  m_Tree->Draw("DeltaE >> h1", "LuminosityWeight", "goff");
   RooDataHist BinnedData("BinnedData", "BinnedData", RooArgList(m_DeltaE), &h1);
-  RooDataSet UnbinnedData("UnbinnedData", "UnbinnedData", m_Tree, RooArgList(m_DeltaE));
+  RooDataSet UnbinnedData("UnbinnedData", "UnbinnedData", m_Tree, RooArgList(m_DeltaE, m_LuminosityWeight), "", "LuminosityWeight");
   RooGaussian Gauss1("Gauss1", "Gauss1", m_DeltaE, m_Mean1, m_Sigma1);
   RooGaussian Gauss2("Gauss2", "Gauss2", m_DeltaE, m_Mean2, m_Sigma2);
-  RooPolynomial Polynomial("Polynomial", "Polynomial", m_DeltaE, RooArgList(m_a, m_b));
+  //RooPolynomial Polynomial("Polynomial", "Polynomial", m_DeltaE, RooArgList(m_a, m_b));
+  RooGenericPdf Polynomial("Polynomial", "DeltaE < 0 ? 1 + a1*DeltaE + b1*DeltaE*DeltaE : 1 + a2*DeltaE + b2*DeltaE*DeltaE", RooArgList(m_DeltaE, m_a1, m_a2, m_b1, m_b2));
   RooAddPdf Model("Model", "Model", RooArgList(Gauss1, Gauss2, Polynomial), RooArgList(m_Nsig1, m_Nsig2, m_Nbkg));
   Model.fitTo(BinnedData);
   if(DoUnbinnedFit) {
@@ -69,6 +83,12 @@ void DeltaEFit::FitDeltaE(const std::string &Filename, const std::string &TagMod
   RooHist *Pull = Frame->pullHist();
   Model.plotOn(Frame, Components(Polynomial), LineColor(kBlue), LineStyle(kDashed));
   Model.plotOn(Frame, Components(RooArgList(Gauss1, Gauss2)), LineColor(kRed));
+  if(m_Tree->GetEntries("DataSetType == 0") == 0) {
+    TH1D h2("h2", "h2", 100, -0.08, 0.08);
+    m_Tree->Draw("DeltaE >> h2", "LuminosityWeight*(DataSetType == 1 && IsSameDMother == 1)", "goff");
+    RooDataHist TrueSignal("TrueSignal", "TrueSignal", RooArgList(m_DeltaE), &h2);
+    TrueSignal.plotOn(Frame);
+  }
   Frame->Draw();
   Pad2.cd();
   RooPlot *PullFrame = m_DeltaE.frame();
@@ -94,7 +114,9 @@ void DeltaEFit::SaveParameters(const std::string &Filename) const {
   OutputFile << "Mean2 " << m_Mean2.getValV() << "\n";
   OutputFile << "Sigma1 " << m_Sigma1.getValV() << "\n";
   OutputFile << "Sigma2 " << m_Sigma2.getValV() << "\n";
-  OutputFile << "a " << m_a.getValV() << "\n";
-  OutputFile << "b " << m_b.getValV() << "\n";
+  OutputFile << "a1 " << m_a1.getValV() << "\n";
+  OutputFile << "b1 " << m_b1.getValV() << "\n";
+  OutputFile << "a2 " << m_a1.getValV() << "\n";
+  OutputFile << "b2 " << m_b1.getValV() << "\n";
   OutputFile.close();
 }

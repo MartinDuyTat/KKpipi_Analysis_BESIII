@@ -72,13 +72,25 @@ class DeltaEFit {
      */
     RooRealVar m_Sigma2;
     /**
-     * Linear coefficient of polynomial
+     * Linear coefficient of polynomial on the left
      */
-    RooRealVar m_a;
+    RooRealVar m_a1;
     /**
-     * Quadratic coefficient of polynomial
+     * Quadratic coefficient of polynomial on the left
      */
-    RooRealVar m_b;
+    RooRealVar m_b1;
+    /**
+     * Linear coefficient of polynomial on the right
+     */
+    RooRealVar m_a2;
+    /**
+     * Quadratic coefficient of polynomial on the right
+     */
+    RooRealVar m_b2;
+    /**
+     * Weighting to account for luminosity scale
+     */
+    RooRealVar m_LuminosityWeight;
 };
 
 #endif
