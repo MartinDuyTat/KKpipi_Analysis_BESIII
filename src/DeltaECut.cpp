@@ -8,7 +8,7 @@
 #include"TCut.h"
 #include"DeltaECut.h"
 
-DeltaECut::DeltaECut(const std::string &TagMode, const std::string &TagType): m_TagMode(TagMode), m_TagType(TagType) {
+DeltaECut::DeltaECut(const std::string &TagMode, const std::string &TagType, const std::string &DataMC): m_TagMode(TagMode), m_TagType(TagType), m_DataMC(DataMC) {
 }
 
 TCut DeltaECut::GetDeltaECut() const {
@@ -22,7 +22,7 @@ TCut DeltaECut::GetDeltaECut() const {
 }
 
 TCut DeltaECut::GetDeltaECutFromFile(const std::string &TagMode, const std::string &TagSide) const {
-  std::ifstream CutFile(std::string(DELTAE_CUTS_DIR) + TagMode + ".cut");
+  std::ifstream CutFile(std::string(DELTAE_CUTS_DIR) + TagMode + m_DataMC + ".cut");
   if(CutFile.is_open()) {
     std::string line;
     std::getline(CutFile, line);
@@ -35,7 +35,7 @@ TCut DeltaECut::GetDeltaECutFromFile(const std::string &TagMode, const std::stri
     std::string Cut = std::string(TagSide + "DeltaE > " + std::to_string(Lower) + " && " + TagSide + "DeltaE < " + std::to_string(Upper));
     return TCut(Cut.c_str());
   } else {
-    std::cout << "Could not find file " << std::string(INITIAL_CUTS_DIR) + m_TagMode + ".cut\n";
+    std::cout << "Could not find file " << std::string(DELTAE_CUTS_DIR) + TagMode + m_DataMC + ".cut\n";
     return TCut();
   }
 }

@@ -41,10 +41,10 @@ namespace Utilities {
     return;
   }
 
-  TCut LoadCuts(const std::string &CutType, const std::string &TagMode, const std::string &TagType) {
+  TCut LoadCuts(const std::string &CutType, const std::string &TagMode, const std::string &TagType, const std::string &DataMC) {
     if(CutType == "DeltaECuts") {
       InitialCuts initialCuts(TagMode, TagType);
-      DeltaECut deltaECut(TagMode, TagType);
+      DeltaECut deltaECut(TagMode, TagType, DataMC);
       return initialCuts.GetInitialCuts() && deltaECut.GetDeltaECut();
     } else if(CutType == "NoDeltaECuts") {
       InitialCuts initialCuts(TagMode, TagType);

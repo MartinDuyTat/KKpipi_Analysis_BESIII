@@ -32,8 +32,9 @@ namespace Utilities {
    * @param CutType "DeltaECuts" for standard initial cuts plus \f$\Delta E\f$ cuts, "NoDeltaECuts" for standard initial cuts only, "TruthMatchingCuts" for truth matching cuts
    * @param TagMode "KKpipi", "Kpi", etc
    * @param TagType "ST" for single tag and "DT" for double tag
+   * @param DataMC "Data" or "MC"
    */
-  TCut LoadCuts(const std::string &CutType, const std::string &TagMode, const std::string &TagType);
+  TCut LoadCuts(const std::string &CutType, const std::string &TagMode, const std::string &TagType, const std::string &DataMC);
 }
 
 #endif

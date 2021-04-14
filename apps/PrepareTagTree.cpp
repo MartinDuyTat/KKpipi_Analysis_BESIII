@@ -80,7 +80,16 @@ void PrepareTagTree(TagTreeSettings Settings) {
   }
   std::cout << "Tag mode: " << Settings.TagMode << "\nTag type: " << Settings.TagType << "\n";
   std::cout << "Reading cuts...\n";
-  TCut Cuts = Utilities::LoadCuts(Settings.CutType, Settings.TagMode, Settings.TagType);
+  std::string DataMC;
+  if(Settings.DataSetType == 0) {
+    DataMC = "Data";
+  } else if(Settings.DataSetType > 0 && Settings.DataSetType < 10) {
+    DataMC = "MC";
+  } else {
+    std::cout << "DataSetType " << Settings.DataSetType << " not recognized\n";
+    return;
+  }
+  TCut Cuts = Utilities::LoadCuts(Settings.CutType, Settings.TagMode, Settings.TagType, DataMC);
   // This cut removes empty NTuples
   //Cuts = Cuts && TCut("!(Run == 0 && Event == 0)");
   Cuts = Cuts && TCut("MBC != 0");

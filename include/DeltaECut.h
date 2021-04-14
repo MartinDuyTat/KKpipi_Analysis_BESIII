@@ -16,8 +16,9 @@ class DeltaECut {
      * Constructor that sets up all the variables
      * @param TagMode The name of the tag mode we want to apply the cuts to
      * @param TagType "ST" for single tags, "DT" double tags
+     * @param DataMC "MC" or "Data" (cuts are different for MC and data)
      */
-    DeltaECut(const std::string &TagMode, const std::string &TagType);
+    DeltaECut(const std::string &TagMode, const std::string &TagType, const std::string &DataMC);
     /**
      * Function that returns the complete initial cut
      */
@@ -31,6 +32,10 @@ class DeltaECut {
      * The tag type of interest, "ST" for single tags, "DT" for double tags
      */
     std::string m_TagType;
+    /**
+     * String that is either "MC" or "Data"
+     */
+    std::string m_DataMC;
     /**
      * Helper function for reading the cuts from a file
      * @param TagMode Tag mode of interest

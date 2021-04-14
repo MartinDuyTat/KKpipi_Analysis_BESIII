@@ -4,7 +4,8 @@
  * The cuts are saved in the DeltaECuts directory, which will later be used to prepare samples for analysis
  * @param 1 Filename of text file with fit parameters
  * @param 2 Tag mode
- * @param 3 Type "pi0" to get an asymmetric cut for \f$\pi^0\f$ modes
+ * @param 3 "MC" or "Data"
+ * @param 4 Type "pi0" to get an asymmetric cut for \f$\pi^0\f$ modes
  */
 
 #include<fstream>
@@ -14,8 +15,12 @@
 #include"TMath.h"
 
 int main(int argc, char *argv[]) {
-  if(argc != 3 && argc != 4) {
-    std::cout << "Need 2 or 3 input arguments\n";
+  if(argc != 4 && argc != 5) {
+    std::cout << "Need 3 or 4 input arguments\n";
+    return 0;
+  }
+  if(std::string(argv[3]) != "MC" && std::string(argv[3]) != "Data") {
+    std::cout << "Parameter 3 must be MC or Data\n";
     return 0;
   }
   std::cout << "Calculation of deltaE cuts\n";
@@ -44,15 +49,16 @@ int main(int argc, char *argv[]) {
   } else {
     std::cout << argv[1] << " does not exist\n";
   }
+  ParameterFile.close();
   double f = Nsig1/(Nsig1 + Nsig2);
   double Mean = f*Mean1 + (1 - f)*Mean2;
   double Sigma = TMath::Sqrt(f*Sigma1*Sigma1 + (1 - f)*Sigma2*Sigma2 + f*(1 - f)*TMath::Power(Mean1 - Mean2, 2));
   double Upper = Mean + 3*Sigma;
   double Lower = Mean - 3*Sigma;
-  if(argc == 4 && std::string(argv[3]) == "pi0") {
+  if(argc == 5 && std::string(argv[4]) == "pi0") {
     Lower = Mean - 4*Sigma;
   }
-  std::ofstream DeltaEFile(std::string(DELTAE_CUTS_DIR) + std::string(argv[2]) + ".cut");
+  std::ofstream DeltaEFile(std::string(DELTAE_CUTS_DIR) + std::string(argv[2]) + std::string(argv[3]) + ".cut");
   DeltaEFile << Lower << " " << Upper;
   DeltaEFile.close();
   std::cout << "deltaE cuts saved\n";
