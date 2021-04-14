@@ -22,6 +22,12 @@ class DeltaEFit {
      */
     DeltaEFit(TTree *Tree);
     /**
+     * Function for parsing alternative parameters from a text file
+     * Each line in the text file must have the format "ParameterName Value Min Max", for example "a1 0.0 -100.0 100.0"
+     * @param Filename Filename of text file with alternative parameters
+     */
+    void SetParameters(const std::string &Filename);
+    /**
      * Function for doing a fit of the \f$\Delta E\f$ distribution
      * First a binned fit with 1000 bins is performed, then a more accurate unbinned fit is performed if necessary
      * @param Filename Save a plot of the fit with this filename

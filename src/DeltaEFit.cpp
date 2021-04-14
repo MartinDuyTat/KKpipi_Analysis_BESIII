@@ -22,10 +22,10 @@
 DeltaEFit::DeltaEFit(TTree *Tree):
                      m_Tree(Tree),
 		     m_DeltaE(RooRealVar("DeltaE", "DeltaE", -0.08, 0.08)),
-		     m_Mean1(RooRealVar("Mean1", "Mean1", 0.0, -0.001, 0.001)),
-		     m_Mean2(RooRealVar("Mean2", "Mean2", 0.0, -0.001, 0.001)),
-		     m_Sigma1(RooRealVar("Sigma1", "Sigma1", 0.001, 0.00001, 0.01)),
-                     m_Sigma2(RooRealVar("Sigma2", "Sigma2", 0.001, 0.00001, 0.01)),
+		     m_Mean1(RooRealVar("Mean1", "Mean1", 0.0, -0.002, 0.002)),
+		     m_Mean2(RooRealVar("Mean2", "Mean2", 0.0, -0.002, 0.002)),
+		     m_Sigma1(RooRealVar("Sigma1", "Sigma1", 0.001, 0.00001, 0.02)),
+                     m_Sigma2(RooRealVar("Sigma2", "Sigma2", 0.001, 0.00001, 0.02)),
                      m_a1(RooRealVar("a1", "a1", 0.0, -100.0, 100.0)),
                      m_b1(RooRealVar("b1", "b1", 0.0, -1000.0, 1000.0)),
                      m_a2(RooRealVar("a2", "a2", 0.0, -100.0, 100.0)),
@@ -47,6 +47,40 @@ DeltaEFit::DeltaEFit(TTree *Tree):
   m_Nsig1 = RooRealVar("Nsig1", "Nsig1", N/2, 0.0, N);
   m_Nsig2 = RooRealVar("Nsig2", "Nsig2", N/3, 0.0, N);
   m_Nbkg = RooRealVar("Nbkg", "Nbkg", N/2, 0.0, N);
+}
+
+void DeltaEFit::SetParameters(const std::string &Filename) {
+  std::ifstream Infile(Filename);
+  std::string ParameterName;
+  double Value, Minimum, Maximum;
+  while(Infile.peek() != EOF) {
+    Infile >> ParameterName >> Value >> Minimum >> Maximum;
+    if(ParameterName == "Nsig1") {
+      m_Nsig1 = RooRealVar("Nsig1", "Nsig1", Value, Minimum, Maximum);
+    } else if(ParameterName == "Nsig2") {
+      m_Nsig2 = RooRealVar("Nsig2", "Nsig2", Value, Minimum, Maximum);
+    } else if(ParameterName == "Nbkg") {
+      m_Nbkg = RooRealVar("Nbkg", "Nbkg", Value, Minimum, Maximum);
+    } else if(ParameterName == "Mean1") {
+      m_Mean1 = RooRealVar("Mean1", "Mean1", Value, Minimum, Maximum);
+    } else if(ParameterName == "Mean2") {
+      m_Mean2 = RooRealVar("Mean2", "Mean2", Value, Minimum, Maximum);
+    } else if(ParameterName == "Sigma1") {
+      m_Sigma1 = RooRealVar("Sigma1", "Sigma1", Value, Minimum, Maximum);
+    } else if(ParameterName == "Sigma2") {
+      m_Sigma2 = RooRealVar("Sigma2", "Sigma2", Value, Minimum, Maximum);
+    } else if(ParameterName == "a1") {
+      m_a1 = RooRealVar("a1", "a1", Value, Minimum, Maximum);
+    } else if(ParameterName == "a2") {
+      m_a2 = RooRealVar("a2", "a2", Value, Minimum, Maximum);
+    } else if(ParameterName == "b1") {
+      m_b1 = RooRealVar("b1", "b1", Value, Minimum, Maximum);
+    } else if(ParameterName == "b2") {
+      m_b2 = RooRealVar("b2", "b2", Value, Minimum, Maximum);
+    } else {
+      continue;
+    }
+  }
 }
 
 void DeltaEFit::FitDeltaE(const std::string &Filename, const std::string &TagMode, bool DoUnbinnedFit) {

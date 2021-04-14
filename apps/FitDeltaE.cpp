@@ -6,7 +6,8 @@
  * @param 3 Name of text file where parameters are saved
  * @param 4 Tag mode label in plots
  * @param 5 Filename for plots
- * @param 6 Input "yes" to do an unbinned fit after the binned fit
+ * @param 6 Input "Unbinned" to do an unbinned fit after the binned fit, otherwise input "Binned"
+ * @param 7 Filename of file with alternative parameters for the fit (optional)
  */
 
 #include<iostream>
@@ -16,8 +17,8 @@
 #include"Utilities.h"
 
 int main(int argc, char *argv[]) {
-  if(argc != 6 && argc != 7) {
-    std::cout << "Need 5 or 6 input arguments\n";
+  if(argc != 7 && argc != 8) {
+    std::cout << "Need 6 or 7 input arguments\n";
     return 0;
   }
   std::cout << "Fit of Delta E\n";
@@ -25,7 +26,10 @@ int main(int argc, char *argv[]) {
   TChain Chain(argv[2]);
   Utilities::LoadChain(&Chain, std::string(argv[1]));
   DeltaEFit deltaEFit(&Chain);
-  bool DoUnbinnedFit = argc == 7 && std::string(argv[6]) == "yes";
+  bool DoUnbinnedFit = std::string(argv[6]) == "Unbinned";
+  if(argc == 8) {
+    deltaEFit.SetParameters(std::string(argv[7]));
+  }
   deltaEFit.FitDeltaE(std::string(argv[5]), std::string(argv[4]), DoUnbinnedFit);
   deltaEFit.SaveParameters(std::string(argv[3]));
   return 0;
