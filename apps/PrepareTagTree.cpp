@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
 }
 
 void PrepareTagTree(TagTreeSettings Settings) {
-  std::cout << "Sample prepartion of " << Settings.Name << " datset\n";
+  std::cout << "Sample preparation of " << Settings.Name << " dataset\n";
   if(Settings.TagType != "ST" && Settings.TagType != "DT") {
     std::cout << "Tag type " << Settings.TagType << " not recognized\n";
     return;

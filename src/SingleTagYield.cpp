@@ -2,6 +2,7 @@
 
 #include<string>
 #include<fstream>
+#include<sstream>
 #include"TTree.h"
 #include"TCanvas.h"
 #include"TPad.h"
@@ -26,13 +27,55 @@ SingleTagYield::SingleTagYield(TTree *DataTree, TTree *MCSignalTree):
 			       m_End(RooRealVar("End", "End", 1.8865)),
 			       m_Mean(RooRealVar("Mean", "Mean", 0.0)),
 			       m_Sigma(RooRealVar("Sigma", "Sigma", 0.003, 0.0001, 0.100)),
-			       m_Nsig(RooRealVar("Nsig", "Nsig", m_DataTree->GetEntries()/2, 0.0, m_DataTree->GetEntries())),
-			       m_Nbkg(RooRealVar("Nbkg", "Nbkg", m_DataTree->GetEntries()/2, 0.0, m_DataTree->GetEntries())) {
+                               m_LuminosityWeight("LuminosityWeight", "LuminosityWeight", 1.0, 0.0, 10.0) {
   m_DataTree->SetBranchStatus("*", 0);
   m_DataTree->SetBranchStatus("MBC", 1);
+  m_DataTree->SetBranchStatus("LuminosityWeight", 1);
   m_MCSignalTree->SetBranchStatus("*", 0);
   m_MCSignalTree->SetBranchStatus("MBC", 1);
   m_MBC.setBins(10000, "cache");
+  // Count the number of weighted events
+  double N = 0;
+  double LuminosityWeight;
+  m_DataTree->SetBranchAddress("LuminosityWeight", &LuminosityWeight);
+  for(int i = 0; i < m_DataTree->GetEntries(); i++) {
+    m_DataTree->GetEntry(i);
+    N += LuminosityWeight;
+  }
+  m_Nsig = RooRealVar("Nsig", "Nsig", N/2, 0.0, N);
+  m_Nbkg = RooRealVar("Nbkg", "Nbkg", N/2, 0.0, N);
+}
+
+SingleTagYield::~SingleTagYield() {
+  for(auto p : m_PeakingMean) {
+    delete p;
+  }
+  for(auto p : m_PeakingSigma) {
+    delete p;
+  }
+  for(auto p : m_PeakingYield) {
+    delete p;
+  }
+  for(auto p : m_PeakingPDF) {
+    delete p;
+  }
+}
+
+void SingleTagYield::AddPeakingComponent(const std::string &Filename) {
+  std::ifstream Infile(Filename);
+  std::string line;
+  while(std::getline(Infile, line)) {
+    std::stringstream ss(line);
+    std::string Name;
+    double Mean, Sigma, Yield;
+    ss >> Name >> Mean >> Sigma >> Yield;
+    m_PeakingName.push_back(Name);
+    m_PeakingMean.push_back(new RooRealVar((Name + "Mean").c_str(), (Name + "Mean").c_str(), Mean));
+    m_PeakingSigma.push_back(new RooRealVar((Name + "Sigma").c_str(), (Name + "Sigma").c_str(), Sigma));
+    m_PeakingYield.push_back(new RooRealVar((Name + "Yield").c_str(), (Name + "Yield").c_str(), Yield));
+    m_PeakingPDF.push_back(new RooGaussian(Name.c_str(), Name.c_str(), m_MBC, *m_PeakingMean.back(), *m_PeakingSigma.back()));
+  }
+  Infile.close();
 }
 
 void SingleTagYield::FitYield(const std::string &TagMode, const std::string &Filename) {
@@ -42,8 +85,14 @@ void SingleTagYield::FitYield(const std::string &TagMode, const std::string &Fil
   RooGaussian Resolution("Resolution", "Resolution", m_MBC, m_Mean, m_Sigma);
   RooFFTConvPdf SignalShapeConv("SignalShapeConv", "SignalShapeConv", m_MBC, SignalShape, Resolution);
   RooArgusBG Argus("Argus", "Argus", m_MBC, m_End, m_c);
-  RooAddPdf Model("Model", "Model", RooArgList(SignalShapeConv, Argus), RooArgList(m_Nsig, m_Nbkg));
-  RooDataSet Data("Data", "Data", m_DataTree, RooArgList(m_MBC));
+  RooArgList PDFList(SignalShapeConv, Argus);
+  RooArgList YieldList(m_Nsig, m_Nbkg);
+  for(unsigned int i = 0; i < m_PeakingPDF.size(); i++) {
+    YieldList.add(*m_PeakingYield[i]);
+    PDFList.add(*m_PeakingPDF[i]);
+  }
+  RooAddPdf Model("Model", "Model", PDFList, YieldList);
+  RooDataSet Data("Data", "Data", m_DataTree, RooArgList(m_MBC, m_LuminosityWeight), "", "LuminosityWeight");
   Model.fitTo(Data, PrintEvalErrors(-1));
   TCanvas c1("c1", "c1", 1600, 1200);
   TPad Pad1("Pad1", "Pad1", 0.0, 0.25, 1.0, 1.0);
@@ -64,6 +113,9 @@ void SingleTagYield::FitYield(const std::string &TagMode, const std::string &Fil
   RooHist *Pull = Frame->pullHist();
   Model.plotOn(Frame, LineColor(kBlue), Components(Argus), LineStyle(kDashed));
   Model.plotOn(Frame, LineColor(kRed), Components(SignalShapeConv));
+  for(auto iter = m_PeakingName.begin(); iter != m_PeakingName.end(); iter++) {
+    Model.plotOn(Frame, LineColor(kGreen), Components(iter->c_str()));
+  }
   Frame->Draw();
   Pad2.cd();
   RooPlot *PullFrame = m_MBC.frame();
