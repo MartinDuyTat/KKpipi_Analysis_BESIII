@@ -9,9 +9,9 @@ TruthMatchingCuts::TruthMatchingCuts(const std::string &TagType): m_TagType(TagT
 
 TCut TruthMatchingCuts::GetTruthMatchingCuts() const {
   if(m_TagType == "ST") {
-    return TCut("IsSameDMother == 1 && PIDTrue == 1");
+    return TCut("IsSameDMother == 1");
   } else if(m_TagType == "DT") {
-    return TCut("SignalIsSameDMother == 1 && SignalPIDTrue == 1 && TagIsSameDMother == 1 && PIDTrue == 1");
+    return TCut("SignalIsSameDMother == 1 && TagIsSameDMother == 1");
   } else {
     return TCut();
   }

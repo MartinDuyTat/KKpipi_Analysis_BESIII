@@ -35,6 +35,7 @@ DeltaEFit::DeltaEFit(TTree *Tree):
   m_Tree->SetBranchStatus("DeltaE" , 1);
   m_Tree->SetBranchStatus("DataSetType", 1);
   m_Tree->SetBranchStatus("IsSameDMother", 1);
+  m_Tree->SetBranchStatus("PIDTrue", 1);
   m_Tree->SetBranchStatus("LuminosityWeight", 1);
   // Count the number of weighted events
   double N = 0;
@@ -119,7 +120,7 @@ void DeltaEFit::FitDeltaE(const std::string &Filename, const std::string &TagMod
   Model.plotOn(Frame, Components(RooArgList(Gauss1, Gauss2)), LineColor(kRed));
   if(m_Tree->GetEntries("DataSetType == 0") == 0) {
     TH1D h2("h2", "h2", 100, -0.08, 0.08);
-    m_Tree->Draw("DeltaE >> h2", "LuminosityWeight*(DataSetType == 1 && IsSameDMother == 1)", "goff");
+    m_Tree->Draw("DeltaE >> h2", "LuminosityWeight*(DataSetType == 1 && IsSameDMother == 1 && PIDTrue == 1)", "goff");
     RooDataHist TrueSignal("TrueSignal", "TrueSignal", RooArgList(m_DeltaE), &h2);
     TrueSignal.plotOn(Frame);
   }

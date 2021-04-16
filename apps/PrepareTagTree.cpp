@@ -102,8 +102,10 @@ void PrepareTagTree(TagTreeSettings Settings) {
   std::cout << "Applying cuts...\n";
   TFile OutputFile(Settings.OutputFilename.c_str(), "RECREATE");
   TTree *OutputTree = applyCuts(&Chain, Settings.DataSetType, Settings.LuminosityScale);
-  OutputTree->SetDirectory(&OutputFile);
+  //OutputTree->SetDirectory(&OutputFile);
+  OutputTree->SetDirectory(0);
   OutputTree->Write();
   OutputFile.Close();
+  delete OutputTree;
   std::cout << "Cuts applied and events saved to file " << Settings.OutputFilename << "\n";
 }

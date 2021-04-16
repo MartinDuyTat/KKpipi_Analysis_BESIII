@@ -51,7 +51,8 @@ namespace Utilities {
       return initialCuts.GetInitialCuts();
     } else if(CutType == "TruthMatchingCuts") {
       TruthMatchingCuts truthMatchingCuts(TagType);
-      return truthMatchingCuts.GetTruthMatchingCuts();
+      DeltaECut deltaECut(TagMode, TagType, DataMC);
+      return truthMatchingCuts.GetTruthMatchingCuts() && deltaECut.GetDeltaECut();
     } else {
       return TCut();
     }
