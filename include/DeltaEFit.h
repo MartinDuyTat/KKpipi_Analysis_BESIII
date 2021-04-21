@@ -32,9 +32,10 @@ class DeltaEFit {
      * First a binned fit with 1000 bins is performed, then a more accurate unbinned fit is performed if necessary
      * @param Filename Save a plot of the fit with this filename
      * @param TagMode Name of tag mode to label plot
+     * @param DoBinnedFit If true, a binned fit is performed
      * @param DoUnbinnedFit If true, an unbinned fit is performed after the binned fit for more accurate results
      */
-    void FitDeltaE(const std::string &Filename, const std::string &TagMode, bool DoUnbinnedFit = false);
+    void FitDeltaE(const std::string &Filename, const std::string &TagMode, bool DoBinnedFit = true, bool DoUnbinnedFit = false);
     /**
      * Function for saving the fitted parameters to a text file
      * @param Filename Name of output text file

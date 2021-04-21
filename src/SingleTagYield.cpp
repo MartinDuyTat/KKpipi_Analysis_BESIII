@@ -137,6 +137,7 @@ void SingleTagYield::SaveFitParameters(const std::string &Filename) const {
   OutputFile << "Nsig " << m_Nsig.getValV() << " " << m_Nsig.getError() << "\n";
   OutputFile << "Nbkg " << m_Nbkg.getValV() << " " << m_Nbkg.getError() << "\n";
   OutputFile << "Sigma " << m_Sigma.getValV() << " " << m_Sigma.getError() << "\n";
+  OutputFile << "Mean " << m_Mean.getValV() << " " << m_Mean.getError() << "\n";
   OutputFile << "c " << m_c.getValV() << " " << m_c.getError() << "\n";
   OutputFile.close();
 }

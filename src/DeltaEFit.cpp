@@ -84,7 +84,7 @@ void DeltaEFit::SetParameters(const std::string &Filename) {
   }
 }
 
-void DeltaEFit::FitDeltaE(const std::string &Filename, const std::string &TagMode, bool DoUnbinnedFit) {
+void DeltaEFit::FitDeltaE(const std::string &Filename, const std::string &TagMode, bool DoBinnedFit, bool DoUnbinnedFit) {
   using namespace RooFit;
   TH1D h1("h1", "h1", 1000, 0.08, 0.08);
   m_Tree->Draw("DeltaE >> h1", "LuminosityWeight", "goff");
@@ -95,9 +95,11 @@ void DeltaEFit::FitDeltaE(const std::string &Filename, const std::string &TagMod
   //RooPolynomial Polynomial("Polynomial", "Polynomial", m_DeltaE, RooArgList(m_a, m_b));
   RooGenericPdf Polynomial("Polynomial", "DeltaE < 0 ? 1 + a1*DeltaE + b1*DeltaE*DeltaE : 1 + a2*DeltaE + b2*DeltaE*DeltaE", RooArgList(m_DeltaE, m_a1, m_a2, m_b1, m_b2));
   RooAddPdf Model("Model", "Model", RooArgList(Gauss1, Gauss2, Polynomial), RooArgList(m_Nsig1, m_Nsig2, m_Nbkg));
-  Model.fitTo(BinnedData);
-  if(DoUnbinnedFit) {
-    Model.fitTo(UnbinnedData);
+  if(DoBinnedFit) {
+    Model.fitTo(BinnedData);
+    if(DoUnbinnedFit) {
+      Model.fitTo(UnbinnedData);
+    }
   }
   TCanvas c1("c1", "c1", 1600, 1200);
   TPad Pad1("Pad1", "Pad1", 0.0, 0.25, 1.0, 1.0);
