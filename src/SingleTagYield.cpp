@@ -15,6 +15,7 @@
 #include"RooGaussian.h"
 #include"RooFFTConvPdf.h"
 #include"RooAddPdf.h"
+#include"RooExtendPdf.h"
 #include"RooPlot.h"
 #include"RooHist.h"
 #include"SingleTagYield.h"
@@ -34,6 +35,7 @@ SingleTagYield::SingleTagYield(TTree *DataTree, TTree *MCSignalTree):
   m_MCSignalTree->SetBranchStatus("*", 0);
   m_MCSignalTree->SetBranchStatus("MBC", 1);
   m_MBC.setBins(10000, "cache");
+  m_MBC.setRange("SignalRange", 1.86, 1.87);
   // Count the number of weighted events
   double N = 0;
   double LuminosityWeight;
@@ -59,6 +61,9 @@ SingleTagYield::~SingleTagYield() {
   for(auto p : m_PeakingPDF) {
     delete p;
   }
+  for(auto p : m_PeakingExPDF) {
+    delete p;
+  }
 }
 
 void SingleTagYield::AddPeakingComponent(const std::string &Filename) {
@@ -74,6 +79,7 @@ void SingleTagYield::AddPeakingComponent(const std::string &Filename) {
     m_PeakingSigma.push_back(new RooRealVar((Name + "Sigma").c_str(), (Name + "Sigma").c_str(), Sigma));
     m_PeakingYield.push_back(new RooRealVar((Name + "Yield").c_str(), (Name + "Yield").c_str(), Yield));
     m_PeakingPDF.push_back(new RooGaussian(Name.c_str(), Name.c_str(), m_MBC, *m_PeakingMean.back(), *m_PeakingSigma.back()));
+    m_PeakingExPDF.push_back(new RooExtendPdf(("Ex" + Name).c_str(), ("Ex" + Name).c_str(), *m_PeakingPDF.back(), *m_PeakingYield.back()));
   }
   Infile.close();
 }
@@ -85,13 +91,13 @@ void SingleTagYield::FitYield(const std::string &TagMode, const std::string &Fil
   RooGaussian Resolution("Resolution", "Resolution", m_MBC, m_Mean, m_Sigma);
   RooFFTConvPdf SignalShapeConv("SignalShapeConv", "SignalShapeConv", m_MBC, SignalShape, Resolution);
   RooArgusBG Argus("Argus", "Argus", m_MBC, m_End, m_c);
-  RooArgList PDFList(SignalShapeConv, Argus);
-  RooArgList YieldList(m_Nsig, m_Nbkg);
+  RooExtendPdf ExSignalShapeConv("ExSignalShapeConv", "ExSignalShapeConv", SignalShapeConv, m_Nsig, "SignalRange");
+  RooExtendPdf ExArgus("ExArgus", "ExArgus", Argus, m_Nbkg);
+  RooArgList PDFList(ExSignalShapeConv, ExArgus);
   for(unsigned int i = 0; i < m_PeakingPDF.size(); i++) {
-    YieldList.add(*m_PeakingYield[i]);
-    PDFList.add(*m_PeakingPDF[i]);
+    PDFList.add(*m_PeakingExPDF[i]);
   }
-  RooAddPdf Model("Model", "Model", PDFList, YieldList);
+  RooAddPdf Model("Model", "Model", PDFList);
   RooDataSet Data("Data", "Data", m_DataTree, RooArgList(m_MBC, m_LuminosityWeight), "", "LuminosityWeight");
   Model.fitTo(Data, PrintEvalErrors(-1));
   TCanvas c1("c1", "c1", 1600, 1200);

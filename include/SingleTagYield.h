@@ -13,6 +13,7 @@
 #include"TTree.h"
 #include"RooRealVar.h"
 #include"RooGaussian.h"
+#include"RooExtendPdf.h"
 
 class SingleTagYield {
   public:
@@ -109,6 +110,10 @@ class SingleTagYield {
      * Vector of RooGaussian objects for PDF of peaking backgrounds
      */
     std::vector<RooGaussian*> m_PeakingPDF;
+    /**
+     * Vector of RooExtendPDF objects for PDF of peaking backgrounds
+     */
+    std::vector<RooExtendPdf*> m_PeakingExPDF;
 };
 
 #endif
