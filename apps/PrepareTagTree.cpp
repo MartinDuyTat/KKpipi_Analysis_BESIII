@@ -91,8 +91,7 @@ void PrepareTagTree(TagTreeSettings Settings) {
   }
   TCut Cuts = Utilities::LoadCuts(Settings.CutType, Settings.TagMode, Settings.TagType, DataMC);
   // This cut removes empty NTuples
-  //Cuts = Cuts && TCut("!(Run == 0 && Event == 0)");
-  Cuts = Cuts && TCut("MBC != 0");
+  Cuts = Cuts && TCut("!(Run == 0 && Event == 0)");
   std::cout << "Cuts ready, will apply the following cuts:\n" << Cuts.GetTitle() << "\n";
   ApplyCuts applyCuts(Cuts);
   std::cout << "Cuts ready\n";
