@@ -23,7 +23,7 @@
 SingleTagYield::SingleTagYield(TTree *DataTree, TTree *MCSignalTree):
                                m_DataTree(DataTree),
 			       m_MCSignalTree(MCSignalTree),
-			       m_MBC(RooRealVar("MBC", "MBC", 1.83, 1.885)),
+			       m_MBC(RooRealVar("MBC", "MBC", 1.83, 1.8865)),
 			       m_c(RooRealVar("c", "c", -10, -100, 100)),
 			       m_End(RooRealVar("End", "End", 1.8865)),
 			       m_Mean(RooRealVar("Mean", "Mean", 0.0, -0.003, 0.003)),
