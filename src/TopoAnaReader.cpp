@@ -47,6 +47,9 @@ void TopoAnaReader::AnalyzeComponents(const std::string &Filename) {
       continue;
     }
     ss >> word >> word >> word;
+    if(word == "---") {
+      continue;
+    }
     int DecayTopology = std::stoi(word);
     std::string D0Decay, D0barDecay;
     std::getline(Infile, line);
