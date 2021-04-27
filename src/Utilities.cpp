@@ -42,17 +42,16 @@ namespace Utilities {
   }
 
   TCut LoadCuts(const std::string &CutType, const std::string &TagMode, const std::string &TagType, const std::string &DataMC) {
+    InitialCuts initialCuts(TagMode, TagType);
     if(CutType == "DeltaECuts") {
-      InitialCuts initialCuts(TagMode, TagType);
       DeltaECut deltaECut(TagMode, TagType, DataMC);
       return initialCuts.GetInitialCuts() && deltaECut.GetDeltaECut();
     } else if(CutType == "NoDeltaECuts") {
-      InitialCuts initialCuts(TagMode, TagType);
       return initialCuts.GetInitialCuts();
     } else if(CutType == "TruthMatchingCuts") {
-      TruthMatchingCuts truthMatchingCuts(TagType);
+      TruthMatchingCuts truthMatchingCuts(TagMode, TagType);
       DeltaECut deltaECut(TagMode, TagType, DataMC);
-      return truthMatchingCuts.GetTruthMatchingCuts() && deltaECut.GetDeltaECut();
+      return truthMatchingCuts.GetTruthMatchingCuts() && deltaECut.GetDeltaECut() && initialCuts.GetInitialCuts();
     } else {
       return TCut();
     }

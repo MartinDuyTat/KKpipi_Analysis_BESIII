@@ -21,3 +21,4 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/src)
 
 target_compile_definitions(KKpipiStrongPhase PUBLIC INITIAL_CUTS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/InitialCuts/")
 target_compile_definitions(KKpipiStrongPhase PUBLIC DELTAE_CUTS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/DeltaECuts/")
+target_compile_definitions(KKpipiStrongPhase PUBLIC TRUTH_MATCHING_CUTS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/TruthMatchingCuts/")
