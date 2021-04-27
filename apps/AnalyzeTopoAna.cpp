@@ -9,7 +9,7 @@
 
 #include<iostream>
 #include"TFile.h"
-#include"TTree.h"
+#include"TChain.h"
 #include"TopoAnaReader.h"
 
 int main(int argc, char *argv[]) {
@@ -27,10 +27,9 @@ int main(int argc, char *argv[]) {
   Reader.SaveAllComponentCuts();
   std::cout << "Cuts safely stored in files\n";
   std::cout << "Saving TTrees...\n";
-  TFile f(argv[3], "READ");
-  TTree *Tree;
-  f.GetObject(argv[4], Tree);
-  Reader.SaveAllTrees(Tree);
+  TChain Chain(argv[4]);
+  Chain.Add(argv[3]);
+  Reader.SaveAllTrees(&Chain);
   std::cout << "All trees saved\n";
   return 0;
 }

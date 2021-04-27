@@ -27,7 +27,7 @@ SingleTagYield::SingleTagYield(TTree *DataTree, TTree *MCSignalTree):
 			       m_c(RooRealVar("c", "c", -10, -100, 100)),
 			       m_End(RooRealVar("End", "End", 1.8865)),
 			       m_Mean(RooRealVar("Mean", "Mean", 0.0, -0.003, 0.003)),
-			       m_Sigma(RooRealVar("Sigma", "Sigma", 0.003, 0.00001, 0.010)),
+			       m_Sigma(RooRealVar("Sigma", "Sigma", 0.0004, 0.00001, 0.010)),
                                m_LuminosityWeight("LuminosityWeight", "LuminosityWeight", 1.0, 0.0, 10.0) {
   m_DataTree->SetBranchStatus("*", 0);
   m_DataTree->SetBranchStatus("MBC", 1);
