@@ -2,6 +2,7 @@ set(CMAKE_INSTALL_RPATH ${KKPIPI_BINNED_FIT_PATH}/lib)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 add_executable(AnalyzeTopoAna AnalyzeTopoAna.cpp)
+add_executable(DetermineDoubleTagYields DetermineDoubleTagYields.cpp)
 add_executable(FitDeltaE FitDeltaE.cpp)
 add_executable(FitSingleTagMBC FitSingleTagMBC.cpp)
 add_executable(MakeDeltaECuts MakeDeltaECuts.cpp)
@@ -10,6 +11,10 @@ add_executable(PrepareTagTree PrepareTagTree.cpp)
 
 target_link_libraries(AnalyzeTopoAna PUBLIC KKpipiStrongPhase)
 target_link_libraries(AnalyzeTopoAna PUBLIC ROOT::Physics ROOT::RIO ROOT::Tree)
+
+target_link_libraries(DetermineDoubleTagYields PUBLIC KKpipiStrongPhase)
+target_link_libraries(DetermineDoubleTagYields PUBLIC ${KKPIPI_BINNED_FIT_LIB} -ldl)
+target_link_libraries(DetermineDoubleTagYields PUBLIC ROOT::Physics ROOT::RIO ROOT::Tree)
 
 target_link_libraries(FitDeltaE PUBLIC KKpipiStrongPhase)
 target_link_libraries(FitDeltaE PUBLIC ROOT::Physics ROOT::RIO ROOT::Tree)
@@ -25,4 +30,4 @@ target_link_libraries(PredictDoubleTaggedYields PUBLIC KKpipiStrongPhase ${KKPIP
 target_link_libraries(PrepareTagTree PUBLIC KKpipiStrongPhase)
 target_link_libraries(PrepareTagTree PUBLIC ROOT::Physics ROOT::RIO ROOT::Tree)
 
-install(TARGETS AnalyzeTopoAna FitDeltaE FitSingleTagMBC MakeDeltaECuts PredictDoubleTaggedYields PrepareTagTree DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/../bin)
+install(TARGETS AnalyzeTopoAna DetermineDoubleTagYields FitDeltaE FitSingleTagMBC MakeDeltaECuts PredictDoubleTaggedYields PrepareTagTree DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/../bin)

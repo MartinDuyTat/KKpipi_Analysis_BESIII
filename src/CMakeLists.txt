@@ -1,4 +1,4 @@
-add_library(KKpipiStrongPhase ApplyCuts.cpp CutsFromFile.cpp DeltaECut.cpp DeltaEFit.cpp InitialCuts.cpp PredictNumberEvents.cpp SingleTagYield.cpp TopoAnaReader.cpp TruthMatchingCuts.cpp Utilities.cpp)
+add_library(KKpipiStrongPhase ApplyCuts.cpp CutsFromFile.cpp DeltaECut.cpp DeltaEFit.cpp DoubleTagYield.cpp InitialCuts.cpp PredictNumberEvents.cpp SingleTagYield.cpp TopoAnaReader.cpp TruthMatchingCuts.cpp Utilities.cpp)
 
 target_include_directories(KKpipiStrongPhase PUBLIC ../include)
 
