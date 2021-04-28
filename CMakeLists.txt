@@ -9,6 +9,16 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 find_package(ROOT 6.22 CONFIG REQUIRED)
 
+set(KKPIPI_BINNED_FIT_PATH /data/lhcb/users/tat/KKpipi_Binned_Fit)
+
+find_library(KKPIPI_BINNED_FIT_LIB KKpipiBinnedFit PATHS ${KKPIPI_BINNED_FIT_PATH}/build/src)
+
+include_directories(${KKPIPI_BINNED_FIT_PATH}/include)
+
+if(NOT KKPIPI_BINNED_FIT_LIB)
+  message(FATAL_ERROR "KKpipiBinnedFit library not found")
+endif()
+
 add_compile_options(-Wall)
 add_compile_options(-Wunused)
 add_compile_options(-Wextra)
