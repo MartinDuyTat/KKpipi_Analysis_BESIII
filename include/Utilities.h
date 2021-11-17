@@ -6,6 +6,7 @@
 #include<string>
 #include"TChain.h"
 #include"TCut.h"
+#include"Settings.h"
 
 #ifndef UTILITIES
 #define UTILITIES
@@ -35,6 +36,16 @@ namespace Utilities {
    * @param DataMC "Data" or "MC"
    */
   TCut LoadCuts(const std::string &CutType, const std::string &TagMode, const std::string &TagType, const std::string &DataMC);
+  /**
+   * Parse arguments and set up a Settings object
+   * Copied from GGSZ code repository
+   * Pass inputs to application
+   */
+  Settings parse_args(int arc, char** argv);
+  /**
+   * Helper function for Settings class
+   */
+  void replace_env_variables(std::string& text);
 }
 
 #endif
