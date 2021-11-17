@@ -40,6 +40,10 @@ class DoubleTagYield {
      */
     double GetBinYield(int i) const;
     /**
+     * Function that calculates the total sideband background subtracted yield
+     */
+    double GetTotalYield() const;
+    /**
      * Get the number of events outside phase space
      */
     int GetEventsOutsidePhaseSpace() const;
@@ -88,6 +92,11 @@ class DoubleTagYield {
      * Cuts to apply before counting events
      */
     TCut m_Cuts;
+    /**
+     * Helper function that calculates the correct bin index
+     * Bin numbers are both positive and negative, this function will simply wrap the indexing into a normal array
+     */
+    int BinIndex(int i) const;
 };
 
 #endif

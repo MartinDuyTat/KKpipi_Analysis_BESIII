@@ -10,6 +10,7 @@
 #include"RooRealVar.h"
 #include"RooDataSet.h"
 #include"RooArgList.h"
+#include"RooArgSet.h"
 #include"RooKeysPdf.h"
 #include"RooArgusBG.h"
 #include"RooGaussian.h"
@@ -119,9 +120,11 @@ void SingleTagYield::FitYield(const std::string &TagMode, const std::string &Fil
   RooHist *Pull = Frame->pullHist();
   Model.plotOn(Frame, LineColor(kBlue), Components(Argus), LineStyle(kDashed));
   Model.plotOn(Frame, LineColor(kRed), Components(SignalShapeConv));
-  for(auto iter = m_PeakingName.begin(); iter != m_PeakingName.end(); iter++) {
-    Model.plotOn(Frame, LineColor(kGreen), Components(iter->c_str()));
+  RooArgSet PeakingComponents;
+  for(auto PeakingPDF : m_PeakingPDF) {
+    PeakingComponents.add(*PeakingPDF);
   }
+  Model.plotOn(Frame, LineColor(kGreen), Components(PeakingComponents));
   Frame->Draw();
   Pad2.cd();
   RooPlot *PullFrame = m_MBC.frame();

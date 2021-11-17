@@ -1,6 +1,8 @@
 // Martin Duy Tat 28th April 2021
 
 #include<vector>
+#include<stdexcept>
+#include<numeric>
 #include"TTree.h"
 #include"TCut.h"
 #include"TEntryList.h"
@@ -9,7 +11,9 @@
 #include"Event.h"
 #include"DoubleTagYield.h"
 
-DoubleTagYield::DoubleTagYield(int NBins, TCut Cuts): m_NBins(NBins), m_AmplitudePhaseSpace(AmplitudePhaseSpace(m_NBins)), m_BinYieldS(std::vector<int>(m_NBins)), m_BinYieldA(std::vector<int>(m_NBins)), m_BinYieldB(std::vector<int>(m_NBins)), m_BinYieldC(std::vector<int>(m_NBins)), m_BinYieldD(std::vector<int>(m_NBins)), m_EventsOutsidePhaseSpace(0), m_EventsOutsideMBCSpace(0), m_Cuts(Cuts) {
+DoubleTagYield::DoubleTagYield(int NBins, TCut Cuts): m_NBins(NBins), m_AmplitudePhaseSpace(AmplitudePhaseSpace(m_NBins)), m_BinYieldS(std::vector<int>(2*m_NBins)), m_BinYieldA(std::vector<int>(2*m_NBins)), m_BinYieldB(std::vector<int>(2*m_NBins)), m_BinYieldC(std::vector<int>(2*m_NBins)), m_BinYieldD(std::vector<int>(2*m_NBins)), m_EventsOutsidePhaseSpace(0), m_EventsOutsideMBCSpace(0), m_Cuts(Cuts) {
+  m_AmplitudePhaseSpace.SetBinEdges(std::vector<double>{1.20923});
+  m_AmplitudePhaseSpace.UseVariableBinWidths(true);
 }
 
 char DoubleTagYield::DetermineMBCRegion(double SignalMBC, double TagMBC) const {
@@ -88,35 +92,63 @@ void DoubleTagYield::CalculateBinnedRawYields(TTree *Tree) {
       continue;
     }
     int BinNumber = KalmanFitSuccess == 1 ? m_AmplitudePhaseSpace.WhichBin(Event(MomentaKalmanFit)) : m_AmplitudePhaseSpace.WhichBin(Event(Momenta));
-    int BinIndex = TMath::Abs(BinNumber) - 1;
     if(BinNumber == 0) {
       m_EventsOutsidePhaseSpace++;
       continue;
     }
     if(Region == 'S') {
-      m_BinYieldS[BinIndex]++;
+      m_BinYieldS[BinIndex(BinNumber)]++;
     } else if(Region == 'A') {
-      m_BinYieldS[BinIndex]++;
+      m_BinYieldA[BinIndex(BinNumber)]++;
     } else if(Region == 'B') {
-      m_BinYieldB[BinIndex]++;
+      m_BinYieldB[BinIndex(BinNumber)]++;
     } else if(Region == 'C') {
-      m_BinYieldC[BinIndex]++;
+      m_BinYieldC[BinIndex(BinNumber)]++;
     } else if(Region == 'D') {
-      m_BinYieldD[BinIndex]++;
+      m_BinYieldD[BinIndex(BinNumber)]++;
     }
   }
 }
 
 double DoubleTagYield::GetBinYield(int i) const {
-  int BinIndex = TMath::Abs(i) - 1;
   // Area in beam constrained 2D plane
   double A_S = 10*10;
   double A_A = 10*25;
   double A_B = 25*10;
-  double A_D = 19.5*19.5;
   double A_C = 25*25 - 21.5*21.5;
-  double Background = (A_S/A_D)*m_BinYieldD[BinIndex] + (A_S/A_A)*(m_BinYieldA[BinIndex] - (A_S/A_A)*m_BinYieldD[BinIndex]) + (A_S/A_B)*(m_BinYieldB[BinIndex] - (A_S/A_B)*m_BinYieldD[BinIndex]) + (A_S/A_C)*(m_BinYieldC[BinIndex] - (A_S/A_C)*m_BinYieldD[BinIndex]);
-  return m_BinYieldS[BinIndex] - Background;
+  double A_D = 19.5*19.5;
+  double Background = (A_S/A_D)*m_BinYieldD[BinIndex(i)]
+                    + (A_S/A_A)*(m_BinYieldA[BinIndex(i)] - (A_A/A_D)*m_BinYieldD[BinIndex(i)])
+                    + (A_S/A_B)*(m_BinYieldB[BinIndex(i)] - (A_B/A_D)*m_BinYieldD[BinIndex(i)])
+                    + (A_S/A_C)*(m_BinYieldC[BinIndex(i)] - (A_C/A_D)*m_BinYieldD[BinIndex(i)]);
+  /*  double Background = (A_S/A_D)*m_BinYieldD[BinIndex(i)]
+                    + (A_S/A_A)*(m_BinYieldA[BinIndex(i)] - (A_S/A_A)*m_BinYieldD[BinIndex(i)])
+                    + (A_S/A_B)*(m_BinYieldB[BinIndex(i)] - (A_S/A_B)*m_BinYieldD[BinIndex(i)])
+                    + (A_S/A_C)*(m_BinYieldC[BinIndex(i)] - (A_S/A_C)*m_BinYieldD[BinIndex(i)]);*/
+  return m_BinYieldS[BinIndex(i)] - Background;
+}
+
+double DoubleTagYield::GetTotalYield() const {
+  // Area in beam constrained 2D plane
+  double A_S = 10*10;
+  double A_A = 10*25;
+  double A_B = 25*10;
+  double A_C = 25*25 - 21.5*21.5;
+  double A_D = 19.5*19.5;
+  double YieldS = std::accumulate(m_BinYieldS.begin(), m_BinYieldS.end(), 0.0);
+  double YieldA = std::accumulate(m_BinYieldA.begin(), m_BinYieldA.end(), 0.0);
+  double YieldB = std::accumulate(m_BinYieldB.begin(), m_BinYieldB.end(), 0.0);
+  double YieldC = std::accumulate(m_BinYieldC.begin(), m_BinYieldC.end(), 0.0);
+  double YieldD = std::accumulate(m_BinYieldD.begin(), m_BinYieldD.end(), 0.0);
+  double Background = (A_S/A_D)*YieldD
+                    + (A_S/A_A)*(YieldA - (A_A/A_D)*YieldD)
+                    + (A_S/A_B)*(YieldB - (A_B/A_D)*YieldD)
+                    + (A_S/A_C)*(YieldC - (A_C/A_D)*YieldD);
+  /*  double Background = (A_S/A_D)*YieldD
+                    + (A_S/A_A)*(YieldA - (A_S/A_A)*YieldD)
+                    + (A_S/A_B)*(YieldB - (A_S/A_B)*YieldD)
+                    + (A_S/A_C)*(YieldC - (A_S/A_C)*YieldD);*/
+  return YieldS - Background;
 }
 
 int DoubleTagYield::GetEventsOutsidePhaseSpace() const {
@@ -125,4 +157,14 @@ int DoubleTagYield::GetEventsOutsidePhaseSpace() const {
 
 int DoubleTagYield::GetEventsOutsideMBCSpace() const {
   return m_EventsOutsideMBCSpace;
+}
+
+int DoubleTagYield::BinIndex(int i) const {
+  if(i == 0) {
+    throw std::invalid_argument("Bin number 0 given");
+  } else if(i > 0) {
+    return i - 1;
+  } else {
+    return -i - 1 + m_NBins;
+  }
 }
