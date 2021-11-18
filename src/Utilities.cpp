@@ -5,11 +5,13 @@
 #include<string>
 #include<regex>
 #include"TChain.h"
+#include"RooRealVar.h"
 #include"Utilities.h"
 #include"InitialCuts.h"
 #include"DeltaECut.h"
 #include"TruthMatchingCuts.h"
 #include"Settings.h"
+#include"Unique.h"
 
 namespace Utilities {
   void LoadChain(TChain *Chain, int NumberFiles, const std::string &Filename, const std::string &TreeName) {
@@ -108,6 +110,31 @@ namespace Utilities {
       }   
     }
     return settings;
+  }
+
+  RooRealVar* load_param(const Settings& settings, const std::string& name) {
+    double init_val = settings.getD(name); // throws error if var not included
+    double low = init_val;
+    double high = init_val;
+    if (settings.contains(name+"_limL"))
+        low = settings.getD(name+"_limL");
+    if (settings.contains(name+"_limU"))
+        high = settings.getD(name+"_limU");
+    RooRealVar * v = Unique::create<RooRealVar*>(name, "", init_val, low, high);
+    // Handle limits: variables without limL (limU) are set to have no lower (upper) limit
+    if (!settings.contains(name+"_limL"))
+        v->removeMin();
+    if (!settings.contains(name+"_limU"))
+        v->removeMax();
+    // If limits are equal, set constant
+    if (low==high){
+        v->setConstant();
+    }
+    // If <var_name>_float is in settings, it determines whether param. is floated
+    if (settings.contains(name+"_float")){
+        v->setConstant(!settings.getB(name+"_float"));
+    }
+    return v;
   }
 
 

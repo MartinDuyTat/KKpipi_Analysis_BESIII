@@ -6,6 +6,7 @@
 #include<string>
 #include"TChain.h"
 #include"TCut.h"
+#include"RooRealVar.h"
 #include"Settings.h"
 
 #ifndef UTILITIES
@@ -41,11 +42,19 @@ namespace Utilities {
    * Copied from GGSZ code repository
    * Pass inputs to application
    */
-  Settings parse_args(int arc, char** argv);
+  Settings parse_args(int argc, char** argv);
   /**
    * Helper function for Settings class
+   * Copied from GGSZ code repository
    */
   void replace_env_variables(std::string& text);
+  /**
+   * Load a parameter and initialize the RooRealVar object
+   * Copied from GGSZ code repository
+   * @param settings The settings containing the parameters
+   * @param name Name of the RooRealVar variable
+   */
+  RooRealVar* load_param(const Settings &settings, const std::string &name);
 }
 
 #endif

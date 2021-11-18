@@ -83,7 +83,7 @@ void Settings::add_entry(
     std::string file_name,
     bool enforce_var_already_existing){
 
-    if (key.find("/") != (unsigned int)std::string::npos){
+    if (key.find("/") != std::string::npos){
         this->add_subsetting_entry(key, val, file_name, enforce_var_already_existing);
         return;
     }
@@ -164,7 +164,7 @@ void Settings::update_subsettings_from_file(
     std::string file_path,
     bool enforce_already_existing){
 
-    if (key.find("/") != (unsigned int)std::string::npos){
+    if (key.find("/") != std::string::npos){
         // Trying to update a file further down the tree: simply pass down!
         int slash_pos = key.find('/');
         std::string settings_name = key.substr(0, slash_pos);
