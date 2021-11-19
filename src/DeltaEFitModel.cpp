@@ -10,6 +10,7 @@
 #include"RooShapes/FitShape.h"
 #include"RooShapes/DoubleGaussian_Shape.h"
 #include"RooShapes/DoublePolynomial_Shape.h"
+#include"RooShapes/Chebychev_Shape.h"
 
 DeltaEFitModel::DeltaEFitModel(const Settings &settings, RooRealVar *x): m_Settings(settings), m_x(x) {
   InitializeSignal();
@@ -40,6 +41,8 @@ void DeltaEFitModel::InitializeCombinatorial() {
   std::string CombinatorialShape = m_Settings["Combinatorial"].get("CombinatorialShape");
   if(CombinatorialShape == "DoublePolynomial") {
     m_ModelComponents.push_back(new DoublePolynomial_Shape(Name, m_Settings["Combinatorial"], m_x));
+  } else if(CombinatorialShape == "Chebychev") {
+    m_ModelComponents.push_back(new Chebychev_Shape(Name, m_Settings["Combinatorial"], m_x));
   } else {
     throw std::invalid_argument("Unknown combinatorial shape");
   }

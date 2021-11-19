@@ -40,7 +40,7 @@ class DeltaEFit {
      * Function for saving the fitted parameters to a text file
      * @param Results The fit results
      */
-    void SaveParameters(RooFitResult *Results) const;
+    void SaveParameters(RooFitResult *Results);
   private:
     /**
      * TTree containing the data we want to fit
@@ -58,6 +58,14 @@ class DeltaEFit {
      * Weighting to account for luminosity scale
      */
     RooRealVar m_LuminosityWeight;
+    /**
+     * The lower \f$\Delta E\f$ cut
+     */
+    double m_DeltaE_Low;
+    /**
+     * The upper \f$\Delta E\f$ cut
+     */
+    double m_DeltaE_High;
 };
 
 #endif
