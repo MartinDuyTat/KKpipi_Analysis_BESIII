@@ -25,71 +25,23 @@
 #include"TTree.h"
 #include"Utilities.h"
 #include"ApplyCuts.h"
-
-struct TagTreeSettings {
-  std::string Name;
-  int NumberFiles;
-  std::string InputFilename;
-  std::string TagMode;
-  std::string TagType;
-  std::string CutType;
-  std::string TreeName;
-  int DataSetType;
-  double LuminosityScale;
-  std::string OutputFilename;
-};
-
-void PrepareTagTree(TagTreeSettings Settings);
+#include"Settings.h"
 
 int main(int argc, char *argv[]) {
-  if(argc != 2) {
-    std::cout << "Need 1 input agument\n";
-    return 0;
-  }
-  std::ifstream Infile(argv[1]);
-  if(!Infile.is_open()) {
-    std::cout << "Unable to open options file\n";
-    return 0;
-  }
-  while(Infile.peek() != EOF) {
-    std::string First;
-    Infile >> First;
-    if(First == "Name") {
-      TagTreeSettings Settings;
-      Infile >> Settings.Name;
-      Infile >> Settings.NumberFiles;
-      Infile >> Settings.InputFilename;
-      Infile >> Settings.TagMode;
-      Infile >> Settings.TagType;
-      Infile >> Settings.CutType;
-      Infile >> Settings.TreeName;
-      Infile >> Settings.DataSetType;
-      Infile >> Settings.LuminosityScale;
-      Infile >> Settings.OutputFilename;
-      PrepareTagTree(Settings);
-    }
-  }
-  return 0;
-}
-
-void PrepareTagTree(TagTreeSettings Settings) {
-  std::cout << "Sample preparation of " << Settings.Name << " dataset\n";
-  if(Settings.TagType != "ST" && Settings.TagType != "DT") {
-    std::cout << "Tag type " << Settings.TagType << " not recognized\n";
-    return;
-  }
-  std::cout << "Tag mode: " << Settings.TagMode << "\nTag type: " << Settings.TagType << "\n";
-  std::cout << "Reading cuts...\n";
-  std::string DataMC;
-  if(Settings.DataSetType == 0) {
-    DataMC = "Data";
-  } else if(Settings.DataSetType > 0 && Settings.DataSetType < 10) {
-    DataMC = "MC";
-  } else {
-    std::cout << "DataSetType " << Settings.DataSetType << " not recognized\n";
-    return;
-  }
-  TCut Cuts = Utilities::LoadCuts(Settings.CutType, Settings.TagMode, Settings.TagType, DataMC);
+  Settings settings = Utilities::parse_args(argc, argv);
+  std::string Mode = settings.get("Mode");
+  std::string TagType = settings.get("TagType");
+  bool IncludeDeltaECuts = settings.getB("Include_DeltaE_Cuts");
+  bool TruthMatch = settings.getB("TruthMatch");
+  std::string TreeName = settings.get("TreeName");
+  int DataSetType = settings.getI("DataSetType");
+  double LuminosityScale = settings.getD("LuminosityScale");
+  std::string InputFiles = settings.get("InputFiles");
+  std::string OutputFilename = settings.get("OutputFilename");
+  std::cout << "Sample prepration of " << TagType << " " << Mode << " mode\n";
+  std::cout << "DataSetType: " << DataSetType << "\n";
+  std::string DataMC = DataSetType == 0 ? "Data" : "MC";
+  TCut Cuts = Utilities::LoadCuts(Mode, IncludeDeltaECuts, TruthMatch, TagType, DataMC);
   // This cut removes empty NTuples
   Cuts = Cuts && TCut("!(Run == 0 && Event == 0)");
   std::cout << "Cuts ready, will apply the following cuts:\n" << Cuts.GetTitle() << "\n";
@@ -97,14 +49,14 @@ void PrepareTagTree(TagTreeSettings Settings) {
   std::cout << "Cuts ready\n";
   std::cout << "Loading TChain...\n";
   TChain Chain;
-  Utilities::LoadChain(&Chain, Settings.NumberFiles, Settings.InputFilename, Settings.TreeName);
+  Utilities::LoadChain(&Chain, InputFiles, TreeName);
   std::cout << "Applying cuts...\n";
-  TFile OutputFile(Settings.OutputFilename.c_str(), "RECREATE");
-  TTree *OutputTree = applyCuts(&Chain, Settings.DataSetType, Settings.LuminosityScale);
-  //OutputTree->SetDirectory(&OutputFile);
+  TFile OutputFile(OutputFilename.c_str(), "RECREATE");
+  TTree *OutputTree = applyCuts(&Chain, DataSetType, LuminosityScale);
   OutputTree->SetDirectory(0);
   OutputTree->Write();
   OutputFile.Close();
-  delete OutputTree;
-  std::cout << "Cuts applied and events saved to file " << Settings.OutputFilename << "\n";
+  //delete OutputTree;
+  std::cout << "Cuts applied and events saved to file " << OutputFilename << "\n";
+  return 0;
 }

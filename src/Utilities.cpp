@@ -45,20 +45,18 @@ namespace Utilities {
     return;
   }
 
-  TCut LoadCuts(const std::string &CutType, const std::string &TagMode, const std::string &TagType, const std::string &DataMC) {
+  TCut LoadCuts(const std::string &TagMode, bool IncludeDeltaECuts, bool TruthMatch, const std::string &TagType, const std::string &DataMC) {
     InitialCuts initialCuts(TagMode, TagType);
-    if(CutType == "DeltaECuts") {
+    TCut Cuts = initialCuts.GetInitialCuts();
+    if(IncludeDeltaECuts) {
       DeltaECut deltaECut(TagMode, TagType, DataMC);
-      return initialCuts.GetInitialCuts() && deltaECut.GetDeltaECut();
-    } else if(CutType == "NoDeltaECuts") {
-      return initialCuts.GetInitialCuts();
-    } else if(CutType == "TruthMatchingCuts") {
-      TruthMatchingCuts truthMatchingCuts(TagMode, TagType);
-      DeltaECut deltaECut(TagMode, TagType, DataMC);
-      return truthMatchingCuts.GetTruthMatchingCuts() && deltaECut.GetDeltaECut() && initialCuts.GetInitialCuts();
-    } else {
-      return TCut();
+      Cuts = Cuts && deltaECut.GetDeltaECut();
     }
+    if(TruthMatch) {
+      TruthMatchingCuts truthMatchingCuts(TagMode, TagType);
+      Cuts = Cuts && truthMatchingCuts.GetTruthMatchingCuts();
+    }
+    return Cuts;
   }
 
   void replace_env_variables(std::string& text) {
