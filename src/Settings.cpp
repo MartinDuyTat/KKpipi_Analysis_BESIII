@@ -2,6 +2,7 @@
 #include "Utilities.h"
 #include <iostream>
 #include <fstream>
+#include <algorithm>
 #include <set>
 #include "boost/algorithm/string.hpp"
 
@@ -47,6 +48,7 @@ void Settings::update_from_file(
     while (file.good() && !file.eof()){
         std::getline(file, line);
         line = line.substr(0, line.find("*")); // ignore comments
+	std::replace(line.begin(), line.end(), '?', '*');
         boost::trim(line); // remove any spaces
         if (line.size()==0) continue;
         int space_pos = line.find(' '); // find break

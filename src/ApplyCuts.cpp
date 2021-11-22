@@ -23,5 +23,7 @@ TTree* ApplyCuts::operator()(TTree *InputTree, int DataSetType, double Luminosit
     InputTree->GetEntry(InputTree->GetEntryNumber(i));
     OutputTree->Fill();
   }
+  // I think this line prevents a seg fault for some reason
+  gDirectory->Clear();
   return OutputTree;
 }
