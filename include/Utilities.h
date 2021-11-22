@@ -4,6 +4,7 @@
  */
 
 #include<string>
+#include<vector>
 #include"TChain.h"
 #include"TCut.h"
 #include"RooRealVar.h"
@@ -56,6 +57,18 @@ namespace Utilities {
    * @param name Name of the RooRealVar variable
    */
   RooRealVar* load_param(const Settings &settings, const std::string &name);
+  /**
+   * Convert a comma separated list into a vector
+   * @param List List of comma separated elements
+   */
+  std::vector<std::string> ConvertStringToVector(std::string List);
+  /**
+   * Replace part of string with another string
+   * @param String The original string
+   * @param From The string we want to replace
+   * @param To The string we're replacing with
+   */
+  std::string ReplaceString(const std::string &String, const std::string &From, const std::string &To);
 }
 
 #endif

@@ -45,7 +45,7 @@ void DeltaEFit::FitDeltaE() {
   if(m_Settings.get("FitType") != "NoFit") {
     Results = Model->fitTo(BinnedData, Save(), Strategy(2));
     if(m_Settings.get("FitType") == "UnbinnedFit") {
-      Results = Model->fitTo(UnbinnedData, Save(), Strategy(2));
+      Results = Model->fitTo(UnbinnedData, Save(), Strategy(2), NumCPU(4));
     }
     SaveParameters(Results);
   }

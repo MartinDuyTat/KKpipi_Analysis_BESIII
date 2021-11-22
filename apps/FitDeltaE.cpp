@@ -17,9 +17,13 @@ int main(int argc, char *argv[]) {
   std::cout << "Settings ready\n";
   std::cout << "Loading ROOT file\n";
   TChain Chain(settings.get("TreeName").c_str());
-  Utilities::LoadChain(&Chain, settings.get("InputFiles"));
+  std::string Mode = settings.get("Mode");
+  std::vector<std::string> Datasets = Utilities::ConvertStringToVector(settings.get("Datasets_to_include"));
+  for(const auto &Dataset : Datasets) {
+    std::string Filename = Utilities::ReplaceString(settings["Datasets_WithoutDeltaECuts"].get(Dataset), "TAG", Mode);
+    Chain.Add(Filename.c_str());
+  }
   DeltaEFit deltaEFit(&Chain, settings);
   deltaEFit.FitDeltaE();
-  //deltaEFit.SaveParameters();
   return 0;
 }

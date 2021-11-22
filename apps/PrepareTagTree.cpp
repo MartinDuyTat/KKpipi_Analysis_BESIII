@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
   bool IncludeDeltaECuts = settings.getB("Include_DeltaE_Cuts");
   bool TruthMatch = settings.getB("TruthMatch");
   std::string TreeName = settings.get("TreeName");
-  std::vector<std::string> Datasets = ParseDatasets(settings.get("Datasets_to_include"));
+  std::vector<std::string> Datasets = Utilities::ConvertStringToVector(settings.get("Datasets_to_include"));
   std::cout << "Sample prepration of " << TagType << " " << Mode << " mode\n";
   for(const auto &Dataset : Datasets) {
     int DataSetType = settings["DataTypes"].getI(Dataset);
@@ -64,15 +64,4 @@ int main(int argc, char *argv[]) {
     }
   }
   return 0;
-}
-
-std::vector<std::string> ParseDatasets(std::string DatasetsString) {
-  std::replace(DatasetsString.begin(), DatasetsString.end(), ',', ' ');
-  std::stringstream ss(DatasetsString);
-  std::string Dataset;
-  std::vector<std::string> DatasetsToInclude;
-  for(std::string i; ss >> i;) {
-    DatasetsToInclude.push_back(i);
-  }
-  return DatasetsToInclude;
 }

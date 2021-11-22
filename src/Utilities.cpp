@@ -135,5 +135,18 @@ namespace Utilities {
     return v;
   }
 
+  std::vector<std::string> ConvertStringToVector(std::string List) {
+    std::replace(List.begin(), List.end(), ',', ' ');
+    std::stringstream ss(List);
+    std::vector<std::string> ListOfElements;
+    for(std::string i; ss >> i;) {
+      ListOfElements.push_back(i);
+    }
+    return ListOfElements;
+  }
+
+  std::string ReplaceString(const std::string &String, const std::string &From, const std::string &To) {
+    return std::regex_replace(String, std::regex(From), To);
+  }
 
 }
