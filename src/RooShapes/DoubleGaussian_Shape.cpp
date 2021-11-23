@@ -8,7 +8,7 @@
 #include"Utilities.h"
 #include"Unique.h"
 
-DoubleGaussian_Shape::DoubleGaussian_Shape(const std::string &Name, const Settings &settings, RooRealVar *x): FitShape(Name + "_Signal", settings, x) {
+DoubleGaussian_Shape::DoubleGaussian_Shape(const std::string &Name, const Settings &settings, RooRealVar *x): FitShape(Name, settings, x) {
 }
 
 void DoubleGaussian_Shape::Initialize() {

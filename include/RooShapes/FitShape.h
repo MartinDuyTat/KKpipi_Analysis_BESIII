@@ -33,12 +33,18 @@ class FitShape {
     /**
      * Get a pointer to the yield variable
      */
-    RooRealVar* GetYield();
+    RooAbsReal* GetYield();
+    /**
+     * Use this function to change the yield parameterisation from an independent yield variable to a fixed ratio relative to another yield variable
+     * @param SignalYield Signal yield variable that we want to fix the yield to
+     * @param BackgroundToSignalYieldRatio The product of this and the signal yield gives us the yield of this component
+     */
+    void UseRelativeYield(RooRealVar *SignalYield, double BackgroundToSignalYieldRatio);
+  protected:
     /**
      * Settings for the PDF shape
      */
     Settings m_Settings;
-  protected:
     /**
      * Name of this component
      */
@@ -63,7 +69,7 @@ class FitShape {
     /**
      * RooRealVar containing the yield of this component
      */
-    RooRealVar *m_Yield = nullptr;
+    RooAbsReal *m_Yield = nullptr;
 };
 
 #endif

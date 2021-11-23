@@ -20,6 +20,7 @@
 #include"RooAddPdf.h"
 #include"RooDataSet.h"
 #include"Settings.h"
+#include"RooShapes/FitShape.h"
 
 class SingleTagYield {
   public:
@@ -91,6 +92,10 @@ class SingleTagYield {
      * List of all PDF yields
      */
     RooArgList m_ModelYields;
+    /**
+     * Vector containing all the peaking backgrounds
+     */
+    std::vector<FitShape*> m_PeakingBackgrounds;
     /**
      * The full fit model of \f$\Delta E\f$
      */

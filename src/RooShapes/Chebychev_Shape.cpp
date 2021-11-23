@@ -10,7 +10,7 @@
 #include"Utilities.h"
 #include"Unique.h"
 
-Chebychev_Shape::Chebychev_Shape(const std::string &Name, const Settings &settings, RooRealVar *x): FitShape(Name + "_Combinatorial", settings, x), m_Order(m_Settings.getI("PolynomialOrder")) {
+Chebychev_Shape::Chebychev_Shape(const std::string &Name, const Settings &settings, RooRealVar *x): FitShape(Name, settings, x), m_Order(m_Settings.getI("PolynomialOrder")) {
   if(m_Order <= 0) {
     throw std::invalid_argument("Polynomial order must be strictly positive");
   }

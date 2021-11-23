@@ -8,7 +8,7 @@
 #include"Utilities.h"
 #include"Unique.h"
 
-DoublePolynomial_Shape::DoublePolynomial_Shape(const std::string &Name, const Settings &settings, RooRealVar *x): FitShape(Name + "_Combinatorial", settings, x) {
+DoublePolynomial_Shape::DoublePolynomial_Shape(const std::string &Name, const Settings &settings, RooRealVar *x): FitShape(Name, settings, x) {
 }
 
 void DoublePolynomial_Shape::Initialize() {

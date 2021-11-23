@@ -3,9 +3,12 @@
 #include<string>
 #include"RooAbsPdf.h"
 #include"RooRealVar.h"
-#include"RooShapes/FitShape.h"
+#include"RooFormulaVar.h"
+#include"RooArgSet.h"
 #include"Settings.h"
 #include"Utilities.h"
+#include"Unique.h"
+#include"RooShapes/FitShape.h"
 
 FitShape::FitShape(const std::string &Name, const Settings &settings, RooRealVar *x):  m_Settings(settings), m_Name(Name), m_x(x) {
   m_Yield = Utilities::load_param(m_Settings, m_Name + "_yield");
@@ -21,9 +24,16 @@ RooAbsPdf* FitShape::GetPDF() {
   return m_PDF;
 }
 
-RooRealVar* FitShape::GetYield() {
+RooAbsReal* FitShape::GetYield() {
   if(!m_Yield) {
     Initialize();
   }
   return m_Yield;
+}
+
+void FitShape::UseRelativeYield(RooRealVar *SignalYield, double BackgroundToSignalYieldRatio) {
+  if(!m_Yield) {
+    delete m_Yield;
+  }
+  m_Yield = Unique::create<RooFormulaVar*>(m_Name + "_yield", Form("%f*@0", BackgroundToSignalYieldRatio), RooArgSet(*SignalYield));
 }

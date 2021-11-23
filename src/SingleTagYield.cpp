@@ -3,6 +3,7 @@
 #include<string>
 #include<utility>
 #include<fstream>
+#include<stdexcept>
 #include"TTree.h"
 #include"TCanvas.h"
 #include"TPad.h"
@@ -24,6 +25,8 @@
 #include"Settings.h"
 #include"Unique.h"
 #include"Utilities.h"
+#include"RooShapes/FitShape.h"
+#include"RooShapes/DoubleGaussian_Shape.h"
 
 SingleTagYield::SingleTagYield(TTree *DataTree, TTree *MCSignalTree, const Settings &settings):
                                m_DataTree(DataTree),
@@ -71,6 +74,23 @@ void SingleTagYield::InitializeArgus() {
 }
 
 void SingleTagYield::InitializePeakingBackgrounds() {
+  std::string Mode = m_Settings.get("Mode");
+  int PeakingBackgrounds = m_Settings["MBC_Shape"].getI(Mode + "_PeakingBackgrounds");
+  for(int i = 0; i < PeakingBackgrounds; i++) {
+    std::string Name = Mode + "_PeakingBackground" + std::to_string(i);
+    std::string PeakingShape = m_Settings["MBC_Shape"].get(Name + "_Shape");
+    FitShape *PeakingPDF = nullptr;
+    if(PeakingShape == "DoubleGaussian") {
+      PeakingPDF = new DoubleGaussian_Shape(Name, m_Settings["MBC_Shape"], &m_MBC);
+    } else {
+      throw std::invalid_argument("Unknown peaking background shape");
+    }
+    double BackgroundToSignalRatio = m_Settings["MBC_Shape"].getD(Name + "_BackgroundToSignalRatio");
+    PeakingPDF->UseRelativeYield(m_Parameters["Yield"], BackgroundToSignalRatio);
+    m_ModelPDFs.add(*PeakingPDF->GetPDF());
+    m_ModelYields.add(*PeakingPDF->GetYield());
+    m_PeakingBackgrounds.push_back(PeakingPDF);
+  }
 }
 
 void SingleTagYield::InitializeFitShape() {
@@ -109,6 +129,13 @@ void SingleTagYield::PlotSingleTagYield(const RooDataSet &Data) const {
   RooHist *Pull = Frame->pullHist();
   m_FullModel->plotOn(Frame, LineColor(kBlue), Components("Argus"), LineStyle(kDashed));
   m_FullModel->plotOn(Frame, LineColor(kRed), Components("SignalShapeConv"));
+  if(m_PeakingBackgrounds.size() > 0) {
+    std::string PeakingList = m_PeakingBackgrounds[0]->GetPDF()->GetName();
+    for(unsigned int i = 1; i < m_PeakingBackgrounds.size(); i++) {
+      PeakingList += std::string(",") + m_PeakingBackgrounds[i]->GetPDF()->GetName();
+    }
+    m_FullModel->plotOn(Frame, LineColor(kMagenta), Components(PeakingList.c_str()));
+  }
   Frame->Draw();
   Pad2.cd();
   RooPlot *PullFrame = m_MBC.frame();

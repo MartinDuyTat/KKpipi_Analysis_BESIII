@@ -30,14 +30,14 @@ RooAbsPdf* DeltaEFitModel::GetModel() const {
 }
 
 void DeltaEFitModel::InitializeSignal() {
-  std::string Name = m_Settings.get("Mode") + "_SingleTag";
+  std::string Name = m_Settings.get("Mode") + "_SingleTag_Signal";
   m_ModelComponents.push_back(new DoubleGaussian_Shape(Name, m_Settings["Signal"], m_x));
   m_ModelPDFs.add(*m_ModelComponents.back()->GetPDF());
   m_ModelYields.add(*m_ModelComponents.back()->GetYield());
 }
 
 void DeltaEFitModel::InitializeCombinatorial() {
-  std::string Name = m_Settings.get("Mode") + "_SingleTag";
+  std::string Name = m_Settings.get("Mode") + "_SingleTag_Combinatorial";
   std::string CombinatorialShape = m_Settings["Combinatorial"].get("CombinatorialShape");
   if(CombinatorialShape == "DoublePolynomial") {
     m_ModelComponents.push_back(new DoublePolynomial_Shape(Name, m_Settings["Combinatorial"], m_x));
