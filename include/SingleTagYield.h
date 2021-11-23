@@ -10,10 +10,16 @@
 
 #include<string>
 #include<vector>
+#include<utility>
+#include<map>
 #include"TTree.h"
 #include"RooRealVar.h"
 #include"RooGaussian.h"
 #include"RooExtendPdf.h"
+#include"RooFitResult.h"
+#include"RooAddPdf.h"
+#include"RooDataSet.h"
+#include"Settings.h"
 
 class SingleTagYield {
   public:
@@ -21,34 +27,45 @@ class SingleTagYield {
      * Constructor that takes in the TTree object with the data and a TTree with the MC signal shape
      * @param DataTree TTree with signal events
      * @param MCSignalTree TTree with MC signal shape for fitting the signal
-     * @param TreeName Name of the TTree
      */
-    SingleTagYield(TTree *DataTree, TTree *MCSignalTree);
+    SingleTagYield(TTree *DataTree, TTree *MCSignalTree, const Settings &settings);
     /**
      * Destructor that deletes all the PDFs and corresponding variables for peaking backgrounds that were allocated on the heap
      */
     ~SingleTagYield();
     /**
-     * Function that parses peaking background components from a file and places a fixed component for this in the fit
-     * Text file must have each peaking background on a separate line, in the format "Name Mean Sigma Yield"
-     * @param Filename Filename of text file with peaking background Gaussian components
+     * Initialize the signal shape
      */
-    void AddPeakingComponent(const std::string &Filename);
+    void InitializeSignalShape();
+    /**
+     * Initialize the combinatorial background shape
+     */
+    void InitializeArgus();
+    /**
+     * Initialize any peaking backgrounds
+     */
+    void InitializePeakingBackgrounds();
+    /**
+     * Initialize full mass shape
+     */
+    void InitializeFitShape();
     /**
      * Function that performs the fit of the single tag yield in RooFit
-     * @param TagMode Plot label tag mode (#pi#pi for pipi etc)
-     * @param Filename Filename to save plot to
      */
-    void FitYield(const std::string &TagMode, const std::string &Filename);
+    void FitYield();
+    /**
+     * Plot the single tag MBC fit
+     * @param Data The data to be plotted
+     */
+    void PlotSingleTagYield(const RooDataSet &Data) const;
     /**
      * Function that saves the fit parameters to a text file
-     * @param Filename Filename of text file
      */
-    void SaveFitParameters(const std::string &Filename) const;
+    void SaveFitParameters() const;
     /**
-     * Function that returns fitted yield, only call this after fit
+     * Calculate the single tag yield and the uncertainty inside the signal region
      */
-    double GetYield() const;
+    std::pair<double, double> CalculateSingleTagYield() const;
   private:
     /**
      * TTree with signal events
@@ -59,61 +76,37 @@ class SingleTagYield {
      */
     TTree *m_MCSignalTree;
     /**
-     * Beam constrained mass variable, independent parameter in fit
+     * Settings object with the fit configuration
+     */
+    Settings m_Settings;
+    /**
+     * Parameters in fit
+     */
+    std::map<std::string, RooRealVar*> m_Parameters;
+    /**
+     * List of all PDFs
+     */
+    RooArgList m_ModelPDFs;
+    /**
+     * List of all PDF yields
+     */
+    RooArgList m_ModelYields;
+    /**
+     * The full fit model of \f$\Delta E\f$
+     */
+    RooAddPdf* m_FullModel = nullptr;
+    /**
+     * The \f$m_{\rm BC}\f$ variable
      */
     RooRealVar m_MBC;
-    /**
-     * An Argus PDF shape parameter
-     */
-    RooRealVar m_c;
-    /**
-     * Endpoint of Argus PDF shape
-     */
-    RooRealVar m_End;
-    /**
-     * Mean of Gaussian modelling detector resolution
-     */
-    RooRealVar m_Mean;
-    /**
-     * Width of Gaussian modelling detector resolution
-     */
-    RooRealVar m_Sigma;
-    /**
-     * Signal yield
-     */
-    RooRealVar m_Nsig;
-    /**
-     * Background yield
-     */
-    RooRealVar m_Nbkg;
     /**
      * Weighting to account for luminosity scale
      */
     RooRealVar m_LuminosityWeight;
     /**
-     * Vector of names of peaking background
+     * The fit results
      */
-    std::vector<std::string> m_PeakingName;
-    /**
-     * Vector of RooRealVar objects for mean of peaking background Gaussians
-     */
-    std::vector<RooRealVar*> m_PeakingMean;
-    /**
-     * Vector of RooRealVar objects for width of peaking background Gaussians
-     */
-    std::vector<RooRealVar*> m_PeakingSigma;
-    /**
-     * Vector of RooRealVar objects for yield of peaking background Gaussians
-     */
-    std::vector<RooRealVar*> m_PeakingYield;
-    /**
-     * Vector of RooGaussian objects for PDF of peaking backgrounds
-     */
-    std::vector<RooGaussian*> m_PeakingPDF;
-    /**
-     * Vector of RooExtendPDF objects for PDF of peaking backgrounds
-     */
-    std::vector<RooExtendPdf*> m_PeakingExPDF;
+    RooFitResult *m_Result = nullptr;
 };
 
 #endif

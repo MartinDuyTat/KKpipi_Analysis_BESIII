@@ -1,12 +1,13 @@
 // Martin Duy Tat 4th April 2021
 
 #include<string>
+#include<utility>
 #include<fstream>
-#include<sstream>
 #include"TTree.h"
 #include"TCanvas.h"
 #include"TPad.h"
 #include"TAxis.h"
+#include"TLine.h"
 #include"RooRealVar.h"
 #include"RooDataSet.h"
 #include"RooArgList.h"
@@ -16,20 +17,20 @@
 #include"RooGaussian.h"
 #include"RooFFTConvPdf.h"
 #include"RooAddPdf.h"
-#include"RooExtendPdf.h"
+#include"RooFormulaVar.h"
 #include"RooPlot.h"
 #include"RooHist.h"
 #include"SingleTagYield.h"
+#include"Settings.h"
+#include"Unique.h"
+#include"Utilities.h"
 
-SingleTagYield::SingleTagYield(TTree *DataTree, TTree *MCSignalTree):
+SingleTagYield::SingleTagYield(TTree *DataTree, TTree *MCSignalTree, const Settings &settings):
                                m_DataTree(DataTree),
 			       m_MCSignalTree(MCSignalTree),
-			       m_MBC(RooRealVar("MBC", "MBC", 1.83, 1.8865)),
-			       m_c(RooRealVar("c", "c", -10, -100, 100)),
-			       m_End(RooRealVar("End", "End", 1.8865)),
-			       m_Mean(RooRealVar("Mean", "Mean", 0.0, -0.003, 0.003)),
-			       m_Sigma(RooRealVar("Sigma", "Sigma", 0.0004, 0.00001, 0.010)),
-                               m_LuminosityWeight("LuminosityWeight", "LuminosityWeight", 1.0, 0.0, 10.0) {
+			       m_Settings(settings),
+			       m_MBC("MBC", "", 1.83, 1.8865),
+                               m_LuminosityWeight("LuminosityWeight", "", 1.0, 0.0, 10.0) {
   m_DataTree->SetBranchStatus("*", 0);
   m_DataTree->SetBranchStatus("MBC", 1);
   m_DataTree->SetBranchStatus("LuminosityWeight", 1);
@@ -37,70 +38,57 @@ SingleTagYield::SingleTagYield(TTree *DataTree, TTree *MCSignalTree):
   m_MCSignalTree->SetBranchStatus("MBC", 1);
   m_MBC.setBins(10000, "cache");
   m_MBC.setRange("SignalRange", 1.86, 1.87);
-  // Count the number of weighted events
-  double N = 0;
-  double LuminosityWeight;
-  m_DataTree->SetBranchAddress("LuminosityWeight", &LuminosityWeight);
-  for(int i = 0; i < m_DataTree->GetEntries(); i++) {
-    m_DataTree->GetEntry(i);
-    N += LuminosityWeight;
-  }
-  m_Nsig = RooRealVar("Nsig", "Nsig", N/2, 0.0, N);
-  m_Nbkg = RooRealVar("Nbkg", "Nbkg", N/2, 0.0, N);
+  InitializeSignalShape();
+  InitializeArgus();
+  InitializePeakingBackgrounds();
+  InitializeFitShape();
 }
 
 SingleTagYield::~SingleTagYield() {
-  for(auto p : m_PeakingMean) {
-    delete p;
-  }
-  for(auto p : m_PeakingSigma) {
-    delete p;
-  }
-  for(auto p : m_PeakingYield) {
-    delete p;
-  }
-  for(auto p : m_PeakingPDF) {
-    delete p;
-  }
-  for(auto p : m_PeakingExPDF) {
-    delete p;
-  }
 }
 
-void SingleTagYield::AddPeakingComponent(const std::string &Filename) {
-  std::ifstream Infile(Filename);
-  std::string line;
-  while(std::getline(Infile, line)) {
-    std::stringstream ss(line);
-    std::string Name;
-    double Mean, Sigma, Yield;
-    ss >> Name >> Mean >> Sigma >> Yield;
-    m_PeakingName.push_back(Name);
-    m_PeakingMean.push_back(new RooRealVar((Name + "Mean").c_str(), (Name + "Mean").c_str(), Mean));
-    m_PeakingSigma.push_back(new RooRealVar((Name + "Sigma").c_str(), (Name + "Sigma").c_str(), Sigma));
-    m_PeakingYield.push_back(new RooRealVar((Name + "Yield").c_str(), (Name + "Yield").c_str(), Yield));
-    m_PeakingPDF.push_back(new RooGaussian(Name.c_str(), Name.c_str(), m_MBC, *m_PeakingMean.back(), *m_PeakingSigma.back()));
-    m_PeakingExPDF.push_back(new RooExtendPdf(("Ex" + Name).c_str(), ("Ex" + Name).c_str(), *m_PeakingPDF.back(), *m_PeakingYield.back()));
-  }
-  Infile.close();
+void SingleTagYield::InitializeSignalShape() {
+  m_Parameters.insert({"Mean", Unique::create<RooRealVar*>("Mean", "", 0.0, -0.003, 0.003)});
+  m_Parameters.insert({"Sigma", Unique::create<RooRealVar*>("Sigma", "", 0.0004, 0.0001, 0.010)});
+  auto Resolution = Unique::create<RooGaussian*>("Resolution", "", m_MBC, *m_Parameters["Mean"], *m_Parameters["Sigma"]);
+  RooDataSet MCSignal("MCSignal", "", m_MCSignalTree, RooArgList(m_MBC));
+  auto SignalShape = Unique::create<RooKeysPdf*>("SignalShape", "", m_MBC, MCSignal);
+  auto SignalShapeConv = Unique::create<RooFFTConvPdf*>("SignalShapeConv", "", m_MBC, *SignalShape, *Resolution);
+  m_ModelPDFs.add(*SignalShapeConv);
+  auto SingleTag_Yield = Utilities::load_param(m_Settings["MBC_Shape"], m_Settings.get("Mode") + "_SingleTag_Yield");
+  m_ModelYields.add(*SingleTag_Yield);
+  m_Parameters.insert({"Yield", SingleTag_Yield});
 }
 
-void SingleTagYield::FitYield(const std::string &TagMode, const std::string &Filename) {
+void SingleTagYield::InitializeArgus() {
+  m_Parameters.insert({"End", Unique::create<RooRealVar*>("End", "", 1.8865)});
+  m_Parameters.insert({"c", Unique::create<RooRealVar*>("c", "", -10.0, -100.0, 100.0)});
+  auto Argus = Unique::create<RooArgusBG*>("Argus", "", m_MBC, *m_Parameters["End"], *m_Parameters["c"]);
+  m_ModelPDFs.add(*Argus);
+  auto SingleTag_BackgroundYield = Utilities::load_param(m_Settings["MBC_Shape"], m_Settings.get("Mode") + "_SingleTag_CombinatorialYield");
+  m_ModelYields.add(*SingleTag_BackgroundYield);
+  m_Parameters.insert({"CombinatorialYield", SingleTag_BackgroundYield});
+}
+
+void SingleTagYield::InitializePeakingBackgrounds() {
+}
+
+void SingleTagYield::InitializeFitShape() {
+  m_FullModel = Unique::create<RooAddPdf*>("MBC_Model", "", m_ModelPDFs, m_ModelYields);
+} 
+
+void SingleTagYield::FitYield() {
   using namespace RooFit;
-  RooDataSet MCSignal("MCSignal", "MCSignal", m_MCSignalTree, RooArgList(m_MBC));
-  RooKeysPdf SignalShape("SignalShape", "SignalShape", m_MBC, MCSignal);
-  RooGaussian Resolution("Resolution", "Resolution", m_MBC, m_Mean, m_Sigma);
-  RooFFTConvPdf SignalShapeConv("SignalShapeConv", "SignalShapeConv", m_MBC, SignalShape, Resolution);
-  RooArgusBG Argus("Argus", "Argus", m_MBC, m_End, m_c);
-  RooExtendPdf ExSignalShapeConv("ExSignalShapeConv", "ExSignalShapeConv", SignalShapeConv, m_Nsig, "SignalRange");
-  RooExtendPdf ExArgus("ExArgus", "ExArgus", Argus, m_Nbkg);
-  RooArgList PDFList(ExSignalShapeConv, ExArgus);
-  for(unsigned int i = 0; i < m_PeakingPDF.size(); i++) {
-    PDFList.add(*m_PeakingExPDF[i]);
-  }
-  RooAddPdf Model("Model", "Model", PDFList);
   RooDataSet Data("Data", "Data", m_DataTree, RooArgList(m_MBC, m_LuminosityWeight), "", "LuminosityWeight");
-  Model.fitTo(Data, PrintEvalErrors(-1));
+  if(m_Settings.getB("DoFit")) {
+    m_Result = m_FullModel->fitTo(Data, PrintEvalErrors(-1), NumCPU(4), Save());
+  }
+  PlotSingleTagYield(Data);
+  SaveFitParameters();
+}
+
+void SingleTagYield::PlotSingleTagYield(const RooDataSet &Data) const {
+  using namespace RooFit;
   TCanvas c1("c1", "c1", 1600, 1200);
   TPad Pad1("Pad1", "Pad1", 0.0, 0.25, 1.0, 1.0);
   TPad Pad2("Pad2", "Pad2", 0.0, 0.0, 1.0, 0.25);
@@ -114,21 +102,19 @@ void SingleTagYield::FitYield(const std::string &TagMode, const std::string &Fil
   Pad2.SetTopMargin(0.05);
   Pad1.cd();
   RooPlot *Frame = m_MBC.frame();
+  std::string TagMode = m_Settings.get("Mode");
   Frame->SetTitle((TagMode + std::string(" Single Tag M_{BC}; M_{BC} (GeV); Events")).c_str());
   Data.plotOn(Frame, Binning(100));
-  Model.plotOn(Frame, LineColor(kBlue));
+  m_FullModel->plotOn(Frame, LineColor(kBlue));
   RooHist *Pull = Frame->pullHist();
-  Model.plotOn(Frame, LineColor(kBlue), Components(Argus), LineStyle(kDashed));
-  Model.plotOn(Frame, LineColor(kRed), Components(SignalShapeConv));
-  RooArgSet PeakingComponents;
-  for(auto PeakingPDF : m_PeakingPDF) {
-    PeakingComponents.add(*PeakingPDF);
-  }
-  Model.plotOn(Frame, LineColor(kGreen), Components(PeakingComponents));
+  m_FullModel->plotOn(Frame, LineColor(kBlue), Components("Argus"), LineStyle(kDashed));
+  m_FullModel->plotOn(Frame, LineColor(kRed), Components("SignalShapeConv"));
   Frame->Draw();
   Pad2.cd();
   RooPlot *PullFrame = m_MBC.frame();
   PullFrame->addObject(Pull);
+  TLine *Line = new TLine(1.83, 0.0, 1.8865, 0.0);
+  PullFrame->addObject(Line);
   PullFrame->SetMinimum(-5);
   PullFrame->SetMaximum(5);
   PullFrame->SetTitle(";;");
@@ -138,19 +124,30 @@ void SingleTagYield::FitYield(const std::string &TagMode, const std::string &Fil
   PullFrame->GetYaxis()->SetLabelSize(0.1);
   PullFrame->Draw();
   c1.cd();
-  c1.SaveAs(Filename.c_str());
+  std::string PlotFilename = m_Settings.get("MBCPlotFilename");
+  c1.SaveAs(PlotFilename.c_str());
 }
 
-void SingleTagYield::SaveFitParameters(const std::string &Filename) const {
-  std::ofstream OutputFile(Filename);
-  OutputFile << "Nsig " << m_Nsig.getValV() << " " << m_Nsig.getError() << "\n";
-  OutputFile << "Nbkg " << m_Nbkg.getValV() << " " << m_Nbkg.getError() << "\n";
-  OutputFile << "Sigma " << m_Sigma.getValV() << " " << m_Sigma.getError() << "\n";
-  OutputFile << "Mean " << m_Mean.getValV() << " " << m_Mean.getError() << "\n";
-  OutputFile << "c " << m_c.getValV() << " " << m_c.getError() << "\n";
+void SingleTagYield::SaveFitParameters() const {
+  m_Result->Print("V");
+  std::string Mode = m_Settings.get("Mode");
+  std::ofstream OutputFile(m_Settings.get("ResultsFilename"));
+  OutputFile << "status " << m_Result->status() << "\n";
+  OutputFile << "covQual " << m_Result->covQual() << "\n";
+  for(const auto Param : m_Parameters) {
+    OutputFile << Mode + "_" + Param.first << " " << Param.second->getVal() << "\n";
+    OutputFile << Mode + "_" + Param.first << "_err " << Param.second->getError() << "\n";
+  }
+  auto Yield = CalculateSingleTagYield();
+  OutputFile << Mode + "_SingleTag_Yield " << Yield.first << "\n";
+  OutputFile << Mode + "_SingleTag_Yield_err " << Yield.second << "\n";
   OutputFile.close();
 }
 
-double SingleTagYield::GetYield() const {
-  return m_Nsig.getVal();
+std::pair<double, double> SingleTagYield::CalculateSingleTagYield() const {
+  using namespace RooFit;
+  RooAbsReal *FractionSignalRange = static_cast<RooAbsReal*>(m_ModelPDFs.find("SignalShapeConv"))->createIntegral(m_MBC, NormSet(m_MBC), Range("SignalRange"));
+  std::cout << FractionSignalRange->getVal() << " " << m_Parameters.at("Yield")->getVal() << "\n";
+  RooFormulaVar SignalRangeYield("SignalRangeYield", "@0*@1", RooArgList(*FractionSignalRange, *m_Parameters.at("Yield")));
+  return std::pair<double, double>{SignalRangeYield.getVal(), SignalRangeYield.getPropagatedError(*m_Result)};
 }
