@@ -25,21 +25,29 @@ int main(int argc, char *argv[]) {
   std::string Mode = settings.get("Mode");
   std::string TagType = settings.get("TagType");
   bool IncludeDeltaECuts = settings.getB("Include_DeltaE_Cuts");
-  bool TruthMatch = settings.getB("TruthMatch");
+  std::string TruthMatchMode("");
+  if(settings.getB("TruthMatch")) {
+    TruthMatchMode = Mode;
+  }
   std::string TreeName = settings.get("TreeName");
   std::vector<std::string> Datasets = Utilities::ConvertStringToVector(settings.get("Datasets_to_include"));
   std::cout << "Sample prepration of " << TagType << " " << Mode << " mode\n";
   for(const auto &Dataset : Datasets) {
     int DataSetType = settings["DataTypes"].getI(Dataset);
     std::cout << "Processing " << Dataset << " sample, dataset type " << DataSetType << "\n";
-    std::string InputFilename = settings["Datasets"].get(Dataset);
+    std::string InputFilename;
+    if(DataSetType != 10) {
+      InputFilename = settings["Datasets"].get(Dataset);
+    } else {
+      InputFilename = settings["Datasets"].get(Dataset + "_" + settings.get("SignalMCMode"));
+    }
     std::vector<std::string> Years = InputFilename.find("YEAR") == std::string::npos ? std::vector<std::string>{""} : std::vector<std::string>{"2010", "2011"};
     for(const auto &Year : Years) {
       double LuminosityScale = settings["LuminosityScale"].getD(Dataset + Year);
       std::cout << "Luminosity scale is " << LuminosityScale << "\n";
       std::string OutputFilename = settings.get("OutputFilenamePrefix") + "_" + Dataset + Year + ".root";
       std::string DataMC = DataSetType == 0 ? "Data" : "MC";
-      TCut Cuts = Utilities::LoadCuts(Mode, IncludeDeltaECuts, TruthMatch, TagType, DataMC);
+      TCut Cuts = Utilities::LoadCuts(Mode, TagType, IncludeDeltaECuts, DataMC, TruthMatchMode);
       // This cut removes empty NTuples
       Cuts = Cuts && TCut("!(Run == 0 && Event == 0)");
       std::cout << "Cuts ready, will apply the following cuts:\n" << Cuts.GetTitle() << "\n";

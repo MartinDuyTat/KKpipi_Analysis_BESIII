@@ -45,15 +45,15 @@ namespace Utilities {
     return;
   }
 
-  TCut LoadCuts(const std::string &TagMode, bool IncludeDeltaECuts, bool TruthMatch, const std::string &TagType, const std::string &DataMC) {
+  TCut LoadCuts(const std::string &TagMode, const std::string &TagType, bool IncludeDeltaECuts, const std::string &DataMC, const std::string &TruthMatchMode) {
     InitialCuts initialCuts(TagMode, TagType);
     TCut Cuts = initialCuts.GetInitialCuts();
     if(IncludeDeltaECuts) {
       DeltaECut deltaECut(TagMode, TagType, DataMC);
       Cuts = Cuts && deltaECut.GetDeltaECut();
     }
-    if(TruthMatch) {
-      TruthMatchingCuts truthMatchingCuts(TagMode, TagType);
+    if(TruthMatchMode != "") {
+      TruthMatchingCuts truthMatchingCuts(TruthMatchMode, TagType);
       Cuts = Cuts && truthMatchingCuts.GetTruthMatchingCuts();
     }
     return Cuts;

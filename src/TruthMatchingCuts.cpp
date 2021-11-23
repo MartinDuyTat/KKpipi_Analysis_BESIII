@@ -11,11 +11,11 @@ TruthMatchingCuts::TruthMatchingCuts(const std::string &TagMode, const std::stri
 TCut TruthMatchingCuts::GetModeSpecificCuts() const {
   if(m_TagType == "ST") {
     CutsFromFile cutsFromFile(std::string(TRUTH_MATCHING_CUTS_DIR) + m_TagMode + ".cut", "");
-    return TCut("IsSameDMotherAll == 1") && cutsFromFile.GetCuts();
+    return cutsFromFile.GetCuts();
   } else if (m_TagType == "DT") {
     CutsFromFile cutsFromFileSignal(std::string(TRUTH_MATCHING_CUTS_DIR) + "KKpipi" + ".cut", "Signal");
     CutsFromFile cutsFromFileTag(std::string(TRUTH_MATCHING_CUTS_DIR) + m_TagMode + ".cut", "Tag");
-    return TCut("TagIsSameDMotherAll == 1") && cutsFromFileSignal.GetCuts() && cutsFromFileTag.GetCuts();
+    return cutsFromFileSignal.GetCuts() && cutsFromFileTag.GetCuts();
   } else {
     return TCut();
   }

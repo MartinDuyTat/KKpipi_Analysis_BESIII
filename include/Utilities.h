@@ -35,10 +35,10 @@ namespace Utilities {
    * @param TagMode "KKpipi", "Kpi", etc
    * @param TagType "ST" for single tag and "DT" for double tag
    * @param IncludeDeltaECuts Set to true to apply \f$Delta E\f$ cuts
-   * @param TruthMatch Set to true to truth match all candidates
    * @param DataMC "Data" or "MC"
+   * @param TruthMatchMode The true tag mode that we want to truth match, input empty string for no truth matching
    */
-  TCut LoadCuts(const std::string &TagMode, bool IncludeDeltaECuts, bool TruthMathc, const std::string &TagType, const std::string &DataMC);
+  TCut LoadCuts(const std::string &TagMode, const std::string &TagType, bool IncludeDeltaECuts, const std::string &DataMC, const std::string &TruthMatchMode = "");
   /**
    * Parse arguments and set up a Settings object
    * Copied from GGSZ code repository
