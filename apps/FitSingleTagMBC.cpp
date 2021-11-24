@@ -28,11 +28,16 @@ int main(int argc, char *argv[]) {
   MCFile.GetObject(TreeName.c_str(), MCTree);
   std::cout << "Trees ready\n";
   std::cout << "Setting up fit model...\n";
-  SingleTagYield singleTagYield(&Chain, MCTree, settings);
+  TTree *ClonedMCTree = nullptr;
+  if(settings.getI("Events_in_MC") < 0) {
+    ClonedMCTree = MCTree;
+  } else {
+    ClonedMCTree = MCTree->CloneTree(settings.getI("Events_in_MC"));
+  }
+  SingleTagYield singleTagYield(&Chain, ClonedMCTree, settings);
   std::cout << "Ready to fit\n";
   std::cout << "Fitting single tag yield of " << Mode << "...\n";
   singleTagYield.FitYield();
-  //singleTagYield.SaveFitParameters();
   std::cout << "Fit completed" << "\n";
   return 0;
 }

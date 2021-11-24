@@ -4,6 +4,7 @@
 #include<utility>
 #include<fstream>
 #include<stdexcept>
+#include<numeric>
 #include"TTree.h"
 #include"TCanvas.h"
 #include"TPad.h"
@@ -41,8 +42,7 @@ SingleTagYield::SingleTagYield(TTree *DataTree, TTree *MCSignalTree, const Setti
   m_DataTree->SetBranchStatus("LuminosityWeight", 1);
   m_MCSignalTree->SetBranchStatus("*", 0);
   m_MCSignalTree->SetBranchStatus("MBC", 1);
-  m_MBC.setBins(10000, "cache");
-  m_MBC.setBins(m_Settings.getI("Bins_in_fit"));
+  m_MBC.setBins(MCSignalTree->GetEntries()/10, "cache");
   m_MBC.setRange("SignalRange", 1.86, 1.87);
   InitializeSignalShape();
   InitializeArgus();
@@ -54,10 +54,16 @@ SingleTagYield::~SingleTagYield() {
 }
 
 void SingleTagYield::InitializeSignalShape() {
-  m_Parameters.insert({"Mean", Unique::create<RooRealVar*>("Mean", "", 0.0, -0.003, 0.003)});
-  auto Sigma = Utilities::load_param(m_Settings["MBC_Shape"], m_Settings.get("Mode") + "_SingleTag_Sigma");
-  m_Parameters.insert({"Sigma", Sigma});
-  auto Resolution = Unique::create<RooGaussian*>("Resolution", "", m_MBC, *m_Parameters["Mean"], *m_Parameters["Sigma"]);
+  m_Parameters.insert({"frac", Unique::create<RooRealVar*>("frac", "", 0.5, 0.0, 1.0)});
+  m_Parameters.insert({"Mean1", Unique::create<RooRealVar*>("Mean1", "", 0.0, -0.001, 0.001)});
+  m_Parameters.insert({"Mean2", Unique::create<RooRealVar*>("Mean2", "", 0.0, -0.001, 0.001)});
+  auto Sigma1 = Utilities::load_param(m_Settings["MBC_Shape"], m_Settings.get("Mode") + "_SingleTag_Sigma1");
+  auto Sigma2 = Utilities::load_param(m_Settings["MBC_Shape"], m_Settings.get("Mode") + "_SingleTag_Sigma2");
+  m_Parameters.insert({"Sigma1", Sigma1});
+  m_Parameters.insert({"Sigma2", Sigma2});
+  auto Gaussian1 = Unique::create<RooGaussian*>("Gaussian1", "", m_MBC, *m_Parameters["Mean1"], *m_Parameters["Sigma1"]);
+  auto Gaussian2 = Unique::create<RooGaussian*>("Gaussian2", "", m_MBC, *m_Parameters["Mean2"], *m_Parameters["Sigma2"]);
+  auto Resolution = Unique::create<RooAddPdf*>("Resolution", "", RooArgList(*Gaussian1, *Gaussian2), *m_Parameters["frac"]);
   RooDataSet MCSignal("MCSignal", "", m_MCSignalTree, RooArgList(m_MBC));
   auto SignalShape = Unique::create<RooKeysPdf*>("SignalShape", "", m_MBC, MCSignal);
   auto SignalShapeConv = Unique::create<RooFFTConvPdf*>("SignalShapeConv", "", m_MBC, *SignalShape, *Resolution);
@@ -104,7 +110,7 @@ void SingleTagYield::InitializeFitShape() {
 
 void SingleTagYield::FitYield() {
   using namespace RooFit;
-  TH1D h1("h1", "h1", 1000, 0.08, 0.08);
+  TH1D h1("h1", "h1", m_Settings.getI("Bins_in_fit"), 1.83, 1.8865);
   m_DataTree->Draw("MBC >> h1", "LuminosityWeight", "goff");
   RooDataHist BinnedData("BinnedData", "BinnedData", RooArgList(m_MBC), &h1);
   RooDataSet Data("Data", "Data", m_DataTree, RooArgList(m_MBC, m_LuminosityWeight), "", "LuminosityWeight");
@@ -135,11 +141,12 @@ void SingleTagYield::PlotSingleTagYield(const RooDataSet &Data) const {
   RooPlot *Frame = m_MBC.frame();
   std::string TagMode = m_Settings.get("Mode");
   Frame->SetTitle((TagMode + std::string(" Single Tag M_{BC}; M_{BC} (GeV); Events")).c_str());
-  Data.plotOn(Frame, Binning(100));
-  m_FullModel->plotOn(Frame, LineColor(kBlue));
+  Data.plotOn(Frame, Binning(200));
+  double TotalEvents = std::accumulate(m_ModelYields.begin(), m_ModelYields.end(), 0.0, [] (double a, const auto &b) { return a + static_cast<RooRealVar*>(b)->getVal(); });
+  m_FullModel->plotOn(Frame, LineColor(kBlue), Normalization(TotalEvents, RooAbsReal::NumEvent));
   RooHist *Pull = Frame->pullHist();
-  m_FullModel->plotOn(Frame, LineColor(kBlue), Components("Argus"), LineStyle(kDashed));
-  m_FullModel->plotOn(Frame, LineColor(kRed), Components("SignalShapeConv"));
+  m_FullModel->plotOn(Frame, LineColor(kBlue), Components("Argus"), LineStyle(kDashed), Normalization(TotalEvents, RooAbsReal::NumEvent));
+  m_FullModel->plotOn(Frame, LineColor(kRed), Components("SignalShapeConv"), Normalization(TotalEvents, RooAbsReal::NumEvent));
   if(m_PeakingBackgrounds.size() > 0) {
     std::string PeakingList = m_PeakingBackgrounds[0]->GetPDF()->GetName();
     for(unsigned int i = 1; i < m_PeakingBackgrounds.size(); i++) {
@@ -184,8 +191,6 @@ void SingleTagYield::SaveFitParameters() const {
 
 std::pair<double, double> SingleTagYield::CalculateSingleTagYield() const {
   using namespace RooFit;
-  RooAbsReal *FractionSignalRange = static_cast<RooAbsReal*>(m_ModelPDFs.find("SignalShapeConv"))->createIntegral(m_MBC, NormSet(m_MBC), Range("SignalRange"));
-  std::cout << FractionSignalRange->getVal() << " " << m_Parameters.at("Yield")->getVal() << "\n";
-  RooFormulaVar SignalRangeYield("SignalRangeYield", "@0*@1", RooArgList(*FractionSignalRange, *m_Parameters.at("Yield")));
-  return std::pair<double, double>{SignalRangeYield.getVal(), SignalRangeYield.getPropagatedError(*m_Result)};
+  double Fraction = static_cast<RooAbsPdf*>(m_ModelPDFs.find("SignalShapeConv"))->createIntegral(m_MBC, NormSet(m_MBC), Range("SignalRange"))->getVal();
+  return std::pair<double, double>{m_Parameters.at("Yield")->getVal()*Fraction, m_Parameters.at("Yield")->getPropagatedError(*m_Result)*Fraction};
 }
