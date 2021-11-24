@@ -27,9 +27,6 @@ DeltaEFit::DeltaEFit(TTree *Tree, const Settings &settings):
                      m_LuminosityWeight("LuminosityWeight", "LuminosityWeight", 1.0, 0.0, 10.0) {
   m_Tree->SetBranchStatus("*", 0);
   m_Tree->SetBranchStatus("DeltaE" , 1);
-  m_Tree->SetBranchStatus("DataSetType", 1);
-  m_Tree->SetBranchStatus("IsSameDMother", 1);
-  m_Tree->SetBranchStatus("PIDTrue", 1);
   m_Tree->SetBranchStatus("LuminosityWeight", 1);
 }
 

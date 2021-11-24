@@ -1,2 +1,11 @@
 KKpipi_DeltaE_LowerCut -0.0234958
 KKpipi_DeltaE_UpperCut 0.0219857
+
+Kpi_DeltaE_LowerCut -0.0213223
+Kpi_DeltaE_UpperCut 0.0210513
+
+Kpipi0_DeltaE_LowerCut -0.0467171
+Kpipi0_DeltaE_UpperCut 0.0281756
+
+Kpipipi_DeltaE_LowerCut -0.0150859
+Kpipipi_DeltaE_UpperCut 0.013809

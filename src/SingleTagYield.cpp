@@ -9,8 +9,10 @@
 #include"TPad.h"
 #include"TAxis.h"
 #include"TLine.h"
+#include"TH1D.h"
 #include"RooRealVar.h"
 #include"RooDataSet.h"
+#include"RooDataHist.h"
 #include"RooArgList.h"
 #include"RooArgSet.h"
 #include"RooKeysPdf.h"
@@ -40,6 +42,7 @@ SingleTagYield::SingleTagYield(TTree *DataTree, TTree *MCSignalTree, const Setti
   m_MCSignalTree->SetBranchStatus("*", 0);
   m_MCSignalTree->SetBranchStatus("MBC", 1);
   m_MBC.setBins(10000, "cache");
+  m_MBC.setBins(m_Settings.getI("Bins_in_fit"));
   m_MBC.setRange("SignalRange", 1.86, 1.87);
   InitializeSignalShape();
   InitializeArgus();
@@ -52,7 +55,8 @@ SingleTagYield::~SingleTagYield() {
 
 void SingleTagYield::InitializeSignalShape() {
   m_Parameters.insert({"Mean", Unique::create<RooRealVar*>("Mean", "", 0.0, -0.003, 0.003)});
-  m_Parameters.insert({"Sigma", Unique::create<RooRealVar*>("Sigma", "", 0.0004, 0.0001, 0.010)});
+  auto Sigma = Utilities::load_param(m_Settings["MBC_Shape"], m_Settings.get("Mode") + "_SingleTag_Sigma");
+  m_Parameters.insert({"Sigma", Sigma});
   auto Resolution = Unique::create<RooGaussian*>("Resolution", "", m_MBC, *m_Parameters["Mean"], *m_Parameters["Sigma"]);
   RooDataSet MCSignal("MCSignal", "", m_MCSignalTree, RooArgList(m_MBC));
   auto SignalShape = Unique::create<RooKeysPdf*>("SignalShape", "", m_MBC, MCSignal);
@@ -65,7 +69,8 @@ void SingleTagYield::InitializeSignalShape() {
 
 void SingleTagYield::InitializeArgus() {
   m_Parameters.insert({"End", Unique::create<RooRealVar*>("End", "", 1.8865)});
-  m_Parameters.insert({"c", Unique::create<RooRealVar*>("c", "", -10.0, -100.0, 100.0)});
+  auto c = Utilities::load_param(m_Settings["MBC_Shape"], m_Settings.get("Mode") + "_SingleTag_c");
+  m_Parameters.insert({"c", c});
   auto Argus = Unique::create<RooArgusBG*>("Argus", "", m_MBC, *m_Parameters["End"], *m_Parameters["c"]);
   m_ModelPDFs.add(*Argus);
   auto SingleTag_BackgroundYield = Utilities::load_param(m_Settings["MBC_Shape"], m_Settings.get("Mode") + "_SingleTag_CombinatorialYield");
@@ -99,12 +104,18 @@ void SingleTagYield::InitializeFitShape() {
 
 void SingleTagYield::FitYield() {
   using namespace RooFit;
+  TH1D h1("h1", "h1", 1000, 0.08, 0.08);
+  m_DataTree->Draw("MBC >> h1", "LuminosityWeight", "goff");
+  RooDataHist BinnedData("BinnedData", "BinnedData", RooArgList(m_MBC), &h1);
   RooDataSet Data("Data", "Data", m_DataTree, RooArgList(m_MBC, m_LuminosityWeight), "", "LuminosityWeight");
-  if(m_Settings.getB("DoFit")) {
-    m_Result = m_FullModel->fitTo(Data, PrintEvalErrors(-1), NumCPU(4), Save());
+  if(m_Settings.get("FitType") != "NoFit") {
+    m_Result = m_FullModel->fitTo(BinnedData, Save(), Strategy(2));
+    if(m_Settings.get("FitType") == "UnbinnedFit") {
+      m_Result = m_FullModel->fitTo(Data, Save(), Strategy(2), NumCPU(4));
+    }
+    SaveFitParameters();
   }
   PlotSingleTagYield(Data);
-  SaveFitParameters();
 }
 
 void SingleTagYield::PlotSingleTagYield(const RooDataSet &Data) const {
