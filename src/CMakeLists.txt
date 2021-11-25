@@ -1,5 +1,6 @@
 add_library(KKpipiStrongPhase
 	    ApplyCuts.cpp
+	    Category.cpp
 	    CutsFromFile.cpp
 	    DeltaECut.cpp
 	    DeltaEFit.cpp
