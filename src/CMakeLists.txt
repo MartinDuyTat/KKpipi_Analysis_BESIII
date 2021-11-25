@@ -1,5 +1,7 @@
 add_library(KKpipiStrongPhase
 	    ApplyCuts.cpp
+	    BinnedDataLoader.cpp
+	    BinnedFitModel.cpp
 	    Category.cpp
 	    CutsFromFile.cpp
 	    DeltaECut.cpp

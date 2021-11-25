@@ -32,6 +32,10 @@ class Category {
      */
     std::vector<std::string> GetCategories() const;
     /**
+     * Get the category variable
+     */
+    RooCategory GetCategoryVariable() const;
+    /**
      * Get the bin number from the unique string that describes the category
      */
     //int GetSignalBinNumber(const std::string &category) const;
