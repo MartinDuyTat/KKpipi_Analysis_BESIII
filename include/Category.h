@@ -7,6 +7,8 @@
 #define CATEGORY
 
 #include<string>
+#include<vector>
+#include"RooCategory.h"
 #include"Settings.h"
 
 class Category {
@@ -25,6 +27,10 @@ class Category {
      * Same as GetCateory()
      */
     std::string operator ()(int SignalBin, int TagBin = 0) const;
+    /**
+     * Get a vector of all the categories
+     */
+    std::vector<std::string> GetCategories() const;
     /**
      * Get the bin number from the unique string that describes the category
      */
@@ -61,6 +67,10 @@ class Category {
      * Number of bins on the tag side
      */
     int m_TagBins;
+    /**
+     * Category variable used in the fit
+     */
+    RooCategory m_CategoryVar;
 };
 
 #endif
