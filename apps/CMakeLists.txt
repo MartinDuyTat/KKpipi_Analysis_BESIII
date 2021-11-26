@@ -3,8 +3,8 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 add_executable(AnalyzeTopoAna AnalyzeTopoAna.cpp)
 add_executable(BinDoubleTags BinDoubleTags.cpp)
-add_executable(DetermineDoubleTagYields DetermineDoubleTagYields.cpp)
 add_executable(FitDeltaE FitDeltaE.cpp)
+add_executable(FitDoubleTagMBC FitDoubleTagMBC.cpp)
 add_executable(FitSingleTagPeaking FitSingleTagPeaking.cpp)
 add_executable(FitSingleTagMBC FitSingleTagMBC.cpp)
 add_executable(MakeDeltaECuts MakeDeltaECuts.cpp)
@@ -18,13 +18,13 @@ target_link_libraries(BinDoubleTags PUBLIC KKpipiStrongPhase)
 target_link_libraries(BinDoubleTags PUBLIC ${KKPIPI_BINNED_FIT_LIB} -ldl)
 target_link_libraries(BinDoubleTags PUBLIC ROOT::Physics ROOT::RIO ROOT::Tree)
 
-target_link_libraries(DetermineDoubleTagYields PUBLIC KKpipiStrongPhase)
-target_link_libraries(DetermineDoubleTagYields PUBLIC ${KKPIPI_BINNED_FIT_LIB} -ldl)
-target_link_libraries(DetermineDoubleTagYields PUBLIC ROOT::Physics ROOT::RIO ROOT::Tree)
-
 target_link_libraries(FitDeltaE PUBLIC KKpipiStrongPhase)
 target_link_libraries(FitDeltaE PUBLIC ${KKPIPI_BINNED_FIT_LIB} -ldl)
 target_link_libraries(FitDeltaE PUBLIC ROOT::Physics ROOT::RIO ROOT::Tree)
+
+target_link_libraries(FitDoubleTagMBC PUBLIC KKpipiStrongPhase)
+target_link_libraries(FitDoubleTagMBC PUBLIC ${KKPIPI_BINNED_FIT_LIB} -ldl)
+target_link_libraries(FitDoubleTagMBC PUBLIC ROOT::Physics ROOT::RIO ROOT::Tree)
 
 target_link_libraries(FitSingleTagPeaking PUBLIC KKpipiStrongPhase)
 target_link_libraries(FitSingleTagPeaking PUBLIC ${KKPIPI_BINNED_FIT_LIB} -ldl)
@@ -43,4 +43,4 @@ target_link_libraries(PrepareTagTree PUBLIC KKpipiStrongPhase)
 target_link_libraries(PrepareTagTree PUBLIC ${KKPIPI_BINNED_FIT_LIB} -ldl)
 target_link_libraries(PrepareTagTree PUBLIC ROOT::Physics ROOT::RIO ROOT::Tree)
 
-install(TARGETS AnalyzeTopoAna BinDoubleTags DetermineDoubleTagYields FitDeltaE FitSingleTagPeaking FitSingleTagMBC MakeDeltaECuts PredictDoubleTaggedYields PrepareTagTree DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/../bin)
+install(TARGETS AnalyzeTopoAna BinDoubleTags FitDeltaE FitDoubleTagMBC FitSingleTagPeaking FitSingleTagMBC MakeDeltaECuts PredictDoubleTaggedYields PrepareTagTree DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/../bin)

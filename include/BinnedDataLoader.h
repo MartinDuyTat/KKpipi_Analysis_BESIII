@@ -22,9 +22,17 @@ class BinnedDataLoader {
      */
     BinnedDataLoader(const Settings &settings, TTree *Tree, RooRealVar *SignalMBC);
     /**
+     * Destructor that deletes dataset
+     */
+    ~BinnedDataLoader();
+    /**
      * Get the binned dataset
      */
     RooDataSet* GetDataSet();
+    /**
+     * Get the category object
+     */
+    Category* GetCategoryObject();
   private:
     /**
      * Create the RooDataSet with the correct category variable
@@ -45,7 +53,7 @@ class BinnedDataLoader {
     /**
      * Dataset that we want to fit
      */
-    RooDataSet m_DataSet;
+    RooDataSet *m_DataSet;
     /**
      * The object keeping track of all the categories
      */

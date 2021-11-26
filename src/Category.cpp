@@ -8,8 +8,6 @@
 #include"Category.h"
 #include"Settings.h"
 
-#include<iostream> //remove
-
 Category::Category(const Settings &settings): m_TagMode(settings.get("Mode")),
 					      m_SignalBins(4),
 					      m_CategoryVar(("DoubleTag_" + m_TagMode + "_Categories").c_str(), "") {
@@ -70,12 +68,12 @@ std::string Category::operator ()(int SignalBin, int TagBin) const {
 
 std::vector<std::string> Category::GetCategories() const {
   std::vector<std::string> CategoryStrings;
-  std::vector<int> SignalBins(8), TagBins(m_TagBins);
+  std::vector<int> SignalBins(m_SignalBins), TagBins(m_TagBins);
   // We need at least 8 bins on the signal KKpipi side
   std::iota(SignalBins.begin(), SignalBins.end(), 1);
   // If tag mode is not KKpipi, we also need the conjugate bins
   if(m_TagMode != "KKpipi") {
-    for(int i = 1; i <= 8; i++) {
+    for(int i = 1; i <= m_SignalBins; i++) {
       SignalBins.push_back(-i);
     }
   }
@@ -95,13 +93,21 @@ std::vector<std::string> Category::GetCategories() const {
 	continue;
       }
       CategoryStrings.push_back(GetCategory(i, j));
-      // For cross check, remove
-      std::cout << CategoryStrings.back() << "\n";
     }
   }
   return CategoryStrings;
 }
 
-RooCategory Category::GetCategoryVariable() const {
-  return m_CategoryVar;
+RooCategory* Category::GetCategoryVariable() {
+  return &m_CategoryVar;
+}
+
+int Category::GetSignalBinNumber(const std::string &category) const {
+  // Find position of the substring "SignalBin"
+  auto pos = category.find("SignalBin");
+  // The next character tells us about the sign, P for plus and M for minus
+  int Sign = category[pos + 9] == 'P' ? +1 : -1;
+  // Convert char number to int with some char trickery
+  int Number = category[pos + 10] - '0';
+  return Sign*Number;
 }

@@ -11,9 +11,11 @@
 #include"TTree.h"
 #include"RooFFTConvPdf.h"
 #include"RooSimultaneous.h"
+#include"RooArgusBG.h"
 #include"RooAddPdf.h"
 #include"Settings.h"
 #include"Category.h"
+#include"DoubleTagYield.h"
 
 class BinnedFitModel {
   public:
@@ -32,6 +34,10 @@ class BinnedFitModel {
      * Get the simultaneous PDF for double tag yield fit
      */
     RooSimultaneous* GetPDF();
+    /**
+     * DoubleTagYield is a friend so that it can access the yield variables
+     */
+    friend class DoubleTagYield;
   private:
     /**
      * The fit variable
@@ -40,7 +46,7 @@ class BinnedFitModel {
     /**
      * Simultaneous PDF for the binned fit
      */
-    RooSimultaneous *m_PDF;
+    RooSimultaneous *m_PDF = nullptr;
     /**
      * The signal shape from signal MC convolved with a double Gaussian
      */

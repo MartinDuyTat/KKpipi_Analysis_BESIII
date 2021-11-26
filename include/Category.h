@@ -34,11 +34,11 @@ class Category {
     /**
      * Get the category variable
      */
-    RooCategory GetCategoryVariable() const;
+    RooCategory* GetCategoryVariable();
     /**
      * Get the bin number from the unique string that describes the category
      */
-    //int GetSignalBinNumber(const std::string &category) const;
+    int GetSignalBinNumber(const std::string &category) const;
     /**
      * Get the tag mode from the unique string that describes the category
      */
