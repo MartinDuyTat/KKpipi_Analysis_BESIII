@@ -25,10 +25,7 @@ int main(int argc, char *argv[]) {
   std::string Mode = settings.get("Mode");
   std::string TagType = settings.get("TagType");
   bool IncludeDeltaECuts = settings.getB("Include_DeltaE_Cuts");
-  std::string TruthMatchMode("");
-  if(settings.getB("TruthMatch")) {
-    TruthMatchMode = Mode;
-  }
+  std::string TruthMatchMode = settings.getB("TruthMatch") ? Mode : "";
   std::string TreeName = settings.get("TreeName");
   std::vector<std::string> Datasets = Utilities::ConvertStringToVector(settings.get("Datasets_to_include"));
   std::cout << "Sample prepration of " << TagType << " " << Mode << " mode\n";
@@ -39,7 +36,8 @@ int main(int argc, char *argv[]) {
     if(DataSetType != 10) {
       InputFilename = settings["Datasets"].get(Dataset);
     } else {
-      InputFilename = settings["Datasets"].get(Dataset + "_" + settings.get("SignalMCMode"));
+      InputFilename = settings["Datasets"].get(Dataset + "_" + TagType);
+      InputFilename = Utilities::ReplaceString(InputFilename, "TAG", Mode);
     }
     std::vector<std::string> Years = InputFilename.find("YEAR") == std::string::npos ? std::vector<std::string>{""} : std::vector<std::string>{"2010", "2011"};
     for(const auto &Year : Years) {
