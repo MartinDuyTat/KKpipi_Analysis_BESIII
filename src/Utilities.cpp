@@ -4,6 +4,7 @@
 #include<fstream>
 #include<string>
 #include<regex>
+#include<stdexcept>
 #include"TChain.h"
 #include"RooRealVar.h"
 #include"Utilities.h"
@@ -147,6 +148,15 @@ namespace Utilities {
 
   std::string ReplaceString(const std::string &String, const std::string &From, const std::string &To) {
     return std::regex_replace(String, std::regex(From), To);
+  }
+
+  std::unique_ptr<KKpipi_PhaseSpace> GetPhaseSpaceBinning(const Settings &settings, TTree *Tree) {
+    std::string Mode = settings.get("Mode");
+    if(Mode == "Kpi" || Mode == "Kpipi0" || Mode == "Kpipipi" || Mode == "KeNu") {
+      return std::unique_ptr<KKpipi_PhaseSpace>{new KKpipi_vs_Flavour_PhaseSpace(Tree, settings["BinningScheme"].getI("NumberBins"))};
+    } else {
+      throw std::invalid_argument(Mode + " tag mode is unknown");
+    }
   }
 
 }

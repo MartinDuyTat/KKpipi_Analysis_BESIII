@@ -5,10 +5,14 @@
 
 #include<string>
 #include<vector>
+#include<memory>
 #include"TChain.h"
+#include"TTree.h"
 #include"TCut.h"
 #include"RooRealVar.h"
 #include"Settings.h"
+#include"PhaseSpace/KKpipi_PhaseSpace.h"
+#include"PhaseSpace/KKpipi_vs_Flavour_PhaseSpace.h"
 
 #ifndef UTILITIES
 #define UTILITIES
@@ -69,6 +73,12 @@ namespace Utilities {
    * @param To The string we're replacing with
    */
   std::string ReplaceString(const std::string &String, const std::string &From, const std::string &To);
+  /**
+   * Get the correct phase space binning object
+   * @param settings The fit settings
+   * @param Tree The tree containing double tag events to be binned
+   */
+  std::unique_ptr<KKpipi_PhaseSpace> GetPhaseSpaceBinning(const Settings &settings, TTree *Tree);
 }
 
 #endif

@@ -15,6 +15,8 @@ add_library(KKpipiStrongPhase
 	    TopoAnaReader.cpp
 	    TruthMatchingCuts.cpp
 	    Utilities.cpp
+	    PhaseSpace/KKpipi_PhaseSpace.cpp
+	    PhaseSpace/KKpipi_vs_Flavour_PhaseSpace.cpp
 	    RooShapes/Chebychev_Shape.cpp
 	    RooShapes/DoubleGaussian_Shape.cpp 
 	    RooShapes/DoublePolynomial_Shape.cpp
