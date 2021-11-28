@@ -4,6 +4,7 @@
 #include<vector>
 #include<stdexcept>
 #include<numeric>
+#include<algorithm>
 #include"TMath.h"
 #include"Category.h"
 #include"Settings.h"
@@ -73,9 +74,12 @@ std::vector<std::string> Category::GetCategories() const {
   std::iota(SignalBins.begin(), SignalBins.end(), 1);
   // If tag mode is not KKpipi, we also need the conjugate bins
   if(m_TagMode != "KKpipi") {
-    for(int i = 1; i <= m_SignalBins; i++) {
-      SignalBins.push_back(-i);
-    }
+    // Double the number of bins
+    SignalBins.resize(2*m_SignalBins);
+    // Fill with negative bins
+    std::iota(SignalBins.begin() + m_SignalBins, SignalBins.end(), -m_SignalBins);
+    // Swap the ordering so that we have bins from -8, -7, ..., -1, 1, 2, ..., 8
+    std::rotate(SignalBins.begin(), SignalBins.begin() + m_SignalBins, SignalBins.end());
   }
   if(m_Type == "Flavour" || m_Type == "CP") {
     // For CP and flavour tags, there is no binning on the tag side

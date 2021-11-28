@@ -83,6 +83,10 @@ class BinnedFitModel {
      * Map of all yield parameters
      */
     std::map<std::string, RooRealVar*> m_Yields;
+    /**
+     * Map of Gaussian resolution and Argus parameters
+     */
+    std::map<std::string, RooRealVar*> m_Parameters;
 };
 
 #endif

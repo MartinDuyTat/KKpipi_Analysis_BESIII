@@ -38,6 +38,12 @@ void DoubleTagYield::DoFit() {
       CombinatorialYield->setConstant();
     }
   }
+  for(const auto &Parameter : FitModel.m_Parameters) {
+    if(Parameter.first == "End") {
+      continue;
+    }
+    Parameter.second->setConstant();
+  }
   // Perform a second fit
   auto Result = Model->fitTo(*DataSet, Save(), NumCPU(4));
   Result->Print();
@@ -67,7 +73,7 @@ void DoubleTagYield::PlotProjections(BinnedDataLoader *DataLoader, RooSimultaneo
     RooPlot *Frame = m_SignalMBC.frame();
     std::string TagMode = m_Settings.get("Mode");
     Frame->SetTitle((TagMode + " Double Tag M_{BC} Bin " + std::to_string(Bin) + "; M_{BC} (GeV); Events").c_str());
-    DataSet->plotOn(Frame, Binning(100), Cut((std::string(CategoryVariable->GetName()) + "==" + std::string(CategoryVariable->GetName()) + "::" + Category).c_str()));
+    DataSet->plotOn(Frame, Binning(m_Settings.getI("Bins_in_plots")), Cut((std::string(CategoryVariable->GetName()) + "==" + std::string(CategoryVariable->GetName()) + "::" + Category).c_str()));
     Model->plotOn(Frame, LineColor(kBlue), Slice(*CategoryVariable, Category.c_str()), ProjWData(*CategoryVariable, *DataSet));
     RooHist *Pull = Frame->pullHist();
     Model->plotOn(Frame, LineColor(kBlue), Components("Argus"), LineStyle(kDashed), Slice(*CategoryVariable, Category.c_str()), ProjWData(*CategoryVariable, *DataSet));
