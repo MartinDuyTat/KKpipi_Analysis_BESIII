@@ -8,9 +8,12 @@
 
 #include"TTree.h"
 #include"RooRealVar.h"
+#include"RooFitResult.h"
 #include"RooSimultaneous.h"
 #include"BinnedDataLoader.h"
+#include"BinnedFitModel.h"
 #include"Settings.h"
+#include"Category.h"
 
 class DoubleTagYield {
   public:
@@ -28,6 +31,10 @@ class DoubleTagYield {
      * Plot projections of each bin in the fit
      */
     void PlotProjections(BinnedDataLoader *DataLoader, RooSimultaneous *Model);
+    /**
+     * Save signal yields from fit
+     */
+    void SaveSignalYields(const BinnedFitModel &FitModel, RooFitResult *Result, const Category &category) const;
   private:
     /**
      * The fit variable

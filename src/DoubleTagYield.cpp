@@ -1,5 +1,7 @@
 // Martin Duy Tat 26th November 2021
 
+#include<fstream>
+#include<iomanip>
 #include<string>
 #include<vector>
 #include"TTree.h"
@@ -48,6 +50,7 @@ void DoubleTagYield::DoFit() {
   auto Result = Model->fitTo(*DataSet, Save(), NumCPU(4));
   Result->Print();
   PlotProjections(&DataLoader, Model);
+  SaveSignalYields(FitModel, Result, *DataLoader.GetCategoryObject());
 }
 
 void DoubleTagYield::PlotProjections(BinnedDataLoader *DataLoader, RooSimultaneous *Model) {
@@ -101,4 +104,18 @@ void DoubleTagYield::PlotProjections(BinnedDataLoader *DataLoader, RooSimultaneo
     std::string PlotFilename = m_Settings.get("MBCPlotFilenamePrefix") + "_" + Category + ".png";
     c1.SaveAs(PlotFilename.c_str());
   }
+}
+
+void DoubleTagYield::SaveSignalYields(const BinnedFitModel &FitModel, RooFitResult *Result, const Category &category) const {
+  std::ofstream Outfile(m_Settings.get("FittedSignalYieldsFile"));
+  Outfile << std::fixed << std::setprecision(4);
+  Outfile << "* KKpipi vs " << m_Settings.get("Mode") << " double tag yield fit results\n\n";
+  Outfile << "status " << Result->status() << "\n";
+  Outfile << "covQual " << Result->covQual() << "\n\n";
+  for(const auto & cat : category.GetCategories()) {
+    std::string Name = cat + "_SignalYield";
+    Outfile << Name << "     " << std::setw(8) << std::right << FitModel.m_Yields.at(Name)->getVal() << "\n";
+    Outfile << Name << "_err " << std::setw(8) << std::right << FitModel.m_Yields.at(Name)->getError() << "\n";
+  }
+  Outfile.close();
 }

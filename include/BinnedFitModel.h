@@ -15,7 +15,8 @@
 #include"RooAddPdf.h"
 #include"Settings.h"
 #include"Category.h"
-#include"DoubleTagYield.h"
+
+class DoubleTagYield;
 
 class BinnedFitModel {
   public:
