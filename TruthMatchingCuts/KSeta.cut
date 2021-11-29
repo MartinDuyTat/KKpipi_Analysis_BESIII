@@ -1,4 +1,4 @@
-KSPiPlusMotherTrueID == 310
-KSPiMinusMotherTrueID == 310
-HighEEtaPhotonMotherTrueID == 221
-LowEEtaPhotonMotherTrueID == 221
+SignalTagKSPiPlusMotherTrueID == 310
+SignalTagKSPiMinusMotherTrueID == 310
+SignalTagHighEEtaPhotonMotherTrueID == 221
+SignalTagLowEEtaPhotonMotherTrueID == 221
