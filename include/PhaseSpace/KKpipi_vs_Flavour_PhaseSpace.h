@@ -17,12 +17,18 @@ class KKpipi_vs_Flavour_PhaseSpace: public KKpipi_PhaseSpace {
      * Constructor that saves the branch of the charge of the tag kaon
      * @param Tree TTree with double tag events
      * @param Bins Number of bins in KKpipi phase space binning
+     * @param ReconstructedBins Set to true to calculate the reconstructed bins
+     * @param TrueBins Set to true to calculate the true bins
      */
-    KKpipi_vs_Flavour_PhaseSpace(TTree *Tree, int Bins);
+    KKpipi_vs_Flavour_PhaseSpace(TTree *Tree, int Bins, bool ReconstructedBins, bool TrueBins);
     /**
      * Get the correct phase space bin with flavour tag
      */
     virtual std::pair<int, int> Bin() const;
+    /**
+     * Get the correct true phase space bin with flavour tag
+     */
+    virtual std::pair<int, int> TrueBin() const;
   private:
     /**
      * Charge of the tag kaon

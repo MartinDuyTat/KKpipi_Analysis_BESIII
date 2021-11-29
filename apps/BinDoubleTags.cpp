@@ -44,6 +44,7 @@ int main(int argc, char *argv[]) {
       EventsOutsidePhaseSpace++;
     }
   }
+  std::cout << "Events outside of phase space: " << EventsOutsidePhaseSpace << "\n";
   OutputTree->Write();
   OutputFile.Close();
   std::cout << "Binning complete\n";

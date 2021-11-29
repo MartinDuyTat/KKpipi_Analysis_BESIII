@@ -3,9 +3,23 @@
 #include"TTree.h"
 #include"PhaseSpace/KKpipi_PhaseSpace.h"
 
-KKpipi_PhaseSpace::KKpipi_PhaseSpace(TTree *Tree, int Bins): m_Momenta(16), m_MomentaKalmanFit(16), m_AmplitudePhaseSpace(Bins) {
+KKpipi_PhaseSpace::KKpipi_PhaseSpace(TTree *Tree,
+				     int Bins,
+				     bool ReconstructedBins,
+				     bool TrueBins): m_Momenta(16),
+						     m_MomentaKalmanFit(16),
+						     m_AmplitudePhaseSpace(Bins) {
   m_AmplitudePhaseSpace.SetBinEdges({1.20923});
   m_AmplitudePhaseSpace.UseVariableBinWidths(true);
+  if(ReconstructedBins) {
+    SetBranchAddresses_Rec(Tree);
+  }
+  if(TrueBins) {
+    SetBranchAddresses_True(Tree);
+  }
+}
+
+void KKpipi_PhaseSpace::SetBranchAddresses_Rec(TTree *Tree) {
   Tree->SetBranchAddress("SignalKalmanFitSuccess", &m_KalmanFitSuccess);
   Tree->SetBranchAddress("SignalKPluspx", m_Momenta.data() + 0);
   Tree->SetBranchAddress("SignalKPluspy", m_Momenta.data() + 1);
@@ -41,6 +55,20 @@ KKpipi_PhaseSpace::KKpipi_PhaseSpace(TTree *Tree, int Bins): m_Momenta(16), m_Mo
   Tree->SetBranchAddress("SignalPiMinusenergyKalmanFit", m_MomentaKalmanFit.data() + 15);
 }
 
+void KKpipi_PhaseSpace::SetBranchAddresses_True(TTree *Tree) {
+  Tree->SetBranchAddress("NumberOfParticles", &m_TrueKinematics.NumberParticles);
+  Tree->SetBranchAddress("ParticleIDs", m_TrueKinematics.ParticleIDs.data());
+  Tree->SetBranchAddress("MotherIndex", m_TrueKinematics.MotherIndex.data());
+  Tree->SetBranchAddress("True_Px", m_TrueKinematics.TruePx.data());
+  Tree->SetBranchAddress("True_Py", m_TrueKinematics.TruePy.data());
+  Tree->SetBranchAddress("True_Pz", m_TrueKinematics.TruePz.data());
+  Tree->SetBranchAddress("True_Energy", m_TrueKinematics.TrueEnergy.data());
+}
+  
 int KKpipi_PhaseSpace::KKpipiBin() const {
   return m_KalmanFitSuccess == 1 ? m_AmplitudePhaseSpace.WhichBin(m_MomentaKalmanFit) : m_AmplitudePhaseSpace.WhichBin(m_Momenta);
+}
+
+int KKpipi_PhaseSpace::TrueKKpipiBin() const {
+  return 0;
 }

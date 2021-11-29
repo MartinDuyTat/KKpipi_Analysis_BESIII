@@ -12,6 +12,7 @@
 #include<utility>
 #include"TTree.h"
 #include"AmplitudePhaseSpace.h"
+#include"GeneratorKinematics.h"
 
 class KKpipi_PhaseSpace {
   public:
@@ -19,17 +20,27 @@ class KKpipi_PhaseSpace {
      * Constructor that connects the TTree branches with double tag events to the kinematic variables of the KKpipi decay
      * @param Tree TTree with double tag events
      * @param Bins Number of bins in KKpipi phase space binning
+     * @param ReconstructedBins Set to true to calculate the reconstructed bins
+     * @param TrueBins Set to true to calculate the true bins
      */
-    KKpipi_PhaseSpace(TTree *Tree, int Bins);
+    KKpipi_PhaseSpace(TTree *Tree, int Bins, bool ReconstructedBins, bool TrueBins);
     /**
      * Pure virtual function that returns both the signal and tag side binning
      */
     virtual std::pair<int, int> Bin() const = 0;
+    /**
+     * Pure virtual function that returns both the signal and tag side true binning
+     */
+    virtual std::pair<int, int> TrueBin() const = 0;
   protected:
     /**
      * Get the phase space bin of the \f$D^0\to KK\pi\pi\f$ decay (but obviously we know nothing about the flavour yet)
      */
     int KKpipiBin() const;
+    /**
+     * Get the true phase space bin of the \f$D^0\to KK\pi\pi\f$ decay (but obviously we know nothing about the flavour yet)
+     */
+    int TrueKKpipiBin() const;
   private:
     /**
      * Vector of the kinematic variables before Kalman fit
@@ -44,9 +55,21 @@ class KKpipi_PhaseSpace {
      */
     int m_KalmanFitSuccess;
     /**
+     * Struct containing the generator kinematics used to determine the true bin
+     */
+    GeneratorKinematics m_TrueKinematics;
+    /**
      * Object that calculates the phase space point of an event
      */
     AmplitudePhaseSpace m_AmplitudePhaseSpace;
+    /**
+     * Set the branch addresses of reconstructed variables
+     */
+    void SetBranchAddresses_Rec(TTree *Tree);
+    /**
+     * Set the branch addresses of truth variables
+     */
+    void SetBranchAddresses_True(TTree *Tree);
 };
 
 #endif
