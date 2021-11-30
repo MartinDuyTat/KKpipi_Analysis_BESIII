@@ -31,7 +31,7 @@ class KKpipi_PhaseSpace {
     /**
      * Pure virtual function that returns both the signal and tag side true binning
      */
-    virtual std::pair<int, int> TrueBin() const = 0;
+    virtual std::pair<int, int> TrueBin() = 0;
   protected:
     /**
      * Get the phase space bin of the \f$D^0\to KK\pi\pi\f$ decay (but obviously we know nothing about the flavour yet)
@@ -40,7 +40,15 @@ class KKpipi_PhaseSpace {
     /**
      * Get the true phase space bin of the \f$D^0\to KK\pi\pi\f$ decay (but obviously we know nothing about the flavour yet)
      */
-    int TrueKKpipiBin() const;
+    int TrueKKpipiBin();
+    /**
+     * Struct containing the generator kinematics used to determine the true bin
+     */
+    GeneratorKinematics m_TrueKinematics;
+    /**
+     * Function that saves the index of the signal and tag D mesons in the list of particle IDs in m_TrueKinematics
+     */
+    void FindDIndex();
   private:
     /**
      * Vector of the kinematic variables before Kalman fit
@@ -54,10 +62,6 @@ class KKpipi_PhaseSpace {
      * Flag that is 1 when Kalman fit was a success
      */
     int m_KalmanFitSuccess;
-    /**
-     * Struct containing the generator kinematics used to determine the true bin
-     */
-    GeneratorKinematics m_TrueKinematics;
     /**
      * Object that calculates the phase space point of an event
      */

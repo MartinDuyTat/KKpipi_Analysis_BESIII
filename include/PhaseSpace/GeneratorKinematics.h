@@ -9,7 +9,7 @@
 #include<vector>
 
 struct GeneratorKinematics {
-  GeneratorKinematics(int Particles = 100): ParticleIDs(Particles), MotherIndex(Particles), TruePx(Particles), TruePy(Particles), TruePz(Particles), TrueEnergy(Particles) {}
+  GeneratorKinematics(int Particles = 100): ParticleIDs(Particles), MotherIndex(Particles), TruePx(Particles), TruePy(Particles), TruePz(Particles), TrueEnergy(Particles), SignalD_index(0), TagD_index(0) {}
   /**
    * Number of particles generated in event
    */
@@ -38,6 +38,14 @@ struct GeneratorKinematics {
    * List of generated energies in the x-direction
    */
   std::vector<double> TrueEnergy;
+  /**
+   * The index of the signal D in the ParticleIDs vector
+   */
+  std::vector<int>::size_type SignalD_index;
+  /**
+   * The index of the tag D in the ParticleIDs vector
+   */
+  std::vector<int>::size_type TagD_index;
 };
 
 #endif

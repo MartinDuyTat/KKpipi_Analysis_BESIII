@@ -28,7 +28,7 @@ class KKpipi_vs_Flavour_PhaseSpace: public KKpipi_PhaseSpace {
     /**
      * Get the correct true phase space bin with flavour tag
      */
-    virtual std::pair<int, int> TrueBin() const;
+    virtual std::pair<int, int> TrueBin();
   private:
     /**
      * Charge of the tag kaon

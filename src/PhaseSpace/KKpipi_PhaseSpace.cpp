@@ -1,5 +1,7 @@
 // Martin Duy Tat 26th November 2021
 
+#include<algorithm>
+#include<stdexcept>
 #include"TTree.h"
 #include"PhaseSpace/KKpipi_PhaseSpace.h"
 
@@ -69,6 +71,48 @@ int KKpipi_PhaseSpace::KKpipiBin() const {
   return m_KalmanFitSuccess == 1 ? m_AmplitudePhaseSpace.WhichBin(m_MomentaKalmanFit) : m_AmplitudePhaseSpace.WhichBin(m_Momenta);
 }
 
-int KKpipi_PhaseSpace::TrueKKpipiBin() const {
-  return 0;
+int KKpipi_PhaseSpace::TrueKKpipiBin() {
+  std::vector<double> TrueMomenta;
+  std::vector<int> DaughterIDs{321, -321, 211, -211};
+  std::vector<int> IDs(m_TrueKinematics.ParticleIDs.begin(), m_TrueKinematics.ParticleIDs.begin() + m_TrueKinematics.NumberParticles);
+  std::vector<double>::size_type SignalEnd_index;
+  if(m_TrueKinematics.SignalD_index < m_TrueKinematics.TagD_index) {
+    SignalEnd_index = m_TrueKinematics.TagD_index;
+  } else {
+    SignalEnd_index = m_TrueKinematics.NumberParticles;
+  }
+  for(auto DaughterID : DaughterIDs) {
+    std::vector<double>::size_type Daughter_index = std::find(IDs.begin() + m_TrueKinematics.SignalD_index + 1, IDs.begin() + SignalEnd_index, DaughterID) - IDs.begin();
+    TrueMomenta.push_back(m_TrueKinematics.TruePx[Daughter_index]);
+    TrueMomenta.push_back(m_TrueKinematics.TruePy[Daughter_index]);
+    TrueMomenta.push_back(m_TrueKinematics.TruePz[Daughter_index]);
+    TrueMomenta.push_back(m_TrueKinematics.TrueEnergy[Daughter_index]);
+  }
+  return m_AmplitudePhaseSpace.WhichBin(TrueMomenta);
+}
+
+void KKpipi_PhaseSpace::FindDIndex() {
+  // Copy the particle ID vector with the correct number of particles
+  std::vector<int> IDs(m_TrueKinematics.ParticleIDs.begin(), m_TrueKinematics.ParticleIDs.begin() + m_TrueKinematics.NumberParticles);
+  // Find the D0
+  m_TrueKinematics.SignalD_index = std::find(IDs.begin(), IDs.end(), 421) - IDs.begin();
+  // Find the D0bar
+  m_TrueKinematics.TagD_index = std::find(IDs.begin(), IDs.end(), -421) - IDs.begin();
+  // Find the D0 daughters and sort
+  std::vector<int> D0Daughters(IDs.begin() + m_TrueKinematics.SignalD_index + 1, IDs.begin() + m_TrueKinematics.TagD_index);
+  std::sort(D0Daughters.begin(), D0Daughters.end());
+  // Find the D0bar daughters and sort
+  std::vector<int> D0barDaughters(IDs.begin() + m_TrueKinematics.TagD_index + 1, IDs.end());
+  std::sort(D0barDaughters.begin(), D0barDaughters.end());
+  // State the KKpipi daughters and sort
+  std::vector<int> SignalIDs{321, -321, 211, -211};
+  std::sort(SignalIDs.begin(), SignalIDs.end());
+  if(std::includes(D0Daughters.begin(), D0Daughters.end(), SignalIDs.begin(), SignalIDs.end())) {
+    // If The D0 daughters include KKpipi, do nothing
+  } else if(std::includes(D0barDaughters.begin(), D0barDaughters.end(), SignalIDs.begin(), SignalIDs.end())) {
+    // If the D0bar daughters include KKpipi, swap the labels
+    std::swap(m_TrueKinematics.SignalD_index, m_TrueKinematics.TagD_index);
+  } else {
+    throw std::logic_error("Could not find KKpipi truth information");
+  }
 }
