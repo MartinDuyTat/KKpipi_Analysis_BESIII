@@ -70,3 +70,9 @@ void BinnedFitModel::InitializePDF() {
     m_PDF->addPdf(*BinPDF, CategoryString.c_str());
   }
 }
+
+double BinnedFitModel::GetFractionInSignalRegion() const {
+  using namespace RooFit;
+  m_SignalMBC->setRange("SignalRange", 1.86, 1.87);
+  return m_SignalShapeConv->createIntegral(*m_SignalMBC, NormSet(*m_SignalMBC), Range("SignalRange"))->getVal();
+}

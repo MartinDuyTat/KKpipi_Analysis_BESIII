@@ -36,6 +36,10 @@ class BinnedFitModel {
      */
     RooSimultaneous* GetPDF();
     /**
+     * Get the fraction of events inside the signal region
+     */
+    double GetFractionInSignalRegion() const;
+    /**
      * DoubleTagYield is a friend so that it can access the yield variables
      */
     friend class DoubleTagYield;
