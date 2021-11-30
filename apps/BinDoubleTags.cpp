@@ -8,6 +8,7 @@
 #include<memory>
 #include<string>
 #include<utility>
+#include<stdexcept>
 #include"TChain.h"
 #include"TTree.h"
 #include"TFile.h"
@@ -39,6 +40,7 @@ int main(int argc, char *argv[]) {
   }
   int EventsOutsidePhaseSpace = 0;
   int EventsOutsidePhaseSpace_true = 0;
+  int NumberExceptions = 0;
   std::cout << "Ready to bin phase space\n";
   for(int i = 0; i < InputChain.GetEntries(); i++) {
     InputChain.GetEntry(i);
@@ -53,7 +55,13 @@ int main(int argc, char *argv[]) {
       }
     }
     if(settings.getB("Bin_truth")) {
-      std::pair<int, int> Bin = PhaseSpace->TrueBin();
+      std::pair<int, int> Bin;
+      try {
+	Bin = PhaseSpace->TrueBin();
+      } catch(const std::logic_error &e) {
+	NumberExceptions++;
+	  continue;
+      }
       if(Bin.first != 0) {
 	SignalBin_true = Bin.first;
 	TagBin_true = Bin.second;
@@ -70,6 +78,7 @@ int main(int argc, char *argv[]) {
   if(settings.getB("Bin_truth")) {
     std::cout << "True events outside of phase space: " << EventsOutsidePhaseSpace_true << "\n";
   }
+  std::cout << "Number of events caught and elegantly skipped: " << NumberExceptions << "\n";
   OutputTree->Write();
   OutputFile.Close();
   std::cout << "Binning complete\n";

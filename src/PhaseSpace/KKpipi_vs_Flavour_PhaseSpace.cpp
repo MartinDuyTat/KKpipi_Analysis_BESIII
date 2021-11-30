@@ -7,7 +7,9 @@
 #include"PhaseSpace/KKpipi_vs_Flavour_PhaseSpace.h"
 
 KKpipi_vs_Flavour_PhaseSpace::KKpipi_vs_Flavour_PhaseSpace(TTree *Tree, int Bins, bool ReconstructedBins, bool TrueBins): KKpipi_PhaseSpace(Tree, Bins, ReconstructedBins, TrueBins) {
-  Tree->SetBranchAddress("TagKCharge", &m_KaonCharge);
+  if(ReconstructedBins) {
+    Tree->SetBranchAddress("TagKCharge", &m_KaonCharge);
+  }
 }
 
 std::pair<int, int> KKpipi_vs_Flavour_PhaseSpace::Bin() const {
