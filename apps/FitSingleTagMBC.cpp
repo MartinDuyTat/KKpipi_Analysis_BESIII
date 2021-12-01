@@ -22,7 +22,8 @@ int main(int argc, char *argv[]) {
   std::string Mode = settings.get("Mode");
   std::string DataFilename = Utilities::ReplaceString(settings["Datasets_WithDeltaECuts"].get("Dskim"), "TAG", Mode);
   Chain.Add(DataFilename.c_str());
-  std::string SignalMCFilename = settings["Datasets_WithDeltaECuts"].get("SignalMC_" + Mode);
+  std::string SignalMCFilename = settings["Datasets_WithDeltaECuts"].get("SignalMC_ST");
+  SignalMCFilename = Utilities::ReplaceString(SignalMCFilename, "TAG", Mode);
   TFile MCFile(SignalMCFilename.c_str(), "READ");
   TTree *MCTree = nullptr;
   MCFile.GetObject(TreeName.c_str(), MCTree);
