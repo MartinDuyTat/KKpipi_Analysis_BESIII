@@ -14,6 +14,8 @@ set(KKPIPI_BINNED_FIT_PATH /data/lhcb/users/tat/KKpipi_Binned_Fit)
 find_library(KKPIPI_BINNED_FIT_LIB KKpipiBinnedFit PATHS ${KKPIPI_BINNED_FIT_PATH}/build/src)
 
 include_directories(${KKPIPI_BINNED_FIT_PATH}/include)
+include_directories(SYSTEM /data/lhcb/users/tat/uncertainties-cpp/)
+include_directories(/data/lhcb/users/tat/eigen-3.4.0/)
 
 if(NOT KKPIPI_BINNED_FIT_LIB)
   message(FATAL_ERROR "KKpipiBinnedFit library not found")
