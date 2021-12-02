@@ -23,10 +23,9 @@ class BinnedFitModel {
     /**
      * Constructor that takes in the signal MC TTree and sets up the signal shape for all the bins
      * @param settings Fit settings
-     * @param Tree TTree with MC signal shape
      * @param SignalMBC The fit variable
      */
-    BinnedFitModel(const Settings &settings, TTree *Tree, RooRealVar *SignalMBC);
+    BinnedFitModel(const Settings &settings, RooRealVar *SignalMBC);
     /**
      * Destructor that deletes the simultaneous PDF
      */
@@ -63,7 +62,7 @@ class BinnedFitModel {
     /**
      * Initialize the signal component in a specific bin
      */
-    void InitializeSignalShape(TTree *Tree);
+    void InitializeSignalShape();
     /**
      * Create the combinatorial component in a specific bin
      */

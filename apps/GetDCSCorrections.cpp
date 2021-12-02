@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
     }
     uncertainties::udouble Correction = Ki_m.Get_Ki(Bin)*Ki_m.Get_Ki(Bin)/(Ki_m.Get_Ki(Bin)*Ki_m.Get_Ki(Bin) + DCS_parameters[0]*DCS_parameters[0]*Ki_m.Get_Ki(-Bin)*Ki_m.Get_Ki(-Bin) - 2*DCS_parameters[0]*DCS_parameters[1]*Ki_m.Get_Ki(Bin)*Ki_m.Get_Ki(-Bin)*(cisi_m.Get_ci(Bin)*uncertainties::cos(TMath::Pi()*DCS_parameters[2]/180.0) - cisi_m.Get_si(Bin)*uncertainties::sin(TMath::Pi()*DCS_parameters[2]/180.0)));
     std::string BinSign = Bin > 0 ? "P" : "M";
-    Outfile << Mode << "_DCS_Correction_" << BinSign << TMath::Abs(Bin) << " " << uncertainties::nom(Correction) << "\n";
+    Outfile << Mode << "_DCS_Correction_" << BinSign << TMath::Abs(Bin) << "     " << uncertainties::nom(Correction) << "\n";
     Outfile << Mode << "_DCS_Correction_" << BinSign << TMath::Abs(Bin) << "_err " << uncertainties::sdev(Correction) << "\n";
   }
   std::cout << "DCS corrections calculated!\n";

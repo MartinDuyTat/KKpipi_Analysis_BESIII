@@ -28,7 +28,7 @@ void DoubleTagYield::DoFit() {
   using namespace RooFit;
   BinnedDataLoader DataLoader(m_Settings, m_Tree, &m_SignalMBC);
   RooDataSet *DataSet = DataLoader.GetDataSet();
-  BinnedFitModel FitModel(m_Settings, m_Tree, &m_SignalMBC);
+  BinnedFitModel FitModel(m_Settings, &m_SignalMBC);
   RooSimultaneous *Model = FitModel.GetPDF();
   // Perform an initial fit
   Model->fitTo(*DataSet, NumCPU(4));

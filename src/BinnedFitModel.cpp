@@ -14,14 +14,14 @@
 #include"Utilities.h"
 #include"Unique.h"
 
-BinnedFitModel::BinnedFitModel(const Settings &settings, TTree *Tree, RooRealVar *SignalMBC): m_SignalMBC(SignalMBC),
-											      m_Category(settings),
-											      m_Settings(settings) {
+BinnedFitModel::BinnedFitModel(const Settings &settings, RooRealVar *SignalMBC): m_SignalMBC(SignalMBC),
+										 m_Category(settings),
+										 m_Settings(settings) {
   // First initialize the simultaneous fit with the correct categories for all bins
   auto CategoryVariable = m_Category.GetCategoryVariable();
   m_PDF = new RooSimultaneous(("Simultaneous_PDF_KKpipi_vs_" + settings.get("Mode")).c_str(), "", *CategoryVariable);
   // Set up the signal shape using signal MC
-  InitializeSignalShape(Tree);
+  InitializeSignalShape();
   // Then set up the combinatorial shape using an Argus function
   InitializeArgusShape();
   // Finally set up the simultaneous PDF for all bins
@@ -38,7 +38,7 @@ RooSimultaneous* BinnedFitModel::GetPDF() {
   return m_PDF;
 }
 
-void BinnedFitModel::InitializeSignalShape(TTree *Tree) {
+void BinnedFitModel::InitializeSignalShape() {
   //auto frac = Unique::create<RooRealVar*>("frac", "", 0.4, 0.0, 1.0);
   m_Parameters.insert({"Mean1", Unique::create<RooRealVar*>("Mean1", "", 0.0, -0.001, 0.001)});
   //auto Mean2 = Unique::create<RooRealVar*>("Mean2", "", 0.0, -0.001, 0.001);
@@ -47,7 +47,11 @@ void BinnedFitModel::InitializeSignalShape(TTree *Tree) {
   auto /*Gaussian1*/ Resolution = Unique::create<RooGaussian*>("Gaussian1", "", *m_SignalMBC, *m_Parameters["Mean1"], *m_Parameters["Sigma1"]);
   //auto Gaussian2 = Unique::create<RooGaussian*>("Gaussian2", "", *m_SignalMBC, *Mean2, *Sigma2);
   //auto Resolution = Unique::create<RooAddPdf*>("Resolution", "", RooArgList(*Gaussian1, *Gaussian2), *frac);
-  RooDataSet MCSignal("MCSignal", "", Tree, RooArgList(*m_SignalMBC));
+  TChain SignalMCChain(m_Settings.get("TreeName").c_str());
+  std::string SignalMCFilename = m_Settings["Datasets_WithDeltaECuts"].get("SignalMC_DT");
+  SignalMCFilename = Utilities::ReplaceString(SignalMCFilename, "TAG", m_Settings.get("Mode"));
+  SignalMCChain.Add(SignalMCFilename.c_str());
+  RooDataSet MCSignal("MCSignal", "", &SignalMCChain, RooArgList(*m_SignalMBC));
   auto SignalShape = Unique::create<RooKeysPdf*>("SignalShape", "", *m_SignalMBC, MCSignal);
   m_SignalShapeConv = Unique::create<RooFFTConvPdf*>("SignalShapeConv", "", *m_SignalMBC, *SignalShape, *Resolution);
 }

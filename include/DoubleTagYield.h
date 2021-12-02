@@ -20,7 +20,7 @@ class DoubleTagYield {
     /**
      * Constructor that takes in the settings and double tag events
      * @param settings The fit settings
-     * @param Tree TTree with the double tag events
+     * @param Tree TTree with the double tag events in data
      */
     DoubleTagYield(const Settings &settings, TTree *Tree);
     /**
