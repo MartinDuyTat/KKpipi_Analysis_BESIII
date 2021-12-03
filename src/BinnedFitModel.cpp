@@ -14,9 +14,12 @@
 #include"Utilities.h"
 #include"Unique.h"
 
-BinnedFitModel::BinnedFitModel(const Settings &settings, RooRealVar *SignalMBC): m_SignalMBC(SignalMBC),
-										 m_Category(settings),
-										 m_Settings(settings) {
+BinnedFitModel::BinnedFitModel(const Settings &settings,
+			       RooRealVar *SignalMBC,
+			       RooRealVar *TagMBC): m_SignalMBC(SignalMBC),
+						    m_TagMBC(TagMBC),
+						    m_Category(settings),
+						    m_Settings(settings) {
   // First initialize the simultaneous fit with the correct categories for all bins
   auto CategoryVariable = m_Category.GetCategoryVariable();
   m_PDF = new RooSimultaneous(("Simultaneous_PDF_KKpipi_vs_" + settings.get("Mode")).c_str(), "", *CategoryVariable);
@@ -51,7 +54,7 @@ void BinnedFitModel::InitializeSignalShape() {
   std::string SignalMCFilename = m_Settings["Datasets_WithDeltaECuts"].get("SignalMC_DT");
   SignalMCFilename = Utilities::ReplaceString(SignalMCFilename, "TAG", m_Settings.get("Mode"));
   SignalMCChain.Add(SignalMCFilename.c_str());
-  RooDataSet MCSignal("MCSignal", "", &SignalMCChain, RooArgList(*m_SignalMBC));
+  RooDataSet MCSignal("MCSignal", "", &SignalMCChain, RooArgList(*m_SignalMBC, *m_TagMBC), "TagMBC > 1.86 && TagMBC < 1.87");
   auto SignalShape = Unique::create<RooKeysPdf*>("SignalShape", "", *m_SignalMBC, MCSignal);
   m_SignalShapeConv = Unique::create<RooFFTConvPdf*>("SignalShapeConv", "", *m_SignalMBC, *SignalShape, *Resolution);
 }

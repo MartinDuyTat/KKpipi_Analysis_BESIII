@@ -41,6 +41,10 @@ class DoubleTagYield {
      */
     RooRealVar m_SignalMBC;
     /**
+     * Need this to apply a cut on the tag side
+     */
+    RooRealVar m_TagMBC;
+    /**
      * The fit settings
      */
     Settings m_Settings;

@@ -9,6 +9,7 @@
 #include"TCanvas.h"
 #include"TAxis.h"
 #include"TLine.h"
+#include"RooRealVar.h"
 #include"RooDataSet.h"
 #include"RooFitResult.h"
 #include"RooSimultaneous.h"
@@ -20,15 +21,17 @@
 #include"BinnedFitModel.h"
 #include"Category.h"
 
-DoubleTagYield::DoubleTagYield(const Settings &settings, TTree *Tree): m_SignalMBC("SignalMBC", "", 1.83, 1.8865), m_Settings(settings), m_Tree(Tree) {
+DoubleTagYield::DoubleTagYield(const Settings &settings, TTree *Tree): m_SignalMBC("SignalMBC", "", 1.83, 1.8865),
+								       m_TagMBC("TagMBC", "", 1.83, 1.8865),
+								       m_Settings(settings), m_Tree(Tree) {
   m_SignalMBC.setBins(5000, "cache");
 }
 
 void DoubleTagYield::DoFit() {
   using namespace RooFit;
-  BinnedDataLoader DataLoader(m_Settings, m_Tree, &m_SignalMBC);
+  BinnedDataLoader DataLoader(m_Settings, m_Tree, &m_SignalMBC, &m_TagMBC);
   RooDataSet *DataSet = DataLoader.GetDataSet();
-  BinnedFitModel FitModel(m_Settings, &m_SignalMBC);
+  BinnedFitModel FitModel(m_Settings, &m_SignalMBC, &m_TagMBC);
   RooSimultaneous *Model = FitModel.GetPDF();
   // Perform an initial fit
   Model->fitTo(*DataSet, NumCPU(4));

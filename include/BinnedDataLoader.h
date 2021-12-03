@@ -20,7 +20,7 @@ class BinnedDataLoader {
      * @param Tree The TTree with all the double tag events
      * @param SignalMBC The fit variable
      */
-    BinnedDataLoader(const Settings &settings, TTree *Tree, RooRealVar *SignalMBC);
+    BinnedDataLoader(const Settings &settings, TTree *Tree, RooRealVar *SignalMBC, RooRealVar *TagMBC);
     /**
      * Destructor that deletes dataset
      */
@@ -50,6 +50,10 @@ class BinnedDataLoader {
      * The fit variable
      */
     RooRealVar *m_SignalMBC;
+    /**
+     * Need this to apply a cut on the tag side
+     */
+    RooRealVar *m_TagMBC;
     /**
      * Dataset that we want to fit
      */

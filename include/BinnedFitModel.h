@@ -25,7 +25,7 @@ class BinnedFitModel {
      * @param settings Fit settings
      * @param SignalMBC The fit variable
      */
-    BinnedFitModel(const Settings &settings, RooRealVar *SignalMBC);
+    BinnedFitModel(const Settings &settings, RooRealVar *SignalMBC, RooRealVar *TagMBC);
     /**
      * Destructor that deletes the simultaneous PDF
      */
@@ -47,6 +47,10 @@ class BinnedFitModel {
      * The fit variable
      */
     RooRealVar *m_SignalMBC;
+    /**
+     * Need this to apply a cut on the tag side
+     */
+    RooRealVar *m_TagMBC;
     /**
      * Simultaneous PDF for the binned fit
      */
