@@ -32,6 +32,11 @@ class KKpipi_PhaseSpace {
      * Pure virtual function that returns both the signal and tag side true binning
      */
     virtual std::pair<int, int> TrueBin() = 0;
+    /**
+     * Get the difference between the reconstructed and true four-momenta of the D daughters
+     * One must call TrueBin() first before calling this function!
+     */
+    std::vector<double> GetMomentumResolution() const;
   protected:
     /**
      * Get the phase space bin of the \f$D^0\to KK\pi\pi\f$ decay (but obviously we know nothing about the flavour yet)
@@ -51,6 +56,10 @@ class KKpipi_PhaseSpace {
     void FindDIndex();
   private:
     /**
+     * Flag that is 1 when Kalman fit was a success
+     */
+    int m_KalmanFitSuccess;
+    /**
      * Vector of the kinematic variables before Kalman fit
      */
     std::vector<double> m_Momenta;
@@ -59,9 +68,9 @@ class KKpipi_PhaseSpace {
      */
     std::vector<double> m_MomentaKalmanFit;
     /**
-     * Flag that is 1 when Kalman fit was a success
+     * Vector of the true variables
      */
-    int m_KalmanFitSuccess;
+    std::vector<double> m_TrueMomenta;
     /**
      * Object that calculates the phase space point of an event
      */

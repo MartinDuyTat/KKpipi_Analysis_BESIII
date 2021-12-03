@@ -8,6 +8,7 @@
 #define KKPIPI_VS_FLAVOUR_PHASESPACE
 
 #include<utility>
+#include<map>
 #include"PhaseSpace/KKpipi_PhaseSpace.h"
 #include"TTree.h"
 

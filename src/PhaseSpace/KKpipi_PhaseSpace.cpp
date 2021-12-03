@@ -81,14 +81,15 @@ int KKpipi_PhaseSpace::TrueKKpipiBin() {
   } else {
     SignalEnd_index = m_TrueKinematics.NumberParticles;
   }
+  m_TrueMomenta.clear();
   for(auto DaughterID : DaughterIDs) {
     std::vector<double>::size_type Daughter_index = std::find(IDs.begin() + m_TrueKinematics.SignalD_index + 1, IDs.begin() + SignalEnd_index, DaughterID) - IDs.begin();
-    TrueMomenta.push_back(m_TrueKinematics.TruePx[Daughter_index]);
-    TrueMomenta.push_back(m_TrueKinematics.TruePy[Daughter_index]);
-    TrueMomenta.push_back(m_TrueKinematics.TruePz[Daughter_index]);
-    TrueMomenta.push_back(m_TrueKinematics.TrueEnergy[Daughter_index]);
+    m_TrueMomenta.push_back(m_TrueKinematics.TruePx[Daughter_index]);
+    m_TrueMomenta.push_back(m_TrueKinematics.TruePy[Daughter_index]);
+    m_TrueMomenta.push_back(m_TrueKinematics.TruePz[Daughter_index]);
+    m_TrueMomenta.push_back(m_TrueKinematics.TrueEnergy[Daughter_index]);
   }
-  return m_AmplitudePhaseSpace.WhichBin(TrueMomenta);
+  return m_AmplitudePhaseSpace.WhichBin(m_TrueMomenta);
 }
 
 void KKpipi_PhaseSpace::FindDIndex() {
@@ -115,4 +116,16 @@ void KKpipi_PhaseSpace::FindDIndex() {
   } else {
     throw std::logic_error("Could not find KKpipi truth information");
   }
+}
+
+std::vector<double> KKpipi_PhaseSpace::GetMomentumResolution() const {
+  std::vector<double> Resolution(16);
+  for(int i = 0; i < 16; i++) {
+    if(m_KalmanFitSuccess == 1) {
+      Resolution[i] = m_MomentaKalmanFit[i] - m_TrueMomenta[i];
+    } else {
+      Resolution[i] = m_Momenta[i] - m_TrueMomenta[i];
+    }
+  }
+  return Resolution;
 }
