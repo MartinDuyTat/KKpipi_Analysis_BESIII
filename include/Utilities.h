@@ -36,13 +36,14 @@ namespace Utilities {
   void LoadChain(TChain *Chain, const std::string &Filename, const std::string &TreeName = std::string());
   /**
    * This is a helper function for loading the correct cuts
-   * @param TagMode "KKpipi", "Kpi", etc
+   * @param SignalMode "KKpipi", "KSKK_to_KKpipi", etc
+   * @param TagMode "KKpipi", "Kpi", "Kpi_to_KK", etc
    * @param TagType "ST" for single tag and "DT" for double tag
    * @param IncludeDeltaECuts Set to true to apply \f$Delta E\f$ cuts
    * @param DataMC "Data" or "MC"
-   * @param TruthMatchMode The true tag mode that we want to truth match, input empty string for no truth matching
+   * @param Set to true to truth match
    */
-  TCut LoadCuts(const std::string &TagMode, const std::string &TagType, bool IncludeDeltaECuts, const std::string &DataMC, const std::string &TruthMatchMode = "");
+  TCut LoadCuts(const std::string &SignalMode, const std::string &TagMode, const std::string &TagType, const std::string &DataMC, bool IncludeDeltaECuts, bool TruthMatch = false);
   /**
    * Parse arguments and set up a Settings object
    * Copied from GGSZ code repository

@@ -13,27 +13,30 @@ class TruthMatchingCuts {
   public:
     /**
      * Constructor that sets the tag type
-     * @param TagMode "KKpipi", "KK", "pipi", etc
-     * @param TagType "ST" for single tag and "DT" for double tag
+     * @param SignalMode "KKpipi", "KK", "pipi", etc, or "KSKK_to_KKpipi" for background modes
+     * @param TagMode "KKpipi", "KK", "pipi", etc, or "Kpi_to_KK" for background modes, leave blank for single tags
      */
-    TruthMatchingCuts(const std::string &TagMode, const std::string &TagType);
+    TruthMatchingCuts(const std::string &SignalMode, const std::string &TagMode = "");
     /**
-     * Function that loads mode specific truth matching cuts from a file
-     */
-    TCut GetModeSpecificCuts() const;
-    /**
-     * Function for obtaining the truth maching requirement cut
+     * Function for obtaining the truth maching requirement cut from a file
+     * If file doesn't exist, some standard truth matching is applied
      */
     TCut GetTruthMatchingCuts() const;
   private:
+    /**
+     * Signal mode ("KKpipi", "KK", "pipi", etc)
+     */
+    std::string m_SignalMode;
     /**
      * Tag mode ("KKpipi", "KK", "pipi", etc)
      */
     std::string m_TagMode;
     /**
-     * "ST" for single tag and "DT" for double tag
+     * Helper function that checks if truth matching cut is empty, and if it's empty a standard cut is put in
+     * @param Cut Cut we want to check
+     * @param TagSide "Signal" or "Tag"
      */
-    std::string m_TagType;
+    TCut CheckEmptyCut(TCut Cut, const std::string &TagSide = "") const;
 };
 
 #endif

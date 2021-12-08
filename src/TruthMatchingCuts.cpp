@@ -5,28 +5,24 @@
 #include"TruthMatchingCuts.h"
 #include"CutsFromFile.h"
 
-TruthMatchingCuts::TruthMatchingCuts(const std::string &TagMode, const std::string &TagType): m_TagMode(TagMode), m_TagType(TagType) {
+TruthMatchingCuts::TruthMatchingCuts(const std::string &SignalMode,
+				     const std::string &TagMode): m_SignalMode(SignalMode), m_TagMode(TagMode) {
 }
 
-TCut TruthMatchingCuts::GetModeSpecificCuts() const {
-  if(m_TagType == "ST") {
-    CutsFromFile cutsFromFile(std::string(TRUTH_MATCHING_CUTS_DIR) + m_TagMode + ".cut", "");
-    return cutsFromFile.GetCuts();
-  } else if (m_TagType == "DT") {
-    CutsFromFile cutsFromFileSignal(std::string(TRUTH_MATCHING_CUTS_DIR) + "KKpipi" + ".cut", "Signal");
-    CutsFromFile cutsFromFileTag(std::string(TRUTH_MATCHING_CUTS_DIR) + m_TagMode + ".cut", "Tag");
-    return cutsFromFileSignal.GetCuts() && cutsFromFileTag.GetCuts();
-  } else {
-    return TCut();
+TCut TruthMatchingCuts::CheckEmptyCut(TCut Cut, const std::string &TagSide) const {
+  if(Cut == TCut()) {
+    Cut = TCut((TagSide + "IsSameDMother == 1 && " + TagSide + "PIDTrue == 1").c_str());
   }
+  return Cut;
 }
 
 TCut TruthMatchingCuts::GetTruthMatchingCuts() const {
-  if(m_TagType == "ST") {
-    return TCut("IsSameDMother == 1 && PIDTrue == 1") && GetModeSpecificCuts();
-  } else if(m_TagType == "DT") {
-    return TCut("SignalIsSameDMother == 1 && SignalPIDTrue == 1 && TagIsSameDMother == 1 && TagPIDTrue == 1") && GetModeSpecificCuts();
+  if(m_TagMode == "") {
+    CutsFromFile cutsFromFile(std::string(TRUTH_MATCHING_CUTS_DIR) + m_SignalMode + ".cut", "");
+    return CheckEmptyCut(cutsFromFile.GetCuts());
   } else {
-    return TCut();
+    CutsFromFile cutsFromFileSignal(std::string(TRUTH_MATCHING_CUTS_DIR) + m_SignalMode + ".cut", "Signal");
+    CutsFromFile cutsFromFileTag(std::string(TRUTH_MATCHING_CUTS_DIR) + m_TagMode + ".cut", "Tag");
+    return CheckEmptyCut(cutsFromFileSignal.GetCuts(), "Signal") && CheckEmptyCut(cutsFromFileTag.GetCuts(), "Tag");
   }
 }

@@ -22,10 +22,28 @@ std::vector<std::string> ParseDatasets(std::string DatasetsString);
 
 int main(int argc, char *argv[]) {
   Settings settings = Utilities::parse_args(argc, argv);
-  std::string Mode = settings.get("Mode");
   std::string TagType = settings.get("TagType");
+  std::string Mode = settings.get("Mode");
+  std::string RecSignalMode(""), RecTagMode("");
+  if(settings.contains("ReconstructedSignalMode")) {
+    RecSignalMode = "_to_" + settings.get("ReconstructedSignalMode");
+  }
+  if(settings.contains("ReconstructedTagMode")) {
+    RecTagMode = "_to_" + settings.get("ReconstructedTagMode");
+  }
+  std::string SignalMode, TagMode;
+  if(TagType == "ST") {
+    SignalMode = Mode + RecSignalMode;
+    TagMode = "";
+  } else if(TagType == "DT") {
+    SignalMode = "KKpipi" + RecSignalMode;
+    TagMode = Mode + RecTagMode;
+  } else {
+    std::cout << "Unknown tag type!\n";
+    return 0;
+  }
   bool IncludeDeltaECuts = settings.getB("Include_DeltaE_Cuts");
-  std::string TruthMatchMode = settings.getB("TruthMatch") ? Mode : "";
+  bool TruthMatch = settings.getB("TruthMatch");
   std::string TreeName = settings.get("TreeName");
   std::vector<std::string> Datasets = Utilities::ConvertStringToVector(settings.get("Datasets_to_include"));
   std::cout << "Sample prepration of " << TagType << " " << Mode << " mode\n";
@@ -45,7 +63,7 @@ int main(int argc, char *argv[]) {
       std::cout << "Luminosity scale is " << LuminosityScale << "\n";
       std::string OutputFilename = settings.get("OutputFilenamePrefix") + "_" + Dataset + Year + ".root";
       std::string DataMC = DataSetType == 0 ? "Data" : "MC";
-      TCut Cuts = Utilities::LoadCuts(Mode, TagType, IncludeDeltaECuts, DataMC, TruthMatchMode);
+      TCut Cuts = Utilities::LoadCuts(SignalMode, TagMode, TagType, DataMC, IncludeDeltaECuts, TruthMatch);
       // This cut removes empty NTuples
       Cuts = Cuts && TCut("!(Run == 0 && Event == 0)");
       std::cout << "Cuts ready, will apply the following cuts:\n" << Cuts.GetTitle() << "\n";
