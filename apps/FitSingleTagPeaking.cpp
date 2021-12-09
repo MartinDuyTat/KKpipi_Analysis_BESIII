@@ -17,6 +17,7 @@
 #include"Settings.h"
 #include"RooShapes/FitShape.h"
 #include"RooShapes/DoubleGaussian_Shape.h"
+#include"RooShapes/DoubleCrystalBall_Shape.h"
 
 int main(int argc, char *argv[]) {
   using namespace RooFit;
@@ -31,13 +32,17 @@ int main(int argc, char *argv[]) {
     std::string Name = Mode + "_PeakingBackground" + std::to_string(i);
     TChain Chain(TreeName.c_str());
     std::string SignalMCMode = settings["MBC_Shape"].get(Name + "_Mode");
-    std::string Filename = settings["Datasets_WithDeltaECuts"].get("SignalMC_" + SignalMCMode);
+    std::string Filename = settings["Datasets_WithDeltaECuts"].get("SignalMC_Peaking_ST");
+    Filename = Utilities::ReplaceString(Filename, "TAG", SignalMCMode);
+    Filename = Utilities::ReplaceString(Filename, "MODE", Mode);
     Chain.Add(Filename.c_str());
     RooRealVar MBC("MBC", "", 1.83, 1.8865);
     RooDataSet Data("Data", "", &Chain, MBC);
     FitShape *PDF;
     if(settings["MBC_Shape"].get(Name + "_Shape") == "DoubleGaussian") {
       PDF = new DoubleGaussian_Shape(Name, settings["MBC_Shape"][Name + "_FitSettings"], &MBC);
+    } else if(settings["MBC_Shape"].get(Name + "_Shape") == "DoubleCrystalBall") {
+      PDF = new DoubleCrystalBall_Shape(Name, settings["MBC_Shape"][Name + "_FitSettings"], &MBC);
     } else {
       throw std::invalid_argument("Unknown peaking background shape");
     }
@@ -59,6 +64,7 @@ int main(int argc, char *argv[]) {
       RooRealVar *param = static_cast<RooRealVar*>(floating_param.at(i));
       std::cout << param->GetName() << " " << param->getVal() << "\n";
     }
+  delete PDF;
   }
   std::cout << "Peaking backgrounds are now accounted for" << "\n";
   return 0;

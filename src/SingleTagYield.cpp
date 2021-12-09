@@ -30,6 +30,7 @@
 #include"Utilities.h"
 #include"RooShapes/FitShape.h"
 #include"RooShapes/DoubleGaussian_Shape.h"
+#include"RooShapes/DoubleCrystalBall_Shape.h"
 
 SingleTagYield::SingleTagYield(TTree *DataTree, TTree *MCSignalTree, const Settings &settings):
                                m_DataTree(DataTree),
@@ -93,6 +94,8 @@ void SingleTagYield::InitializePeakingBackgrounds() {
     FitShape *PeakingPDF = nullptr;
     if(PeakingShape == "DoubleGaussian") {
       PeakingPDF = new DoubleGaussian_Shape(Name, m_Settings["MBC_Shape"], &m_MBC);
+    } else if(PeakingShape == "DoubleCrystalBall") {
+      PeakingPDF = new DoubleCrystalBall_Shape(Name, m_Settings["MBC_Shape"], &m_MBC);
     } else {
       throw std::invalid_argument("Unknown peaking background shape");
     }
