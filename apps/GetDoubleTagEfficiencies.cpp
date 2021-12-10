@@ -71,6 +71,13 @@ int main(int argc, char *argv[]) {
   }
   std::cout << "Efficiency matrix constructed!\n";
   EffMatrix.Write("EffMatrix");
-  Outfile.Close();
+  std::cout << "Double tag yields (copy to some file for now):\n";
+  std::string Mode = settings.get("Mode");
+  double SignalMC_SampleSize = static_cast<double>(settings["SignalMCSampleSize"].getI("DoubleTag"));
+  double Entries = static_cast<double>(Chain.GetEntries());
+  double Efficiency = Entries/SignalMC_SampleSize;
+  std::cout << Mode << "_DoubleTagEfficiency     " << Efficiency << "\n";
+  std::cout << Mode << "_DoubleTagEfficiency_err " << TMath::Sqrt(Efficiency*(1 - Efficiency)/SignalMC_SampleSize) << "\n";
+  std::cout << "Double tag efficiency studies done!\n";
   return 0;
 }
