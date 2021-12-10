@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
     std::string Filename = settings["Datasets_WithDeltaECuts"].get("SignalMC_ST");
     Filename = Utilities::ReplaceString(Filename, "TAG", Mode);
     Chain.Add(Filename.c_str());
-    double Entries = static_cast<double>(Chain.GetEntries("MBC > 1.86 && MBC < 1.87"));
+    double Entries = static_cast<double>(Chain.GetEntries());
     double Efficiency = Entries/SignalMC_SampleSize;
     Outfile << Mode << "_SingleTagEfficiency     " << Efficiency << "\n";
     Outfile << Mode << "_SingleTagEfficiency_err " << TMath::Sqrt(Efficiency*(1 - Efficiency)/SignalMC_SampleSize) << "\n";
