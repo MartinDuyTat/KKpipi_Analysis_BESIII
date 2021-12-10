@@ -64,13 +64,25 @@ class BinnedFitModel {
      */
     RooArgusBG *m_Argus = nullptr;
     /**
-     * Initialize the signal component in a specific bin
+     * Map of all the peaking background shapes
+     */
+    std::map<std::string, RooAbsPdf*> m_PeakingBackgroundShapes;
+    /**
+     * Initialize all the yield variables
+     */
+    void InitializeYields();
+    /**
+     * Initialize the signal component for all bins
      */
     void InitializeSignalShape();
     /**
-     * Create the combinatorial component in a specific bin
+     * Create the combinatorial component for all bins
      */
     void InitializeArgusShape();
+    /**
+     * Create the peaking background shape components for all bins
+     */
+    void InitializePeakingBackgroundShapes();
     /**
      * Create the total PDF and yield in a specific bin
      */
@@ -90,7 +102,7 @@ class BinnedFitModel {
     /**
      * Map of all yield parameters
      */
-    std::map<std::string, RooRealVar*> m_Yields;
+    std::map<std::string, RooAbsReal*> m_Yields;
     /**
      * Map of Gaussian resolution and Argus parameters
      */

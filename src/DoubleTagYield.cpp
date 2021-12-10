@@ -38,7 +38,7 @@ void DoubleTagYield::DoFit() {
   // Any bins with less than 0.5 combinatorial background events are set constant
   std::vector<std::string> Categories = DataLoader.GetCategoryObject()->GetCategories();
   for(const auto &Category : Categories) {
-    RooRealVar *CombinatorialYield = FitModel.m_Yields[Category + "_CombinatorialYield"];
+    RooRealVar *CombinatorialYield = static_cast<RooRealVar*>(FitModel.m_Yields[Category + "_CombinatorialYield"]);
     if(CombinatorialYield->getVal() < 0.5) {
       CombinatorialYield->setConstant();
     }
@@ -83,13 +83,19 @@ void DoubleTagYield::PlotProjections(BinnedDataLoader *DataLoader, RooSimultaneo
     Model->plotOn(Frame, LineColor(kBlue), Slice(*CategoryVariable, Category.c_str()), ProjWData(*CategoryVariable, *DataSet));
     RooHist *Pull = Frame->pullHist();
     Model->plotOn(Frame, LineColor(kBlue), Components("Argus"), LineStyle(kDashed), Slice(*CategoryVariable, Category.c_str()), ProjWData(*CategoryVariable, *DataSet));
-    /*if(m_PeakingBackgrounds.size() > 0) {
-      std::string PeakingList = m_PeakingBackgrounds[0]->GetPDF()->GetName();
-      for(unsigned int i = 1; i < m_PeakingBackgrounds.size(); i++) {
-	PeakingList += std::string(",") + m_PeakingBackgrounds[i]->GetPDF()->GetName();
+    int PeakingBackgrounds = m_Settings["MBC_Shape"].getI(m_Settings.get("Mode") + "_PeakingBackgrounds");
+    if(PeakingBackgrounds > 0) {
+      std::string PeakingList = "";
+      for(int i = 0; i < PeakingBackgrounds; i++) {
+	if(i != 0) {
+	  PeakingList += std::string(",");
+	}
+	std::string Name = m_Settings.get("Mode") + "_PeakingBackground" + std::to_string(i);
+	std::string PeakingShape = m_Settings["MBC_Shape"].get(Name + "_Shape");
+	PeakingList += "PeakingBackground" + std::to_string(i) + "_" + PeakingShape;
       }
-      m_FullModel->plotOn(Frame, LineColor(kMagenta), Components(PeakingList.c_str()));
-    }*/
+      Model->plotOn(Frame, LineColor(kMagenta), Slice(*CategoryVariable, Category.c_str()), ProjWData(*CategoryVariable, *DataSet), Components(PeakingList.c_str()));
+    }
     Frame->Draw();
     Pad2.cd();
     RooPlot *PullFrame = m_SignalMBC.frame();
@@ -120,7 +126,7 @@ void DoubleTagYield::SaveSignalYields(const BinnedFitModel &FitModel, RooFitResu
   for(const auto & cat : category.GetCategories()) {
     std::string Name = cat + "_SignalYield";
     Outfile << Name << "     " << std::setw(8) << std::right << FitModel.m_Yields.at(Name)->getVal()*Fraction << "\n";
-    Outfile << Name << "_err " << std::setw(8) << std::right << FitModel.m_Yields.at(Name)->getError()*Fraction << "\n";
+    Outfile << Name << "_err " << std::setw(8) << std::right << static_cast<RooRealVar*>(FitModel.m_Yields.at(Name))->getError()*Fraction << "\n";
   }
   Outfile.close();
 }
