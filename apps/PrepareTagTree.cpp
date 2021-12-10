@@ -23,7 +23,11 @@ std::vector<std::string> ParseDatasets(std::string DatasetsString);
 int main(int argc, char *argv[]) {
   Settings settings = Utilities::parse_args(argc, argv);
   std::string TagType = settings.get("TagType");
-  std::string Mode = settings.get("Mode");
+  std::string SignalMode("");
+  if(TagType == "DT") {
+    SignalMode = settings.get("SignalMode");
+  }
+  std::string TagMode = settings.get("TagMode");
   std::string RecSignalMode(""), RecTagMode("");
   if(settings.contains("ReconstructedSignalMode")) {
     RecSignalMode = "_to_" + settings.get("ReconstructedSignalMode");
@@ -31,22 +35,15 @@ int main(int argc, char *argv[]) {
   if(settings.contains("ReconstructedTagMode")) {
     RecTagMode = "_to_" + settings.get("ReconstructedTagMode");
   }
-  std::string SignalMode, TagMode;
-  if(TagType == "ST") {
-    SignalMode = Mode + RecSignalMode;
-    TagMode = "";
-  } else if(TagType == "DT") {
-    SignalMode = "KKpipi" + RecSignalMode;
-    TagMode = Mode + RecTagMode;
-  } else {
-    std::cout << "Unknown tag type!\n";
-    return 0;
-  }
   bool IncludeDeltaECuts = settings.getB("Include_DeltaE_Cuts");
   bool TruthMatch = settings.getB("TruthMatch");
   std::string TreeName = settings.get("TreeName");
   std::vector<std::string> Datasets = Utilities::ConvertStringToVector(settings.get("Datasets_to_include"));
-  std::cout << "Sample prepration of " << TagType << " " << Mode << " mode\n";
+  std::cout << "Sample prepration of " << TagType << " ";
+  if(TagType == "DT") {
+    std::cout << SignalMode << "vs ";
+  }
+  std::cout << TagMode << "\n";
   for(const auto &Dataset : Datasets) {
     int DataSetType = settings["DataTypes"].getI(Dataset);
     std::cout << "Processing " << Dataset << " sample, dataset type " << DataSetType << "\n";
@@ -55,7 +52,8 @@ int main(int argc, char *argv[]) {
       InputFilename = settings["Datasets"].get(Dataset);
     } else {
       InputFilename = settings["Datasets"].get(Dataset + "_" + TagType);
-      InputFilename = Utilities::ReplaceString(InputFilename, "TAG", Mode);
+      InputFilename = Utilities::ReplaceString(InputFilename, "SIGNAL", SignalMode);
+      InputFilename = Utilities::ReplaceString(InputFilename, "TAG", TagMode);
     }
     std::vector<std::string> Years = InputFilename.find("YEAR") == std::string::npos ? std::vector<std::string>{""} : std::vector<std::string>{"2010", "2011"};
     for(const auto &Year : Years) {
@@ -63,7 +61,7 @@ int main(int argc, char *argv[]) {
       std::cout << "Luminosity scale is " << LuminosityScale << "\n";
       std::string OutputFilename = settings.get("OutputFilenamePrefix") + "_" + Dataset + Year + ".root";
       std::string DataMC = DataSetType == 0 ? "Data" : "MC";
-      TCut Cuts = Utilities::LoadCuts(SignalMode, TagMode, TagType, DataMC, IncludeDeltaECuts, TruthMatch);
+      TCut Cuts = Utilities::LoadCuts(SignalMode + RecSignalMode, TagMode + RecTagMode, TagType, DataMC, IncludeDeltaECuts, TruthMatch);
       // This cut removes empty NTuples
       Cuts = Cuts && TCut("!(Run == 0 && Event == 0)");
       std::cout << "Cuts ready, will apply the following cuts:\n" << Cuts.GetTitle() << "\n";

@@ -52,7 +52,7 @@ namespace Utilities {
 		const std::string &DataMC,
 		bool IncludeDeltaECuts,
 		bool TruthMatch) {
-    std::string Mode = TagMode == "" ? SignalMode : TagMode;
+    std::string Mode = TagMode;
     if(Mode.find("_to_") != std::string::npos) {
       Mode = Mode.substr(Mode.find("_to_") + 4);
     }

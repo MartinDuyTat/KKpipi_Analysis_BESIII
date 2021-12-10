@@ -17,8 +17,8 @@ TCut TruthMatchingCuts::CheckEmptyCut(TCut Cut, const std::string &TagSide) cons
 }
 
 TCut TruthMatchingCuts::GetTruthMatchingCuts() const {
-  if(m_TagMode == "") {
-    CutsFromFile cutsFromFile(std::string(TRUTH_MATCHING_CUTS_DIR) + m_SignalMode + ".cut", "");
+  if(m_SignalMode == "") {
+    CutsFromFile cutsFromFile(std::string(TRUTH_MATCHING_CUTS_DIR) + m_TagMode + ".cut", "");
     return CheckEmptyCut(cutsFromFile.GetCuts());
   } else {
     CutsFromFile cutsFromFileSignal(std::string(TRUTH_MATCHING_CUTS_DIR) + m_SignalMode + ".cut", "Signal");
