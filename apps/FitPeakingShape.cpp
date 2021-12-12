@@ -1,6 +1,6 @@
 // Martin Duy Tat 4th April 2021
 /**
- * FitSingleTagPeaking is an application that determines the shape and yield (relative to signal) of any peaking backgrounds for single tag fits
+ * FitPeakingShape is an application that determines the shape and yield (relative to signal) of any peaking backgrounds for single and double tag fits
  */
 
 #include<iostream>
@@ -23,21 +23,24 @@
 int main(int argc, char *argv[]) {
   using namespace RooFit;
   Settings settings = Utilities::parse_args(argc, argv);
-  std::cout << "Single tag peaking background fit\n";
+  std::cout << "Peaking background shape fit\n";
   std::cout << "Loading ROOT files...\n";
   std::string TreeName = settings.get("TreeName");
   std::string Mode = settings.get("Mode");
+  std::string TagType = settings.get("TagType");
   int PeakingBackgrounds = settings["MBC_Shape"].getI(Mode + "_PeakingBackgrounds");
   for(int i = 0; i < PeakingBackgrounds; i++) {
     std::cout << "Fitting peaking background " << i << "\n";
     std::string Name = Mode + "_PeakingBackground" + std::to_string(i);
     TChain Chain(TreeName.c_str());
     std::string SignalMCMode = settings["MBC_Shape"].get(Name + "_Mode");
-    std::string Filename = settings["Datasets_WithDeltaECuts"].get("SignalMC_Peaking_ST");
-    Filename = Utilities::ReplaceString(Filename, "TAG", SignalMCMode);
+    std::string RecSignalMCMode = TagType == "ST" ? Mode : settings["MBC_Shape"].get(Name + "_RecMode");
+    std::string Filename = settings["Datasets_WithDeltaECuts"].get("SignalMC_Peaking_" + TagType);
+    Filename = Utilities::ReplaceString(Filename, "BACKGROUND", SignalMCMode);
+    Filename = Utilities::ReplaceString(Filename, "TAG", RecSignalMCMode);
     Filename = Utilities::ReplaceString(Filename, "MODE", Mode);
     Chain.Add(Filename.c_str());
-    RooRealVar MBC("MBC", "", 1.83, 1.8865);
+    RooRealVar MBC(settings.get("FitVariable").c_str(), "", 1.83, 1.8865);
     RooDataSet Data("Data", "", &Chain, MBC);
     std::unique_ptr<FitShape> PDF;
     if(settings["MBC_Shape"].get(Name + "_Shape") == "DoubleGaussian") {
@@ -55,16 +58,16 @@ int main(int argc, char *argv[]) {
     Frame->SetTitle((SignalMCMode + " peaking background in " + Mode + " single tag;m_{BC} (GeV);Events").c_str());
     Frame->Draw();
     c.SaveAs(settings["MBC_Shape"].get(Name + "_PlotFilename").c_str());
+    Result->Print();
     std::cout << "Fit results for peaking background " << i << ":\n";
-    double Signal_BF = settings["BranchingFractions"].getD(Mode);
-    double Background_BF = settings["BranchingFractions"].getD(SignalMCMode);
-    double Signal_MC_Yield = settings["MBC_Shape"].getD(Mode + "_SingleTag_SignalMCYield");
-    std::cout << Name + "_BackgroundToSignalRatio " << Chain.GetEntries()*Background_BF/(Signal_BF*Signal_MC_Yield) << "\n";
+    std::cout << "Status " << Result->status() << "\n";
+    std::cout << "covQual " << Result->covQual() << "\n";
     RooArgList floating_param = Result->floatParsFinal();
     for(int i = 0; i < floating_param.getSize(); i++) {
       RooRealVar *param = static_cast<RooRealVar*>(floating_param.at(i));
       std::cout << param->GetName() << " " << param->getVal() << "\n";
     }
+    std::cout << "\n";
   }
   std::cout << "Peaking backgrounds are now accounted for" << "\n";
   return 0;
