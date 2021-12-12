@@ -15,6 +15,7 @@
 #include"RooAddPdf.h"
 #include"Settings.h"
 #include"Category.h"
+#include"RooShapes/FitShape.h"
 
 class DoubleTagYield;
 
@@ -27,7 +28,7 @@ class BinnedFitModel {
      */
     BinnedFitModel(const Settings &settings, RooRealVar *SignalMBC, RooRealVar *TagMBC);
     /**
-     * Destructor that deletes the simultaneous PDF
+     * Destructor that deletes the simultaneous PDF and the peaking background shapes
      */
     ~BinnedFitModel();
     /**
@@ -66,7 +67,7 @@ class BinnedFitModel {
     /**
      * Map of all the peaking background shapes
      */
-    std::map<std::string, RooAbsPdf*> m_PeakingBackgroundShapes;
+    std::map<std::string, FitShape*> m_PeakingBackgroundShapes;
     /**
      * Initialize all the yield variables
      */

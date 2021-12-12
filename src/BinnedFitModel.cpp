@@ -44,6 +44,10 @@ BinnedFitModel::~BinnedFitModel() {
   if(m_PDF) {
     delete m_PDF;
   }
+  for(auto &PeakingBackgroundShape : m_PeakingBackgroundShapes) {
+    delete PeakingBackgroundShape.second;
+  }
+  m_PeakingBackgroundShapes.clear();
 }
 
 RooSimultaneous* BinnedFitModel::GetPDF() {
@@ -104,17 +108,16 @@ void BinnedFitModel::InitializePeakingBackgroundShapes() {
   int PeakingBackgrounds = m_Settings["MBC_Shape"].getI(Mode + "_PeakingBackgrounds");
   for(int i = 0; i < PeakingBackgrounds; i++) {
     std::string Name = Mode + "_PeakingBackground" + std::to_string(i);
-    std::string PDFName = "PeakingBackground" + std::to_string(i);
     std::string PeakingShape = m_Settings["MBC_Shape"].get(Name + "_Shape");
     FitShape *PeakingPDF = nullptr;
     if(PeakingShape == "DoubleGaussian") {
-      PeakingPDF = new DoubleGaussian_Shape(PDFName, m_Settings["MBC_Shape"], m_SignalMBC);
+      PeakingPDF = new DoubleGaussian_Shape(Name, m_Settings["MBC_Shape"], m_SignalMBC);
     } else if(PeakingShape == "DoubleCrystalBall") {
-      PeakingPDF = new DoubleCrystalBall_Shape(PDFName, m_Settings["MBC_Shape"], m_SignalMBC);
+      PeakingPDF = new DoubleCrystalBall_Shape(Name, m_Settings["MBC_Shape"], m_SignalMBC);
     } else {
       throw std::invalid_argument("Unknown peaking background shape");
     }
-    m_PeakingBackgroundShapes.insert({Name, PeakingPDF->GetPDF()});
+    m_PeakingBackgroundShapes.insert({Name, PeakingPDF});
   }
 }
 
@@ -125,7 +128,7 @@ RooAddPdf* BinnedFitModel::CreateBinPDF(const std::string &CategoryString) {
   int PeakingBackgrounds = m_Settings["MBC_Shape"].getI(Mode + "_PeakingBackgrounds");
   for(int i = 0; i < PeakingBackgrounds; i++) {
     std::string Name = Mode + "_PeakingBackground" + std::to_string(i);
-    Shapes.add(*m_PeakingBackgroundShapes.at(Name));
+    Shapes.add(*m_PeakingBackgroundShapes.at(Name)->GetPDF());
     Yields.add(*m_Yields.at(CategoryString + "_PeakingBackground" + std::to_string(i) + "Yield"));
   }
   return Unique::create<RooAddPdf*>((CategoryString + "_PDF").c_str(), "", Shapes, Yields);

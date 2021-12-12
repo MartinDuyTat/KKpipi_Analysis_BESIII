@@ -52,17 +52,17 @@ void DoubleTagYield::DoFit() {
   // Perform a second fit
   auto Result = Model->fitTo(*DataSet, Save(), NumCPU(4));
   Result->Print();
-  PlotProjections(&DataLoader, Model);
+  PlotProjections(&DataLoader, &FitModel);
   SaveSignalYields(FitModel, Result, *DataLoader.GetCategoryObject());
 }
 
-void DoubleTagYield::PlotProjections(BinnedDataLoader *DataLoader, RooSimultaneous *Model) {
+void DoubleTagYield::PlotProjections(BinnedDataLoader *DataLoader, BinnedFitModel *FitModel) {
   using namespace RooFit;
+  auto Model = FitModel->GetPDF();
   Category *category = DataLoader->GetCategoryObject();
   RooCategory *CategoryVariable = category->GetCategoryVariable();
-  std::vector<std::string> Categories = category->GetCategories();
   RooDataSet *DataSet = DataLoader->GetDataSet();
-  for(const auto &Category : Categories) {
+  for(const auto &Category : category->GetCategories()) {
     int Bin = category->GetSignalBinNumber(Category);
     TCanvas c1((Category + "_c1").c_str(), "", 1600, 1200);
     TPad Pad1((Category + "_Pad1").c_str(), "", 0.0, 0.25, 1.0, 1.0);
@@ -83,16 +83,13 @@ void DoubleTagYield::PlotProjections(BinnedDataLoader *DataLoader, RooSimultaneo
     Model->plotOn(Frame, LineColor(kBlue), Slice(*CategoryVariable, Category.c_str()), ProjWData(*CategoryVariable, *DataSet));
     RooHist *Pull = Frame->pullHist();
     Model->plotOn(Frame, LineColor(kBlue), Components("Argus"), LineStyle(kDashed), Slice(*CategoryVariable, Category.c_str()), ProjWData(*CategoryVariable, *DataSet));
-    int PeakingBackgrounds = m_Settings["MBC_Shape"].getI(m_Settings.get("Mode") + "_PeakingBackgrounds");
-    if(PeakingBackgrounds > 0) {
+    if(FitModel->m_PeakingBackgroundShapes.size() > 0) {
       std::string PeakingList = "";
-      for(int i = 0; i < PeakingBackgrounds; i++) {
-	if(i != 0) {
+      for(auto iter = FitModel->m_PeakingBackgroundShapes.begin(); iter != FitModel->m_PeakingBackgroundShapes.end(); iter++) {
+	if(iter != FitModel->m_PeakingBackgroundShapes.begin()) {
 	  PeakingList += std::string(",");
 	}
-	std::string Name = m_Settings.get("Mode") + "_PeakingBackground" + std::to_string(i);
-	std::string PeakingShape = m_Settings["MBC_Shape"].get(Name + "_Shape");
-	PeakingList += "PeakingBackground" + std::to_string(i) + "_" + PeakingShape;
+	PeakingList += iter->second->GetPDF()->GetName();
       }
       Model->plotOn(Frame, LineColor(kMagenta), Slice(*CategoryVariable, Category.c_str()), ProjWData(*CategoryVariable, *DataSet), Components(PeakingList.c_str()));
     }

@@ -52,6 +52,9 @@ SingleTagYield::SingleTagYield(TTree *DataTree, TTree *MCSignalTree, const Setti
 }
 
 SingleTagYield::~SingleTagYield() {
+  for(auto &PeakingBackground : m_PeakingBackgrounds) {
+    delete PeakingBackground;
+  }
 }
 
 void SingleTagYield::InitializeSignalShape() {

@@ -6,6 +6,7 @@
 #include<iostream>
 #include<string>
 #include<stdexcept>
+#include<memory>
 #include"TChain.h"
 #include"TCanvas.h"
 #include"RooRealVar.h"
@@ -38,11 +39,11 @@ int main(int argc, char *argv[]) {
     Chain.Add(Filename.c_str());
     RooRealVar MBC("MBC", "", 1.83, 1.8865);
     RooDataSet Data("Data", "", &Chain, MBC);
-    FitShape *PDF;
+    std::unique_ptr<FitShape> PDF;
     if(settings["MBC_Shape"].get(Name + "_Shape") == "DoubleGaussian") {
-      PDF = new DoubleGaussian_Shape(Name, settings["MBC_Shape"][Name + "_FitSettings"], &MBC);
+      PDF = std::unique_ptr<FitShape>{new DoubleGaussian_Shape(Name, settings["MBC_Shape"][Name + "_FitSettings"], &MBC)};
     } else if(settings["MBC_Shape"].get(Name + "_Shape") == "DoubleCrystalBall") {
-      PDF = new DoubleCrystalBall_Shape(Name, settings["MBC_Shape"][Name + "_FitSettings"], &MBC);
+      PDF = std::unique_ptr<FitShape>{new DoubleCrystalBall_Shape(Name, settings["MBC_Shape"][Name + "_FitSettings"], &MBC)};
     } else {
       throw std::invalid_argument("Unknown peaking background shape");
     }
@@ -64,7 +65,6 @@ int main(int argc, char *argv[]) {
       RooRealVar *param = static_cast<RooRealVar*>(floating_param.at(i));
       std::cout << param->GetName() << " " << param->getVal() << "\n";
     }
-  delete PDF;
   }
   std::cout << "Peaking backgrounds are now accounted for" << "\n";
   return 0;
