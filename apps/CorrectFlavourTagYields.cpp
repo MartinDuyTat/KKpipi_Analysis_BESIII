@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
     DCS_Name += Bin > 0 ? "P" : "M";
     DCS_Name += std::to_string(TMath::Abs(Bin));
     EffCorrectedYields(i, 0) *= settings["DCS_Corrections"].getD(DCS_Name);
-    std::string VariableName = Mode + "_Ki_Bin" + (Bin > 0 ? "P" : "M" + std::to_string(TMath::Abs(Bin)));
+    std::string VariableName = Mode + "_Ki_Bin" + (Bin > 0 ? "P" : "M") + std::to_string(TMath::Abs(Bin));
     Outfile << VariableName << " " << EffCorrectedYields(i, 0) << "\n";
     YieldErrors(i, 0) = EffCorrectedYields(i, 0)*YieldErrors(i, 0)/Yields(i, 0);
     Outfile << VariableName << "_err " << YieldErrors(i, 0) << "\n";
