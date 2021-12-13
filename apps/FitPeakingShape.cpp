@@ -32,13 +32,34 @@ int main(int argc, char *argv[]) {
   for(int i = 0; i < PeakingBackgrounds; i++) {
     std::cout << "Fitting peaking background " << i << "\n";
     std::string Name = Mode + "_PeakingBackground" + std::to_string(i);
+    std::string SignalMode("");
+    if(TagType == "DT") {
+      SignalMode = settings["MBC_Shape"].get(Name + "_SignalMode");
+    }
+    std::string TagMode = settings["MBC_Shape"].get(Name + "_TagMode");
+    std::string RecSignalMode, RecTagMode;
+    if(settings["MBC_Shape"].contains(Name + "_ReconstructedSignalMode")) {
+      RecSignalMode = settings["MBC_Shape"].get(Name + "_ReconstructedSignalMode");
+    } else {
+      RecSignalMode = SignalMode;
+    }
+    if(settings["MBC_Shape"].contains(Name + "_ReconstructedTagMode")) {
+      RecTagMode = settings["MBC_Shape"].get(Name + "_ReconstructedTagMode");
+    } else {
+      RecTagMode = TagMode;
+    }
     TChain Chain(TreeName.c_str());
-    std::string SignalMCMode = settings["MBC_Shape"].get(Name + "_Mode");
-    std::string RecSignalMCMode = TagType == "ST" ? Mode : settings["MBC_Shape"].get(Name + "_RecMode");
     std::string Filename = settings["Datasets_WithDeltaECuts"].get("SignalMC_Peaking_" + TagType);
-    Filename = Utilities::ReplaceString(Filename, "BACKGROUND", SignalMCMode);
-    Filename = Utilities::ReplaceString(Filename, "TAG", RecSignalMCMode);
-    Filename = Utilities::ReplaceString(Filename, "MODE", Mode);
+    if(TagType == "ST") {
+      Filename = Utilities::ReplaceString(Filename, "BACKGROUND", TagMode);
+      Filename = Utilities::ReplaceString(Filename, "TAG", RecTagMode);
+    } else if(TagType == "DT") {
+      Filename = Utilities::ReplaceString(Filename, "SIGNAL1", SignalMode);
+      Filename = Utilities::ReplaceString(Filename, "TAG1", TagMode);
+      Filename = Utilities::ReplaceString(Filename, "SIGNAL2", RecSignalMode);
+      Filename = Utilities::ReplaceString(Filename, "TAG2", RecTagMode);
+      Filename = Utilities::ReplaceString(Filename, "MODE", Mode);
+    }
     Chain.Add(Filename.c_str());
     RooRealVar MBC(settings.get("FitVariable").c_str(), "", 1.83, 1.8865);
     RooDataSet Data("Data", "", &Chain, MBC);
@@ -55,7 +76,11 @@ int main(int argc, char *argv[]) {
     RooPlot *Frame = MBC.frame();
     Data.plotOn(Frame, Binning(100));
     PDF->GetPDF()->plotOn(Frame, LineColor(kBlue));
-    Frame->SetTitle((SignalMCMode + " peaking background in " + Mode + " single tag;m_{BC} (GeV);Events").c_str());
+    if(TagType == "ST") {
+      Frame->SetTitle((TagMode + " peaking background in " + RecTagMode + " single tag;m_{BC} (GeV);Events").c_str());
+    } else if(TagType == "DT") {
+      Frame->SetTitle((SignalMode  + " vs "  + TagMode + " peaking background in " + RecSignalMode + " vs " + RecTagMode + " double tag;m_{BC} (GeV);Events").c_str());
+    }
     Frame->Draw();
     c.SaveAs(settings["MBC_Shape"].get(Name + "_PlotFilename").c_str());
     Result->Print();
