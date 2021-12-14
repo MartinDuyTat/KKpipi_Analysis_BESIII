@@ -8,6 +8,7 @@ add_library(KKpipiStrongPhase
 	    DeltaEFit.cpp
 	    DeltaEFitModel.cpp
 	    DoubleTagYield.cpp
+	    FPlusFitter.cpp
 	    InitialCuts.cpp
 	    PredictNumberEvents.cpp
 	    Settings.cpp

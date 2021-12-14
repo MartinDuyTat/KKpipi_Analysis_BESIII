@@ -7,6 +7,7 @@ add_executable(BinMigrationStudy BinMigrationStudy.cpp)
 add_executable(CorrectFlavourTagYields CorrectFlavourTagYields.cpp)
 add_executable(FitDeltaE FitDeltaE.cpp)
 add_executable(FitDoubleTagMBC FitDoubleTagMBC.cpp)
+add_executable(FitFPlus FitFPlus.cpp)
 add_executable(FitPeakingShape FitPeakingShape.cpp)
 add_executable(FitSingleTagMBC FitSingleTagMBC.cpp)
 add_executable(GetDCSCorrections GetDCSCorrections.cpp)
@@ -39,6 +40,10 @@ target_link_libraries(FitDeltaE PUBLIC ROOT::Physics ROOT::RIO ROOT::Tree)
 target_link_libraries(FitDoubleTagMBC PUBLIC KKpipiStrongPhase)
 target_link_libraries(FitDoubleTagMBC PUBLIC ${KKPIPI_BINNED_FIT_LIB} -ldl)
 target_link_libraries(FitDoubleTagMBC PUBLIC ROOT::Physics ROOT::RIO ROOT::Tree)
+
+target_link_libraries(FitFPlus PUBLIC KKpipiStrongPhase)
+target_link_libraries(FitFPlus PUBLIC ${KKPIPI_BINNED_FIT_LIB} -ldl)
+target_link_libraries(FitFPlus PUBLIC ROOT::Physics ROOT::RIO ROOT::Tree)
 
 target_link_libraries(FitPeakingShape PUBLIC KKpipiStrongPhase)
 target_link_libraries(FitPeakingShape PUBLIC ${KKPIPI_BINNED_FIT_LIB} -ldl)
@@ -73,4 +78,19 @@ target_link_libraries(PrepareTagTree PUBLIC KKpipiStrongPhase)
 target_link_libraries(PrepareTagTree PUBLIC ${KKPIPI_BINNED_FIT_LIB} -ldl)
 target_link_libraries(PrepareTagTree PUBLIC ROOT::Physics ROOT::RIO ROOT::Tree)
 
-install(TARGETS AnalyzeTopoAna BinDoubleTags BinMigrationStudy CorrectFlavourTagYields FitDeltaE FitDoubleTagMBC FitPeakingShape FitSingleTagMBC GetDCSCorrections GetSingleTagEfficiencies GetDoubleTagEfficiencies MakeDeltaECuts MakeResolutionHistograms PredictDoubleTaggedYields PrepareTagTree DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/../bin)
+install(TARGETS AnalyzeTopoAna
+		BinDoubleTags
+		BinMigrationStudy
+		CorrectFlavourTagYields
+		FitDeltaE
+		FitDoubleTagMBC
+		FitFPlus
+		FitPeakingShape
+		FitSingleTagMBC
+		GetDCSCorrections
+		GetSingleTagEfficiencies
+		GetDoubleTagEfficiencies
+		MakeDeltaECuts
+		MakeResolutionHistograms
+		PredictDoubleTaggedYields
+		PrepareTagTree DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/../bin)
