@@ -1,0 +1,2 @@
+SignalTagIsSameDMother == 1
+(SignalTagKPlusTrueID == 211 && SignalTagKMinusTrueID == -321) || (SignalTagKPlusTrueID == 321 && SignalTagKMinusTrueID == -211)

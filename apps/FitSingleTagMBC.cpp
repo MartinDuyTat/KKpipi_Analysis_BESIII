@@ -27,6 +27,8 @@ int main(int argc, char *argv[]) {
   TFile MCFile(SignalMCFilename.c_str(), "READ");
   TTree *MCTree = nullptr;
   MCFile.GetObject(TreeName.c_str(), MCTree);
+  MCTree->SetBranchStatus("*", 0);
+  MCTree->SetBranchStatus("MBC", 1);
   std::cout << "Trees ready\n";
   std::cout << "Setting up fit model...\n";
   TTree *ClonedMCTree = nullptr;

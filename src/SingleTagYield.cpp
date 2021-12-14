@@ -41,8 +41,8 @@ SingleTagYield::SingleTagYield(TTree *DataTree, TTree *MCSignalTree, const Setti
   m_DataTree->SetBranchStatus("*", 0);
   m_DataTree->SetBranchStatus("MBC", 1);
   m_DataTree->SetBranchStatus("LuminosityWeight", 1);
-  m_MCSignalTree->SetBranchStatus("*", 0);
-  m_MCSignalTree->SetBranchStatus("MBC", 1);
+  //m_MCSignalTree->SetBranchStatus("*", 0);
+  //m_MCSignalTree->SetBranchStatus("MBC", 1);
   m_MBC.setBins(MCSignalTree->GetEntries()/10, "cache");
   m_MBC.setRange("SignalRange", 1.86, 1.87);
   InitializeSignalShape();
@@ -59,8 +59,10 @@ SingleTagYield::~SingleTagYield() {
 
 void SingleTagYield::InitializeSignalShape() {
   m_Parameters.insert({"frac", Unique::create<RooRealVar*>("frac", "", 0.5, 0.0, 1.0)});
-  m_Parameters.insert({"Mean1", Unique::create<RooRealVar*>("Mean1", "", 0.0, -0.001, 0.001)});
-  m_Parameters.insert({"Mean2", Unique::create<RooRealVar*>("Mean2", "", 0.0, -0.001, 0.001)});
+  auto Mean1 = Utilities::load_param(m_Settings["MBC_Shape"], m_Settings.get("Mode") + "_SingleTag_Mean1");
+  auto Mean2 = Utilities::load_param(m_Settings["MBC_Shape"], m_Settings.get("Mode") + "_SingleTag_Mean2");
+  m_Parameters.insert({"Mean1", Mean1});
+  m_Parameters.insert({"Mean2", Mean2});
   auto Sigma1 = Utilities::load_param(m_Settings["MBC_Shape"], m_Settings.get("Mode") + "_SingleTag_Sigma1");
   auto Sigma2 = Utilities::load_param(m_Settings["MBC_Shape"], m_Settings.get("Mode") + "_SingleTag_Sigma2");
   m_Parameters.insert({"Sigma1", Sigma1});

@@ -34,7 +34,8 @@ class KKpipi_vs_Flavour_PhaseSpace: public KKpipi_PhaseSpace {
     /**
      * Charge of the tag kaon
      */
-    double m_KaonCharge;
+    int m_KaonCharge;
+    //double m_KaonCharge; // Bug in BOSS code, will fix in the future
 };
 
 #endif
