@@ -35,9 +35,14 @@ void BinnedDataLoader::MakeDataSet() {
   RooDataSet CategorySet("InputData_Category", "", RooArgSet(*CategoryVariable));
   for(int i = 0; i < m_DataSet->numEntries(); i++) {
     const RooArgSet *Row = m_DataSet->get(i);
-    int SignalBinNumber = static_cast<RooRealVar*>(Row->find(SignalBin_Name.c_str()))->getVal();
-    int TagBinNumber = static_cast<RooRealVar*>(Row->find(TagBin_Name.c_str()))->getVal();
-    std::string CategoryString = m_Category(SignalBinNumber, TagBinNumber);
+    std::string CategoryString;
+    if(m_Settings.contains("Inclusive_fit") && m_Settings.getB("Inclusive_fit")) {
+      CategoryString = m_Category(0, 0);
+    } else {
+      int SignalBinNumber = static_cast<RooRealVar*>(Row->find(SignalBin_Name.c_str()))->getVal();
+      int TagBinNumber = static_cast<RooRealVar*>(Row->find(TagBin_Name.c_str()))->getVal();
+      CategoryString = m_Category(SignalBinNumber, TagBinNumber);
+    }
     CategoryVariable->setLabel(CategoryString.c_str());
     CategorySet.add(RooArgSet(*CategoryVariable));
   }

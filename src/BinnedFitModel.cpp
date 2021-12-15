@@ -76,6 +76,10 @@ void BinnedFitModel::InitializeYields() {
   for(int i = 0; i < PeakingBackgrounds; i++) {
     std::string Name = Mode + "_PeakingBackground" + std::to_string(i);
     double BackgroundSignalRatio = m_Settings["MBC_Shape"].getD(Name + "_BackgroundToSignalRatio");
+    // For inclusive fit, quantum correlation is accounted for with a simple correction factor
+    if(m_Settings.getB("Inclusive_fit") && m_Settings["MBC_Shape"].contains(Name + "_QuantumCorrelationFactor")) {
+      BackgroundSignalRatio *= m_Settings["MBC_Shape"].getD(Name + "_QuantumCorrelationFactor");
+    }
     for(const auto &CategoryString : m_Category.GetCategories()) {
       double BinYieldRatio = BackgroundSignalRatio*m_Settings["MBC_Shape"].getD(Name + "_" + CategoryString + "_frac_Yield");
       RooAbsReal *PeakingYield = Unique::create<RooFormulaVar*>((CategoryString + "_PeakingBackground" + std::to_string(i) + "Yield").c_str(), Form(("%f*(" + Formula + ")").c_str(), BinYieldRatio), SignalYieldVars);
@@ -92,7 +96,16 @@ void BinnedFitModel::InitializeSignalShape() {
   std::string SignalMCFilename = m_Settings["Datasets_WithDeltaECuts"].get("SignalMC_DT");
   SignalMCFilename = Utilities::ReplaceString(SignalMCFilename, "TAG", m_Settings.get("Mode"));
   SignalMCChain.Add(SignalMCFilename.c_str());
-  RooDataSet MCSignal("MCSignal", "", &SignalMCChain, RooArgList(*m_SignalMBC, *m_TagMBC), "TagMBC > 1.86 && TagMBC < 1.87");
+  SignalMCChain.SetBranchStatus("*", 0);
+  SignalMCChain.SetBranchStatus("SignalMBC", 1);
+  SignalMCChain.SetBranchStatus("TagMBC", 1);
+  TTree *ClonedMCChain = nullptr;
+  if(m_Settings.getI("Events_in_MC") < 0) {
+    ClonedMCChain = &SignalMCChain;
+  } else {
+    ClonedMCChain = SignalMCChain.CloneTree(m_Settings.getI("Events_in_MC"));
+  }
+  RooDataSet MCSignal("MCSignal", "", ClonedMCChain, RooArgList(*m_SignalMBC, *m_TagMBC), "TagMBC > 1.86 && TagMBC < 1.87");
   auto SignalShape = Unique::create<RooKeysPdf*>("SignalShape", "", *m_SignalMBC, MCSignal);
   m_SignalShapeConv = Unique::create<RooFFTConvPdf*>("SignalShapeConv", "", *m_SignalMBC, *SignalShape, *Resolution);
 }

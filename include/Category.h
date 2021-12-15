@@ -39,14 +39,6 @@ class Category {
      * Get the bin number from the unique string that describes the category
      */
     int GetSignalBinNumber(const std::string &category) const;
-    /**
-     * Get the tag mode from the unique string that describes the category
-     */
-    //int GetTagMode(const std::string &category) const;
-    /**
-     * Get the type of tag from the unique string that describes the category
-     */
-    //int GetType(const std::string &category) const;
   private:
     /**
      * Tag mode
@@ -75,6 +67,10 @@ class Category {
      * Category variable used in the fit
      */
     RooCategory m_CategoryVar;
+    /**
+     * Helper function that checks whether or not the bins are valid and throw an appropriate exception if not
+     */
+    void CheckValidBins(int SignalBin, int TagBin) const;
 };
 
 #endif

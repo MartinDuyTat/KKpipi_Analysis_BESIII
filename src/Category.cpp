@@ -10,12 +10,16 @@
 #include"Settings.h"
 
 Category::Category(const Settings &settings): m_TagMode(settings.get("Mode")),
-					      m_SignalBins(4),
+					      m_SignalBins(settings["BinningScheme"].getI("NumberBins")),
 					      m_CategoryVar(("DoubleTag_" + m_TagMode + "_Categories").c_str(), "") {
   if(settings.get("TagType") != "DT") {
-    throw std::invalid_argument("Cannot do binned fit with single tags!");
+    throw std::invalid_argument("Cannot do double tag fit with single tags!");
   }
-  if(m_TagMode == "Kpi" || m_TagMode == "Kpipi0" || m_TagMode == "Kpipipi" || m_TagMode == "KeNu") {
+  if(settings.contains("Inclusive_fit") && settings.getB("Inclusive_fit")) {
+    m_Type = "Inclusive";
+    m_SignalBins = 0;
+    m_TagBins = 0;
+  } else if(m_TagMode == "Kpi" || m_TagMode == "Kpipi0" || m_TagMode == "Kpipipi" || m_TagMode == "KeNu") {
     m_Type = "Flavour";
     m_TagBins = 0;
   } else if(m_TagMode == "KSpipi") {
@@ -36,7 +40,16 @@ Category::Category(const Settings &settings): m_TagMode(settings.get("Mode")),
   }
 }
 
-std::string Category::GetCategory(int SignalBin, int TagBin) const {
+void Category::CheckValidBins(int SignalBin, int TagBin) const {
+  // For inclusive fits, both bins must be zero
+  if(m_Type == "Inclusive") {
+    if(SignalBin != 0 || TagBin != 0) {
+      throw std::out_of_range("Inclusive fit cannot have non-zero bins!\n");
+    } else {
+      return;
+    }
+  }
+  // For binned fits it's much more complicated...
   // Signal KKpipi bin must be +-1, +-2, ..., +- 8
   if(SignalBin == 0 || TMath::Abs(SignalBin) > m_SignalBins) {
     throw std::out_of_range("Signal bin number " + std::to_string(SignalBin) + " does not exist!");
@@ -49,14 +62,26 @@ std::string Category::GetCategory(int SignalBin, int TagBin) const {
   if((m_Type == "KSpipi" || m_Type == "KSKK" || m_Type == "KKpipi") && (TagBin <= 0 || TagBin > m_TagBins)) {
     throw std::out_of_range("Tag bin number " + std::to_string(TagBin) + " does not exist for " + m_TagMode + " tag mode!");
   }
+}
+
+std::string Category::GetCategory(int SignalBin, int TagBin) const {
+  // Make sure bins are valid
+  CheckValidBins(SignalBin, TagBin);
+  // Start building up the category string
   std::string CategoryString("DoubleTag_");
-  CategoryString += m_Type + "_";
-  CategoryString += "KKpipi_vs_" + m_TagMode + "_";
-  CategoryString += "SignalBin";
+  CategoryString += m_Type;
+  CategoryString += "_KKpipi_vs_" + m_TagMode;
+  // For inclusive fits no need to include bin number
+  if(m_Type == "Inclusive") {
+    return CategoryString;
+  }
+  // Signal bin number
+  CategoryString += "_SignalBin";
   if(m_Type == "Flavour" || m_Type == "SCMB") {
     CategoryString += SignalBin > 0 ? "P" : "M";
   }
   CategoryString += std::to_string(TMath::Abs(SignalBin));
+  // Tag bin number
   if(m_Type != "CP") {
     CategoryString += "_TagBin" + std::to_string(TagBin);
   }
@@ -69,6 +94,12 @@ std::string Category::operator ()(int SignalBin, int TagBin) const {
 
 std::vector<std::string> Category::GetCategories() const {
   std::vector<std::string> CategoryStrings;
+  // For inclusive fits we only have a single category
+  if(m_Type == "Inclusive") {
+    CategoryStrings.push_back(GetCategory(0, 0));
+    return CategoryStrings;
+  }
+  // For binned fits it's much more complicated...
   std::vector<int> SignalBins(m_SignalBins), TagBins(m_TagBins);
   // We need at least 8 bins on the signal KKpipi side
   std::iota(SignalBins.begin(), SignalBins.end(), 1);
@@ -107,6 +138,10 @@ RooCategory* Category::GetCategoryVariable() {
 }
 
 int Category::GetSignalBinNumber(const std::string &category) const {
+  // Inclusive fits only have a single bin
+  if(m_Type == "Inclusive") {
+    return 0;
+  }
   // Find position of the substring "SignalBin"
   auto pos = category.find("SignalBin");
   // The next character tells us about the sign, P for plus and M for minus

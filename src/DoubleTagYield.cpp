@@ -34,7 +34,7 @@ void DoubleTagYield::DoFit() {
   BinnedFitModel FitModel(m_Settings, &m_SignalMBC, &m_TagMBC);
   RooSimultaneous *Model = FitModel.GetPDF();
   // Perform an initial fit
-  Model->fitTo(*DataSet, NumCPU(4));
+  auto Result = Model->fitTo(*DataSet, Save(), NumCPU(4));
   // Any bins with less than 0.5 combinatorial background events are set constant
   std::vector<std::string> Categories = DataLoader.GetCategoryObject()->GetCategories();
   for(const auto &Category : Categories) {
@@ -49,8 +49,10 @@ void DoubleTagYield::DoFit() {
     }
     Parameter.second->setConstant();
   }
-  // Perform a second fit
-  auto Result = Model->fitTo(*DataSet, Save(), NumCPU(4));
+  // Perform a second fit if fit is binned
+  if(!(m_Settings.contains("Inclusive_fit") && m_Settings.getB("Inclusive_fit"))) {
+    Result = Model->fitTo(*DataSet, Save(), NumCPU(4));
+  }
   Result->Print();
   PlotProjections(&DataLoader, &FitModel);
   SaveSignalYields(FitModel, Result, *DataLoader.GetCategoryObject());
