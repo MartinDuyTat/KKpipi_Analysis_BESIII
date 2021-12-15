@@ -13,7 +13,12 @@
 #include"Unique.h"
 #include"FPlusFitter.h"
 
-FPlusFitter::FPlusFitter(const Settings &settings): m_FPlus("FPlus", "", 0.0, 1.0), m_Settings(settings) {
+FPlusFitter::FPlusFitter(const Settings &settings): m_FPlus("FPlus", "", 0.0, 1.0),
+						    m_KKpipi_BF("KKpipi_BF", "", settings["BranchingFractions"].getD("KKpipi"), 0.002, 0.004),
+						    m_Settings(settings) {
+  if(!m_Settings.getB("Float_KKpipi_BF")) {
+    m_KKpipi_BF.setConstant();
+  }
 }
 
 void FPlusFitter::AddTag(const std::string &TagMode) {
@@ -33,6 +38,7 @@ void FPlusFitter::InitializeAndFit() {
   // Set up dataset
   RooDataSet Data("Data", "", m_NormalizedYields);
   Data.add(m_NormalizedYields);
+  Data.Print("V");
   // Perform fit
   auto Result = Model.fitTo(Data, RooFit::Save());
   Result->Print("V");
@@ -40,8 +46,8 @@ void FPlusFitter::InitializeAndFit() {
 
 void FPlusFitter::AddMeasurement(const std::string &TagMode) {
   // Get raw double tag yields and efficiency
-  double DT_RawYield = m_Settings[TagMode + "_DT_Yield"].getD(TagMode + "_DoubleTag_Yield");
-  double DT_RawYield_err = m_Settings[TagMode + "_DT_Yield"].getD(TagMode + "_DoubleTag_Yield_err");
+  double DT_RawYield = m_Settings[TagMode + "_DT_Yield"].getD("DoubleTag_Inclusive_KKpipi_vs_" + TagMode + "_SignalYield");
+  double DT_RawYield_err = m_Settings[TagMode + "_DT_Yield"].getD("DoubleTag_Inclusive_KKpipi_vs_" + TagMode + "_SignalYield_err");
   double DT_Efficiency = m_Settings["DT_Efficiencies"].getD(TagMode + "_DoubleTagEfficiency");
   // Divide by efficiency
   double DT_Yield = DT_RawYield/DT_Efficiency;
@@ -61,8 +67,8 @@ void FPlusFitter::AddMeasurement(const std::string &TagMode) {
 }
 
 void FPlusFitter::AddPrediction(const std::string &TagMode) {
-  double KKpipi_BF = m_Settings["BranchingFractions"].getD("KKpipi");
+
   double FPlus_Tag = m_Settings["FPlus_TagModes"].getD(TagMode);
-  auto PredictedYield = Unique::create<RooFormulaVar*>((TagMode + "_Normalized_Yield_Prediction").c_str(), Form("%f*(1 - (2*%f - 1)*(2*@0 - 1))", KKpipi_BF, FPlus_Tag), RooArgList(m_FPlus));
+  auto PredictedYield = Unique::create<RooFormulaVar*>((TagMode + "_Normalized_Yield_Prediction").c_str(), Form("@1*(1 - (2*%f - 1)*(2*@0 - 1))", FPlus_Tag), RooArgList(m_FPlus, m_KKpipi_BF));
   m_PredictedYields.add(*PredictedYield);
 }

@@ -48,6 +48,10 @@ class FPlusFitter {
      */
     RooRealVar m_FPlus;
     /**
+     * The KKpipi branching fraction
+     */
+    RooRealVar m_KKpipi_BF;
+    /**
      * Fit setup with all yields and efficiencies are stored in settings
      */
     Settings m_Settings;
