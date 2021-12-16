@@ -16,7 +16,6 @@ int main(int argc, char *argv[]) {
   std::vector<std::string> TagModes = Utilities::ConvertStringToVector(settings.get("TagModes"));
   FPlusFitter Fitter(settings);
   for(const auto &TagMode : TagModes) {
-    std::cout << "Adding " << TagMode << " tag mode\n";
     Fitter.AddTag(TagMode);
   }
   std::cout << "Fitting F+...\n";
