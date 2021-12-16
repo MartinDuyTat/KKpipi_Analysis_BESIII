@@ -24,7 +24,7 @@
 DoubleTagYield::DoubleTagYield(const Settings &settings, TTree *Tree): m_SignalMBC("SignalMBC", "", 1.83, 1.8865),
 								       m_TagMBC("TagMBC", "", 1.83, 1.8865),
 								       m_Settings(settings), m_Tree(Tree) {
-  m_SignalMBC.setBins(5000, "cache");
+  m_SignalMBC.setBins(200, "cache");
 }
 
 void DoubleTagYield::DoFit() {
@@ -116,6 +116,7 @@ void DoubleTagYield::PlotProjections(BinnedDataLoader *DataLoader, BinnedFitMode
 
 void DoubleTagYield::SaveSignalYields(const BinnedFitModel &FitModel, RooFitResult *Result, const Category &category) const {
   double Fraction = FitModel.GetFractionInSignalRegion();
+  double Sideband = m_Tree->GetEntries("TagMBC > 1.84 && TagMBC < 1.85 && SignalMBC > 1.86 && SignalMBC < 1.87");
   std::ofstream Outfile(m_Settings.get("FittedSignalYieldsFile"));
   Outfile << std::fixed << std::setprecision(4);
   Outfile << "* KKpipi vs " << m_Settings.get("Mode") << " double tag yield fit results\n\n";
@@ -124,7 +125,8 @@ void DoubleTagYield::SaveSignalYields(const BinnedFitModel &FitModel, RooFitResu
   Outfile << "* Fraction of events inside signal window: " << Fraction << "\n\n";
   for(const auto & cat : category.GetCategories()) {
     std::string Name = cat + "_SignalYield";
-    Outfile << Name << "     " << std::setw(8) << std::right << FitModel.m_Yields.at(Name)->getVal()*Fraction << "\n";
+    Outfile << Name << "* A sideband of " << Sideband << " has been subtracted off the signal yield\n";
+    Outfile << Name << "     " << std::setw(8) << std::right << FitModel.m_Yields.at(Name)->getVal()*Fraction - Sideband << "\n";
     Outfile << Name << "_err " << std::setw(8) << std::right << static_cast<RooRealVar*>(FitModel.m_Yields.at(Name))->getError()*Fraction << "\n";
   }
   Outfile.close();
