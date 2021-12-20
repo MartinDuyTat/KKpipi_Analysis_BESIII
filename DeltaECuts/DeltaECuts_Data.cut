@@ -13,8 +13,26 @@ Kpipipi_DeltaE_UpperCut 0.0151394
 KK_DeltaE_LowerCut -0.0214644
 KK_DeltaE_UpperCut 0.0201571
 
-KSpi0_DeltaE_LowerCut -0.0919417
-KSpi0_DeltaE_UpperCut 0.0527843
+KSpi0_DeltaE_LowerCut -0.0699077
+KSpi0_DeltaE_UpperCut 0.0512304
 
-pipipi0_DeltaE_LowerCut -0.0574924
-pipipi0_DeltaE_UpperCut 0.0365466
+pipipi0_DeltaE_LowerCut -0.0580178
+pipipi0_DeltaE_UpperCut 0.04828
+
+KSpi0pi0_DeltaE_LowerCut -0.0724318
+KSpi0pi0_DeltaE_UpperCut 0.0536508
+
+*pipi_DeltaE_LowerCut -0.0320442
+*pipi_DeltaE_UpperCut 0.0295788
+* Use tighter cuts for now because double tag yields are extremely small
+pipi_DeltaE_LowerCut -0.02
+pipi_DeltaE_UpperCut 0.02
+
+KSetaPrimepipieta_DeltaE_LowerCut -0.0315217
+KSetaPrimepipieta_DeltaE_UpperCut 0.0283631
+
+KSeta_DeltaE_LowerCut -0.0389041
+KSeta_DeltaE_UpperCut 0.0365221
+
+KSetaPrimerhogamma_DeltaE_LowerCut -0.0320169
+KSetaPrimerhogamma_DeltaE_UpperCut 0.0255968
