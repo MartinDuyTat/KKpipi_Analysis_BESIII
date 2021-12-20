@@ -33,3 +33,6 @@ KSeta_DeltaE_UpperCut 0.0409141
 
 KSetaPrimerhogamma_DeltaE_LowerCut -0.0295373
 KSetaPrimerhogamma_DeltaE_UpperCut 0.0232613
+
+KSpipi_DeltaE_LowerCut -0.0195768
+KSpipi_DeltaE_UpperCut 0.0194702
