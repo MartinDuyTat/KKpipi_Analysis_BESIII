@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
   std::cout << "Trees ready\n";
   std::cout << "Setting up fit model...\n";
   TTree *ClonedMCTree = nullptr;
-  if(settings.getI("Events_in_MC") < 0) {
+  if(settings.getI("Events_in_MC") < 0 || settings.getI("Events_in_MC") > MCTree->GetEntries()) {
     ClonedMCTree = MCTree;
   } else {
     ClonedMCTree = MCTree->CloneTree(settings.getI("Events_in_MC"));

@@ -89,7 +89,7 @@ void BinnedFitModel::InitializeYields() {
 }
 
 void BinnedFitModel::InitializeSignalShape() {
-  m_Parameters.insert({"Mean1", Unique::create<RooRealVar*>("Mean1", "", 0.0, -0.001, 0.001)});
+  m_Parameters.insert({"Mean1", Unique::create<RooRealVar*>((m_Settings.get("Mode") + "_DoubleTag_Mean1").c_str(), "", 0.0, -0.001, 0.001)});
   m_Parameters.insert({"Sigma1", Utilities::load_param(m_Settings["MBC_Shape"], m_Settings.get("Mode") + "_DoubleTag_Sigma1")});
   auto Resolution = Unique::create<RooGaussian*>("Gaussian1", "", *m_SignalMBC, *m_Parameters["Mean1"], *m_Parameters["Sigma1"]);
   TChain SignalMCChain(m_Settings.get("TreeName").c_str());
@@ -100,7 +100,7 @@ void BinnedFitModel::InitializeSignalShape() {
   SignalMCChain.SetBranchStatus("SignalMBC", 1);
   SignalMCChain.SetBranchStatus("TagMBC", 1);
   TTree *ClonedMCChain = nullptr;
-  if(m_Settings.getI("Events_in_MC") < 0) {
+  if(m_Settings.getI("Events_in_MC") < 0 || m_Settings.getI("Events_in_MC") > SignalMCChain.GetEntries()) {
     ClonedMCChain = &SignalMCChain;
   } else {
     ClonedMCChain = SignalMCChain.CloneTree(m_Settings.getI("Events_in_MC"));

@@ -43,7 +43,7 @@ SingleTagYield::SingleTagYield(TTree *DataTree, TTree *MCSignalTree, const Setti
   m_DataTree->SetBranchStatus("LuminosityWeight", 1);
   //m_MCSignalTree->SetBranchStatus("*", 0);
   //m_MCSignalTree->SetBranchStatus("MBC", 1);
-  m_MBC.setBins(MCSignalTree->GetEntries()/10, "cache");
+  m_MBC.setBins(1000, "cache");
   m_MBC.setRange("SignalRange", 1.86, 1.87);
   InitializeSignalShape();
   InitializeArgus();
@@ -58,13 +58,14 @@ SingleTagYield::~SingleTagYield() {
 }
 
 void SingleTagYield::InitializeSignalShape() {
-  m_Parameters.insert({"frac", Unique::create<RooRealVar*>("frac", "", 0.5, 0.0, 1.0)});
-  auto Mean1 = Utilities::load_param(m_Settings["MBC_Shape"], m_Settings.get("Mode") + "_SingleTag_Mean1");
-  auto Mean2 = Utilities::load_param(m_Settings["MBC_Shape"], m_Settings.get("Mode") + "_SingleTag_Mean2");
+  std::string Name = m_Settings.get("Mode") + "_SingleTag_";
+  m_Parameters.insert({"frac", Unique::create<RooRealVar*>((Name + "frac").c_str(), "", 0.5, 0.0, 1.0)});
+  auto Mean1 = Utilities::load_param(m_Settings["MBC_Shape"], Name + "Mean1");
+  auto Mean2 = Utilities::load_param(m_Settings["MBC_Shape"], Name + "Mean2");
   m_Parameters.insert({"Mean1", Mean1});
   m_Parameters.insert({"Mean2", Mean2});
-  auto Sigma1 = Utilities::load_param(m_Settings["MBC_Shape"], m_Settings.get("Mode") + "_SingleTag_Sigma1");
-  auto Sigma2 = Utilities::load_param(m_Settings["MBC_Shape"], m_Settings.get("Mode") + "_SingleTag_Sigma2");
+  auto Sigma1 = Utilities::load_param(m_Settings["MBC_Shape"], Name + "Sigma1");
+  auto Sigma2 = Utilities::load_param(m_Settings["MBC_Shape"], Name + "Sigma2");
   m_Parameters.insert({"Sigma1", Sigma1});
   m_Parameters.insert({"Sigma2", Sigma2});
   auto Gaussian1 = Unique::create<RooGaussian*>("Gaussian1", "", m_MBC, *m_Parameters["Mean1"], *m_Parameters["Sigma1"]);
@@ -74,7 +75,7 @@ void SingleTagYield::InitializeSignalShape() {
   auto SignalShape = Unique::create<RooKeysPdf*>("SignalShape", "", m_MBC, MCSignal);
   auto SignalShapeConv = Unique::create<RooFFTConvPdf*>("SignalShapeConv", "", m_MBC, *SignalShape, *Resolution);
   m_ModelPDFs.add(*SignalShapeConv);
-  auto SingleTag_Yield = Utilities::load_param(m_Settings["MBC_Shape"], m_Settings.get("Mode") + "_SingleTag_Yield");
+  auto SingleTag_Yield = Utilities::load_param(m_Settings["MBC_Shape"], Name + "Yield");
   m_ModelYields.add(*SingleTag_Yield);
   m_Parameters.insert({"Yield", SingleTag_Yield});
 }
