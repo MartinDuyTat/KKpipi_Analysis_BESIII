@@ -13,6 +13,9 @@
 #include"TruthMatchingCuts.h"
 #include"Settings.h"
 #include"Unique.h"
+#include"PhaseSpace/KKpipi_PhaseSpace.h"
+#include"PhaseSpace/KKpipi_vs_Flavour_PhaseSpace.h"
+#include"PhaseSpace/KKpipi_vs_KShh_PhaseSpace.h"
 
 namespace Utilities {
   void LoadChain(TChain *Chain, int NumberFiles, const std::string &Filename, const std::string &TreeName) {
@@ -164,6 +167,8 @@ namespace Utilities {
     std::string Mode = settings.get("Mode");
     if(Mode == "Kpi" || Mode == "Kpipi0" || Mode == "Kpipipi" || Mode == "KeNu") {
       return std::unique_ptr<KKpipi_PhaseSpace>{new KKpipi_vs_Flavour_PhaseSpace(Tree, settings["BinningScheme"].getI("NumberBins"), settings.getB("Bin_reconstructed"), settings.getB("Bin_truth"))};
+    } else if(Mode == "KSpipi" || Mode == "KSKK") {
+      return std::unique_ptr<KKpipi_PhaseSpace>{new KKpipi_vs_KShh_PhaseSpace(Tree, settings["BinningScheme"].getI("NumberBins"), settings.getB("Bin_reconstructed"), settings.getB("Bin_truth"), Mode)};
     } else {
       throw std::invalid_argument(Mode + " tag mode is unknown");
     }

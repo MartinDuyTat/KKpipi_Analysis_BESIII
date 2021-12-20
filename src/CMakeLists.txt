@@ -21,6 +21,7 @@ add_library(KKpipiStrongPhase
 	    HadronicParameters/cisi.cpp
 	    PhaseSpace/KKpipi_PhaseSpace.cpp
 	    PhaseSpace/KKpipi_vs_Flavour_PhaseSpace.cpp
+	    PhaseSpace/KKpipi_vs_KShh_PhaseSpace.cpp
 	    RooShapes/Chebychev_Shape.cpp
 	    RooShapes/DoubleCrystalBall_Shape.cpp 
 	    RooShapes/DoubleGaussian_Shape.cpp 
