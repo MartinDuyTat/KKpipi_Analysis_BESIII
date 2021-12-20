@@ -7,6 +7,7 @@
 #include"DeltaEFitModel.h"
 #include"Settings.h"
 #include"Unique.h"
+#include"Utilities.h"
 #include"RooShapes/FitShape.h"
 #include"RooShapes/DoubleGaussian_Shape.h"
 #include"RooShapes/DoublePolynomial_Shape.h"
@@ -33,7 +34,6 @@ void DeltaEFitModel::InitializeSignal() {
   std::string Name = m_Settings.get("Mode") + "_SingleTag_Signal";
   m_ModelComponents.push_back(new DoubleGaussian_Shape(Name, m_Settings["Signal"], m_x));
   m_ModelPDFs.add(*m_ModelComponents.back()->GetPDF());
-  m_ModelYields.add(*m_ModelComponents.back()->GetYield());
 }
 
 void DeltaEFitModel::InitializeCombinatorial() {
@@ -47,9 +47,9 @@ void DeltaEFitModel::InitializeCombinatorial() {
     throw std::invalid_argument("Unknown combinatorial shape");
   }
   m_ModelPDFs.add(*m_ModelComponents.back()->GetPDF());
-  m_ModelYields.add(*m_ModelComponents.back()->GetYield());
 }
 
 void DeltaEFitModel::InitializeFullShape() {
-  m_FullModel = Unique::create<RooAddPdf*>((m_Settings.get("Mode") + "_SingleTag_Model").c_str(), "", m_ModelPDFs, m_ModelYields);
+  auto YieldRatio = Utilities::load_param(m_Settings["Signal"], m_Settings.get("Mode") + "_SingleTag_Signal_YieldFrac");
+  m_FullModel = Unique::create<RooAddPdf*>((m_Settings.get("Mode") + "_SingleTag_Model").c_str(), "", m_ModelPDFs, *YieldRatio);
 }

@@ -23,7 +23,7 @@
 DeltaEFit::DeltaEFit(TTree *Tree, const Settings &settings):
                      m_Tree(Tree),
 		     m_Settings(settings),
-		     m_DeltaE(RooRealVar("DeltaE", "DeltaE", -0.08, 0.08)),
+		     m_DeltaE("DeltaE", "DeltaE", m_Settings.getD("DeltaE_Low_Range"), m_Settings.getD("DeltaE_High_Range")),
                      m_LuminosityWeight("LuminosityWeight", "LuminosityWeight", 1.0, 0.0, 10.0) {
   m_Tree->SetBranchStatus("*", 0);
   m_Tree->SetBranchStatus("DeltaE" , 1);
@@ -122,8 +122,7 @@ void DeltaEFit::SaveParameters(RooFitResult *Results) {
   }
   double Mean = mu1*frac + mu2*(1 - frac);
   double Sigma = TMath::Sqrt(sigma1*sigma1*frac + sigma2*sigma2*(1 - frac) + (mu1 - mu2)*(mu1 - mu2)*frac*(1 - frac));
-  double LowFactor = m_Settings.getB("ContainsPi0") ? 4.0 : 3.0;
-  m_DeltaE_Low = Mean - LowFactor*Sigma;
+  m_DeltaE_Low = Mean - 3.0*Sigma;
   m_DeltaE_High = Mean + 3.0*Sigma;
   OutputFile << m_Settings.get("Mode") << "_DeltaE_LowerCut " << m_DeltaE_Low << "\n";
   OutputFile << m_Settings.get("Mode") << "_DeltaE_UpperCut " << m_DeltaE_High << "\n";

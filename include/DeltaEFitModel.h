@@ -39,10 +39,6 @@ class DeltaEFitModel {
      */
     RooArgList m_ModelPDFs;
     /**
-     * List of all PDF yields
-     */
-    RooArgList m_ModelYields;
-    /**
      * The full fit model of \f$\Delta E\f$
      */
     RooAddPdf* m_FullModel = nullptr;
