@@ -17,7 +17,8 @@ int main(int argc, char *argv[]) {
   std::string TreeName = settings.get("TreeName");
   TChain Chain(TreeName.c_str());
   std::string Mode = settings.get("Mode");
-  Chain.Add(settings["BinnedDataSets"].get(Mode).c_str());
+  std::string Filename = Utilities::ReplaceString(settings["BinnedDataSets"].get("BinnedDataSet").c_str(), "TAG", Mode);
+  Chain.Add(Filename.c_str());
   DoubleTagYield doubleTagYield(settings, &Chain);
   doubleTagYield.DoFit();
   return 0;

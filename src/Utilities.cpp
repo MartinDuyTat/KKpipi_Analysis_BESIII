@@ -14,6 +14,7 @@
 #include"Settings.h"
 #include"Unique.h"
 #include"PhaseSpace/KKpipi_PhaseSpace.h"
+#include"PhaseSpace/KKpipi_vs_CP_PhaseSpace.h"
 #include"PhaseSpace/KKpipi_vs_Flavour_PhaseSpace.h"
 #include"PhaseSpace/KKpipi_vs_KShh_PhaseSpace.h"
 
@@ -165,12 +166,29 @@ namespace Utilities {
 
   std::unique_ptr<KKpipi_PhaseSpace> GetPhaseSpaceBinning(const Settings &settings, TTree *Tree) {
     std::string Mode = settings.get("Mode");
-    if(Mode == "Kpi" || Mode == "Kpipi0" || Mode == "Kpipipi" || Mode == "KeNu") {
+    if(GetTagType(Mode) == "Flavour") {
       return std::unique_ptr<KKpipi_PhaseSpace>{new KKpipi_vs_Flavour_PhaseSpace(Tree, settings["BinningScheme"].getI("NumberBins"), settings.getB("Bin_reconstructed"), settings.getB("Bin_truth"))};
-    } else if(Mode == "KSpipi" || Mode == "KSKK") {
+    } else if(GetTagType(Mode) == "SCMB") {
       return std::unique_ptr<KKpipi_PhaseSpace>{new KKpipi_vs_KShh_PhaseSpace(Tree, settings["BinningScheme"].getI("NumberBins"), settings.getB("Bin_reconstructed"), settings.getB("Bin_truth"), Mode)};
+    } else if(GetTagType(Mode) == "CP") {
+      return std::unique_ptr<KKpipi_PhaseSpace>{new KKpipi_vs_CP_PhaseSpace(Tree, settings["BinningScheme"].getI("NumberBins"), settings.getB("Bin_reconstructed"), settings.getB("Bin_truth"))};
     } else {
-      throw std::invalid_argument(Mode + " tag mode is unknown");
+      return nullptr;
+    }
+  }
+
+  std::string GetTagType(const std::string &Mode) {
+    if(Mode == "Kpi" || Mode == "Kpipi0" || Mode == "Kpipipi" || Mode == "KeNu") {
+      return "Flavour";
+    } else if(Mode == "KSpipi" || Mode == "KSKK") {
+      return "SCMB";
+    } else {
+      const std::vector<std::string> CPModes{"KK", "pipi", "KSpi0pi0", "pipipi0", "KLpi0", "KSpi0", "KSeta", "KSetaPrimepipieta", "KSetaPrimerhogamma", "KSpipipi0", "KLpi0pi0"};
+      if(std::find(CPModes.begin(), CPModes.end(), Mode) != CPModes.end()) {
+	return "CP";
+      } else {
+	throw std::invalid_argument(Mode + " tag mode is unknown");
+      }
     }
   }
 

@@ -90,7 +90,12 @@ void DoubleTagYield::PlotProjections(BinnedDataLoader *DataLoader, BinnedFitMode
     Pad1.cd();
     RooPlot *Frame = m_SignalMBC.frame();
     std::string TagMode = m_Settings.get("Mode");
-    std::string Title = TagMode + " Double Tag M_{BC}, signal bin " + std::to_string(SignalBin);
+    std::string Title = TagMode + " Double Tag M_{BC}";
+    if(SignalBin != 0) {
+      Title += ", KK#pi#pi bin " + std::to_string(SignalBin);
+    } else {
+      Title += ", inclusive KK#pi#pi phase space";
+    }
     if(TagMode == "KSpipi" || TagMode == "KSKK" || TagMode == "KKpipi") {
       Title += ", tag bin " + std::to_string(TagBin);
     }

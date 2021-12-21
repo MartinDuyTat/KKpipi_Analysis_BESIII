@@ -80,6 +80,10 @@ namespace Utilities {
    * @param Tree The tree containing double tag events to be binned
    */
   std::unique_ptr<KKpipi_PhaseSpace> GetPhaseSpaceBinning(const Settings &settings, TTree *Tree);
+  /**
+   * Determine the tag type, which can be "Flavour", "CP", "SCMB"
+   */
+  std::string GetTagType(const std::string &Mode);
 }
 
 #endif
