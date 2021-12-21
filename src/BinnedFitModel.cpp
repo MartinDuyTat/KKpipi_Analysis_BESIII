@@ -105,7 +105,7 @@ void BinnedFitModel::InitializeSignalShape() {
   } else {
     ClonedMCChain = SignalMCChain.CloneTree(m_Settings.getI("Events_in_MC"));
   }
-  RooDataSet MCSignal("MCSignal", "", ClonedMCChain, RooArgList(*m_SignalMBC, *m_TagMBC)/*, "TagMBC > 1.86 && TagMBC < 1.87"*/);
+  RooDataSet MCSignal("MCSignal", "", ClonedMCChain, RooArgList(*m_SignalMBC, *m_TagMBC));
   auto SignalShape = Unique::create<RooKeysPdf*>("SignalShape", "", *m_SignalMBC, MCSignal);
   m_SignalShapeConv = Unique::create<RooFFTConvPdf*>("SignalShapeConv", "", *m_SignalMBC, *SignalShape, *Resolution);
 }

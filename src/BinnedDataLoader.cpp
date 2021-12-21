@@ -30,7 +30,7 @@ void BinnedDataLoader::MakeDataSet() {
   std::string TagBin_Name = m_Settings.get("TagBin_variable");
   RooRealVar SignalBin(SignalBin_Name.c_str(), "", -8, 8);
   RooRealVar TagBin(TagBin_Name.c_str(), "", -8, 8);
-  m_DataSet = new RooDataSet("InputData", "", m_Tree, RooArgSet(*m_SignalMBC, *m_TagMBC, SignalBin, TagBin)/*, "TagMBC > 1.86 && TagMBC < 1.87"*/);
+  m_DataSet = new RooDataSet("InputData", "", m_Tree, RooArgSet(*m_SignalMBC, *m_TagMBC, SignalBin, TagBin));
   RooCategory *CategoryVariable = m_Category.GetCategoryVariable();
   RooDataSet CategorySet("InputData_Category", "", RooArgSet(*CategoryVariable));
   for(int i = 0; i < m_DataSet->numEntries(); i++) {

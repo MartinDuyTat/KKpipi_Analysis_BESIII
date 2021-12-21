@@ -56,15 +56,23 @@ class FPlusFitter {
      */
     Settings m_Settings;
     /**
-     * Add datapoint containing normalized yield to dataset
+     * Add datapoint containing normalized yield of CP tag to dataset
      * @param TagMode Name of tag mode
      */
-    void AddMeasurement(const std::string &TagMode);
+    void AddMeasurement_CP(const std::string &TagMode);
     /**
-     * Add formula for prediction of normalized yield
+     * Add formula for prediction of normalized yield of CP tag
      * @param TagMode Name of tag mode
      */
-    void AddPrediction(const std::string &TagMode);
+    void AddPrediction_CP(const std::string &TagMode);
+    /**
+     * Add datapoint containing binned, normalized yield of Kshh tag to dataset
+     */
+    void AddMeasurement_KShh(const std::string &TagMode);
+    /**
+     * Add formula for prediction of normalized yield of KShh tag
+     */
+    void AddPrediction_KShh(const std::string &TagMode);
 };
 
 #endif
