@@ -8,6 +8,7 @@
 
 #include<string>
 #include<vector>
+#include<utility>
 #include"RooCategory.h"
 #include"Settings.h"
 
@@ -32,13 +33,21 @@ class Category {
      */
     std::vector<std::string> GetCategories() const;
     /**
+     * Get a vector of all bin combinations
+     */
+    std::vector<std::pair<int, int>> GetBinCombinations() const;
+    /**
      * Get the category variable
      */
     RooCategory* GetCategoryVariable();
     /**
-     * Get the bin number from the unique string that describes the category
+     * Get the signal bin number from the unique string that describes the category
      */
     int GetSignalBinNumber(const std::string &category) const;
+    /**
+     * Get the tag bin number from the unique string that describes the category
+     */
+    int GetTagBinNumber(const std::string &category) const;
   private:
     /**
      * Tag mode
@@ -64,6 +73,10 @@ class Category {
      */
     int m_TagBins;
     /**
+     * If this flag is true, the signal side is treated inclusively
+     */
+    bool m_Inclusive;
+    /**
      * Category variable used in the fit
      */
     RooCategory m_CategoryVar;
@@ -71,6 +84,12 @@ class Category {
      * Helper function that checks whether or not the bins are valid and throw an appropriate exception if not
      */
     void CheckValidBins(int SignalBin, int TagBin) const;
+    /**
+     * Helper function that the signal or tag bin number from the unique string that describes the category
+     * @param category Unique category string
+     * @param SignalTag "Signal or "Tag"
+     */
+    int GetBinNumber(const std::string &category, const std::string &SignalTag) const;
 };
 
 #endif

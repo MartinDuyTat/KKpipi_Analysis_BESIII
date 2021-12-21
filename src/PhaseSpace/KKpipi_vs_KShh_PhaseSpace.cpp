@@ -14,22 +14,9 @@ KKpipi_vs_KShh_PhaseSpace::KKpipi_vs_KShh_PhaseSpace(TTree *Tree, int Bins, bool
   std::string BinningFilename;
   if(Mode == "KSpipi") {
     BinningFilename = std::string(BINNING_SCHEME_DIR) + "KsPiPi_equal.root";
-    Tree->SetBranchAddress("TagPiPluspx", &m_hPlus_P[0]);
-    Tree->SetBranchAddress("TagPiPluspy", &m_hPlus_P[1]);
-    Tree->SetBranchAddress("TagPiPluspz", &m_hPlus_P[2]);
-    Tree->SetBranchAddress("TagPiPlusenergy", &m_hPlus_P[3]);
-    Tree->SetBranchAddress("TagPiPluspxKalmanFit", &m_hPlus_P_KalmanFit[0]);
-    Tree->SetBranchAddress("TagPiPluspyKalmanFit", &m_hPlus_P_KalmanFit[1]);
-    Tree->SetBranchAddress("TagPiPluspzKalmanFit", &m_hPlus_P_KalmanFit[2]);
-    Tree->SetBranchAddress("TagPiPlusenergyKalmanFit", &m_hPlus_P_KalmanFit[3]);
-    Tree->SetBranchAddress("TagPiMinuspx", &m_hMinus_P[0]);
-    Tree->SetBranchAddress("TagPiMinuspy", &m_hMinus_P[1]);
-    Tree->SetBranchAddress("TagPiMinuspz", &m_hMinus_P[2]);
-    Tree->SetBranchAddress("TagPiMinusenergy", &m_hMinus_P[3]);
-    Tree->SetBranchAddress("TagPiMinuspxKalmanFit", &m_hMinus_P_KalmanFit[0]);
-    Tree->SetBranchAddress("TagPiMinuspyKalmanFit", &m_hMinus_P_KalmanFit[1]);
-    Tree->SetBranchAddress("TagPiMinuspzKalmanFit", &m_hMinus_P_KalmanFit[2]);
-    Tree->SetBranchAddress("TagPiMinusenergyKalmanFit", &m_hMinus_P_KalmanFit[3]);
+    if(ReconstructedBins) {
+      SetKSpipiBranchAddresses(Tree);
+    }
   /*} else if(Mode == "KSKK") {
     BinningFilename = std::string(BINNING_SCHEME_DIR) + "KsKK_2bins.root";*/
   } else {
@@ -39,6 +26,31 @@ KKpipi_vs_KShh_PhaseSpace::KKpipi_vs_KShh_PhaseSpace(TTree *Tree, int Bins, bool
   BinningFile.GetObject("dkpp_bin_h", m_BinningScheme);
   m_BinningScheme->SetDirectory(0);
   BinningFile.Close();
+  if(ReconstructedBins) {
+    SetKShhBranchAddresses(Tree);
+  }
+}
+
+void KKpipi_vs_KShh_PhaseSpace::SetKSpipiBranchAddresses(TTree *Tree) {
+  Tree->SetBranchAddress("TagPiPluspx", &m_hPlus_P[0]);
+  Tree->SetBranchAddress("TagPiPluspy", &m_hPlus_P[1]);
+  Tree->SetBranchAddress("TagPiPluspz", &m_hPlus_P[2]);
+  Tree->SetBranchAddress("TagPiPlusenergy", &m_hPlus_P[3]);
+  Tree->SetBranchAddress("TagPiPluspxKalmanFit", &m_hPlus_P_KalmanFit[0]);
+  Tree->SetBranchAddress("TagPiPluspyKalmanFit", &m_hPlus_P_KalmanFit[1]);
+  Tree->SetBranchAddress("TagPiPluspzKalmanFit", &m_hPlus_P_KalmanFit[2]);
+  Tree->SetBranchAddress("TagPiPlusenergyKalmanFit", &m_hPlus_P_KalmanFit[3]);
+  Tree->SetBranchAddress("TagPiMinuspx", &m_hMinus_P[0]);
+  Tree->SetBranchAddress("TagPiMinuspy", &m_hMinus_P[1]);
+  Tree->SetBranchAddress("TagPiMinuspz", &m_hMinus_P[2]);
+  Tree->SetBranchAddress("TagPiMinusenergy", &m_hMinus_P[3]);
+  Tree->SetBranchAddress("TagPiMinuspxKalmanFit", &m_hMinus_P_KalmanFit[0]);
+  Tree->SetBranchAddress("TagPiMinuspyKalmanFit", &m_hMinus_P_KalmanFit[1]);
+  Tree->SetBranchAddress("TagPiMinuspzKalmanFit", &m_hMinus_P_KalmanFit[2]);
+  Tree->SetBranchAddress("TagPiMinusenergyKalmanFit", &m_hMinus_P_KalmanFit[3]);
+}
+
+void KKpipi_vs_KShh_PhaseSpace::SetKShhBranchAddresses(TTree *Tree) {
   Tree->SetBranchAddress("TagKalmanFitSuccess", &m_KalmanFitSuccess);
   Tree->SetBranchAddress("TagKSpx", &m_KS_P[0]);
   Tree->SetBranchAddress("TagKSpy", &m_KS_P[1]);

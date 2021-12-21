@@ -87,6 +87,14 @@ class KKpipi_vs_KShh_PhaseSpace: public KKpipi_PhaseSpace {
      * The KShh binning scheme
      */
     TH2F *m_BinningScheme;
+    /**
+     * Set KSpipi branch addresses
+     */
+    void SetKSpipiBranchAddresses(TTree *Tree);
+    /**
+     * Set branch addresses common to both KSpipi and KSKK
+     */
+    void SetKShhBranchAddresses(TTree *Tree);
 };
 
 #endif

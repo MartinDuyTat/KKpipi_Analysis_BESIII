@@ -7,70 +7,78 @@
 #include<iostream>
 #include<map>
 #include<string>
+#include<utility>
+#include<iterator>
 #include"TChain.h"
 #include"TFile.h"
 #include"TMatrixT.h"
 #include"Utilities.h"
 #include"Settings.h"
-
-/**
- * This functor class converts bin -8, -7, ..., -1, +1, ..., +8 to indices 0, 1, 2, ..., 15
- * @param Bin Bin number
- */
-class BinIndex {
-  public:
-    BinIndex(int NumberBins): m_NumberBins(NumberBins) {}
-    int operator ()(int Bin) { return Bin < 0 ? Bin + m_NumberBins : Bin + m_NumberBins - 1; }
-  private:
-    const int m_NumberBins;
-};
+#include"Category.h"
 
 int main(int argc, char *argv[]) {
   std::cout << "Calculating double tag efficiency matrix from signal MC\n";
   Settings settings = Utilities::parse_args(argc, argv);
-  int NumberBins = settings["BinningScheme"].getI("NumberBins");
-  std::cout << "First get the number of events generated in each bin...\n";
+  std::cout << "Setting up all bin combinations...\n";
+  Category category(settings);
+  auto BinCombinations = category.GetBinCombinations();
+  auto NumberBins = BinCombinations.size();
+  std::cout << "Binning ready\n";
+  std::cout << "Getting the number of events generated in each bin...\n";
   TChain TruthChain("TruthTuple");
   TruthChain.Add(settings.get("TruthTupleFilename").c_str());
-  std::map<int, int> GeneratedEvents;
-  for(int i = -NumberBins; i <= NumberBins; i++) {
-    if(i == 0) {
-      continue;
+  std::vector<int> GeneratedEvents;
+  for(const auto &Bin : BinCombinations) {
+    TCut BinCut((settings.get("TagBin_variable") + "_true == " + std::to_string(Bin.second)).c_str());
+    if(!(settings.contains("Inclusive_fit") && settings.getB("Inclusive_fit"))) {
+      BinCut = BinCut && TCut((settings.get("SignalBin_variable") + "_true == " + std::to_string(Bin.first)).c_str());
     }
-    int Events = TruthChain.GetEntries((settings.get("SignalBin_variable") + "_true == " + std::to_string(i)).c_str());
-    GeneratedEvents.insert({i, Events});
+    int Events = TruthChain.GetEntries(BinCut);
+    GeneratedEvents.push_back(Events);
   }
   std::cout << "True bin yields counted\n";
-  std::cout << "Second get the number of reconstructed events in each bin and construct an efficiency matrix\n";
+  std::cout << "Counting reconstructed and true bin numbers...\n";
   TFile Outfile(settings.get("EfficiencyMatrixFilename").c_str(), "RECREATE");
-  // For now I assume flavour tags, so we need both positive and negative bins, but this will be generalized in the future
-  TMatrixT<double> EffMatrix(2*NumberBins, 2*NumberBins);
+  TMatrixT<double> EffMatrix(NumberBins, NumberBins);
   std::string TreeName = settings.get("TreeName");
   TChain Chain(TreeName.c_str());
   Chain.Add(settings.get("SignalMCFilename").c_str());
-  int SignalBin, SignalBin_true;
-  Chain.SetBranchAddress(settings.get("SignalBin_variable").c_str(), &SignalBin);
-  Chain.SetBranchAddress((settings.get("SignalBin_variable") + "_true").c_str(), &SignalBin_true);
-  BinIndex binIndex(NumberBins);
-  std::cout << "Counting reconstructed and true bin numbers...\n";
+  int SignalBin, SignalBin_true, TagBin, TagBin_true;
+  if(settings.contains("Inclusive_fit") && settings.getB("Inclusive_fit")) {
+    SignalBin = 0;
+    SignalBin_true = 0;
+  } else {
+    Chain.SetBranchAddress(settings.get("SignalBin_variable").c_str(), &SignalBin);
+    Chain.SetBranchAddress((settings.get("SignalBin_variable") + "_true").c_str(), &SignalBin_true);
+  }
+  Chain.SetBranchAddress(settings.get("TagBin_variable").c_str(), &TagBin);
+  Chain.SetBranchAddress((settings.get("TagBin_variable") + "_true").c_str(), &TagBin_true);
   for(int i = 0; i < Chain.GetEntries(); i++) {
     Chain.GetEntry(i);
-    EffMatrix(binIndex(SignalBin), binIndex(SignalBin_true))++;
-  }
-  // Finally normalize all elements by the number of generated events
-  for(int i = -NumberBins; i <= NumberBins; i++) {
-    if(i == 0) {
-      continue;
-    }
-    for(int j = -NumberBins; j <= NumberBins; j++) {
-      if(j == 0) {
-	continue;
-      }
-      EffMatrix(binIndex(i), binIndex(j)) /= GeneratedEvents[j];
-    }
+    auto RecBin_index = std::distance(BinCombinations.begin(), std::find(BinCombinations.begin(), BinCombinations.end(), std::make_pair(SignalBin, TagBin)));
+    auto TrueBin_index = std::distance(BinCombinations.begin(), std::find(BinCombinations.begin(), BinCombinations.end(), std::make_pair(SignalBin_true, TagBin_true)));
+    EffMatrix(RecBin_index, TrueBin_index)++;
   }
   std::cout << "Efficiency matrix constructed!\n";
+  std::cout << "Normalizing efficiency matrix...\n";
+  for(std::size_t i = 0; i < GeneratedEvents.size(); i++) {
+    for(std::size_t j = 0; j < GeneratedEvents.size(); j++) {
+      EffMatrix(i, j) /= GeneratedEvents[j];
+    }
+  }
+  if(settings.contains("Inclusive_fit") && settings.getB("Inclusive_fit")) {
+    for(std::size_t j = 0; j < GeneratedEvents.size(); j++) {
+      double Sum = 0.0;
+      for(std::size_t i = 0; i < GeneratedEvents.size(); i++) {
+	Sum += EffMatrix(i, j);
+      }
+      for(std::size_t i = 0; i < GeneratedEvents.size(); i++) {
+	EffMatrix(i, j) /= Sum;
+      }
+    }
+  }
   EffMatrix.Write("EffMatrix");
+  std::cout << "Efficiency matrix ready\n";
   std::cout << "Double tag efficiency studies done!\n";
   return 0;
 }
