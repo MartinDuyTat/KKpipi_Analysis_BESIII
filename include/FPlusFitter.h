@@ -10,7 +10,7 @@
 #include"RooDataSet.h"
 #include"RooArgSet.h"
 #include"RooArgList.h"
-
+#include"RooFitResult.h"
 #include"RooRealVar.h"
 #include"Settings.h"
 
@@ -73,6 +73,10 @@ class FPlusFitter {
      * Add formula for prediction of normalized yield of KShh tag
      */
     void AddPrediction_KShh(const std::string &TagMode);
+    /**
+     * Save the fit results
+     */
+    void SaveFitResults(RooFitResult *Result) const;
 };
 
 #endif

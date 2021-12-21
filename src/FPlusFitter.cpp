@@ -2,6 +2,7 @@
 
 #include<iostream>
 #include<string>
+#include<fstream>
 #include"TString.h"
 #include"TMatrixTSym.h"
 #include"TMatrixT.h"
@@ -13,6 +14,7 @@
 #include"RooMultiVarGaussian.h"
 #include"RooFitResult.h"
 #include"RooDataSet.h"
+#include"RooFitResult.h"
 #include"Settings.h"
 #include"Unique.h"
 #include"FPlusFitter.h"
@@ -51,6 +53,7 @@ void FPlusFitter::InitializeAndFit() {
   // Perform fit
   auto Result = Model.fitTo(Data, RooFit::Save());
   Result->Print("V");
+  SaveFitResults(Result);
 }
 
 void FPlusFitter::AddMeasurement_CP(const std::string &TagMode) {
@@ -58,7 +61,7 @@ void FPlusFitter::AddMeasurement_CP(const std::string &TagMode) {
   double ST_Yield = m_Settings[TagMode + "_ST_Yield"].getD(TagMode + "_SingleTag_Yield");
   double ST_Yield_err = m_Settings[TagMode + "_ST_Yield"].getD(TagMode + "_SingleTag_Yield_err");
   // Get raw double tag yields and efficiency
-  std::string DT_Name("DoubleTag_CP_KKpipi_vs_" + TagMode + "_SignalBin0_TagBin0_SignalYield");
+  std::string DT_Name("DoubleTag_CP_KKpipi_vs_" + TagMode + "_SignalBin0_SignalYield");
   double DT_Yield = m_Settings[TagMode + "_DT_Yield"].getD(DT_Name);
   double DT_Yield_err = m_Settings[TagMode + "_DT_Yield"].getD(DT_Name + "_err");
   // Create variable with a normalized yield and add to dataset
@@ -99,11 +102,13 @@ void FPlusFitter::AddMeasurement_KShh(const std::string &TagMode) {
   EffMatrix->Invert();
   TMatrixT<double> DT_Yields_EffCorrected = *EffMatrix*DT_Yields;
   EffMatrixFile.Close();
+  std::cout << "Adding " << TagMode << " tag mode\n";
   for(int i = 0; i < Bins; i++) {
     auto NormalizedYield = Unique::create<RooRealVar*>((TagMode + "_Normalized_Yield_Bin" + std::to_string(i + 1)).c_str(), "", DT_Yields_EffCorrected(i, 0)/ST_Yield);
     m_NormalizedYields.add(*NormalizedYield);
     m_Uncertainties.push_back(TMath::Sqrt(TMath::Power(DT_Yields_err(i, 0)/DT_Yields_EffCorrected(i, 0), 2)
                                         + TMath::Power(ST_Yield_err/ST_Yield, 2))*DT_Yields_EffCorrected(i, 0)/ST_Yield);
+    std::cout << "DT/ST ratio in bin " << i + 1 << ": (" << 1000.0*DT_Yields_EffCorrected(i, 0)/ST_Yield << " \u00b1 " << 1000.0*m_Uncertainties.back() << ")e-3\n";
   }
 }
 
@@ -117,4 +122,15 @@ void FPlusFitter::AddPrediction_KShh(const std::string &TagMode) {
     auto PredictedYield = Unique::create<RooFormulaVar*>((TagMode + "_Normalized_Yield_Prediction_Bin" + std::to_string(i)).c_str(), Formula, RooArgList(m_FPlus, m_KKpipi_BF));
     m_PredictedYields.add(*PredictedYield);
   }
+}
+
+void FPlusFitter::SaveFitResults(RooFitResult *Result) const {
+  std::ofstream Outfile(m_Settings.get("ResultsFile"));
+  Outfile << "status " << Result->status() << "\n";
+  Outfile << "covQual " << Result->covQual() << "\n\n";
+  Outfile << "FPlus         " << m_FPlus.getVal() << "\n";
+  Outfile << "FPlus_err     " << m_FPlus.getError() << "\n";
+  Outfile << "BF_KKpipi     " << m_KKpipi_BF.getVal() << "\n";
+  Outfile << "BF_KKpipi_err " << m_KKpipi_BF.getError() << "\n";
+  Outfile.close();
 }
