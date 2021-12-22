@@ -35,38 +35,9 @@ class SingleTagYield {
      */
     ~SingleTagYield();
     /**
-     * Initialize the signal shape
-     */
-    void InitializeSignalShape();
-    /**
-     * Initialize the combinatorial background shape
-     */
-    void InitializeArgus();
-    /**
-     * Initialize any peaking backgrounds
-     */
-    void InitializePeakingBackgrounds();
-    /**
-     * Initialize full mass shape
-     */
-    void InitializeFitShape();
-    /**
      * Function that performs the fit of the single tag yield in RooFit
      */
     void FitYield();
-    /**
-     * Plot the single tag MBC fit
-     * @param Data The data to be plotted
-     */
-    void PlotSingleTagYield(const RooDataSet &Data) const;
-    /**
-     * Function that saves the fit parameters to a text file
-     */
-    void SaveFitParameters() const;
-    /**
-     * Calculate the single tag yield and the uncertainty inside the signal region
-     */
-    std::pair<double, double> CalculateSingleTagYield() const;
   private:
     /**
      * TTree with signal events
@@ -112,6 +83,41 @@ class SingleTagYield {
      * The fit results
      */
     RooFitResult *m_Result = nullptr;
+    /**
+     * Initialize the signal shape
+     */
+    void InitializeSignalShape();
+    /**
+     * Initialize the combinatorial background shape
+     */
+    void InitializeArgus();
+    /**
+     * Initialize any peaking backgrounds
+     */
+    void InitializePeakingBackgrounds();
+    /**
+     * Initialize full mass shape
+     */
+    void InitializeFitShape();
+    /**
+     * Plot the single tag MBC fit
+     * @param Data The data to be plotted
+     */
+    void PlotSingleTagYield(const RooDataSet &Data) const;
+    /**
+     * Function that saves the fit parameters to a text file
+     */
+    void SaveFitParameters() const;
+    /**
+     * Calculate the single tag yield and the uncertainty inside the signal region
+     */
+    std::pair<double, double> CalculateSingleTagYield() const;
+    /**
+     * Run the sPlot background subtract based on the fitted model
+     * The result is saved as a TTree in a ROOT file
+     * @param Data The dataset we want to apply sPlot on
+     */
+    void sPlotReweight(RooDataSet &Data);
 };
 
 #endif

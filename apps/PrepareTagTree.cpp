@@ -53,7 +53,11 @@ int main(int argc, char *argv[]) {
     } else {
       InputFilename = settings["Datasets"].get(Dataset + "_" + TagType);
       InputFilename = Utilities::ReplaceString(InputFilename, "SIGNAL", SignalMode);
-      InputFilename = Utilities::ReplaceString(InputFilename, "TAG", TagMode);
+      if(TagMode != "KSpipipi0") {
+	InputFilename = Utilities::ReplaceString(InputFilename, "TAG", TagMode);
+      } else {
+	InputFilename = Utilities::ReplaceString(InputFilename, "TAG", "KSomegapipipi0");
+      }
     }
     std::vector<std::string> Years = InputFilename.find("YEAR") == std::string::npos ? std::vector<std::string>{""} : std::vector<std::string>{"2010", "2011"};
     for(const auto &Year : Years) {

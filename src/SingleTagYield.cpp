@@ -5,12 +5,14 @@
 #include<fstream>
 #include<stdexcept>
 #include<numeric>
+#include<memory>
 #include"TTree.h"
 #include"TCanvas.h"
 #include"TPad.h"
 #include"TAxis.h"
 #include"TLine.h"
 #include"TH1D.h"
+#include"TFile.h"
 #include"RooRealVar.h"
 #include"RooDataSet.h"
 #include"RooDataHist.h"
@@ -24,6 +26,8 @@
 #include"RooFormulaVar.h"
 #include"RooPlot.h"
 #include"RooHist.h"
+#include"RooStats/SPlot.h"
+#include "RooStats/RooStatsUtils.h"
 #include"SingleTagYield.h"
 #include"Settings.h"
 #include"Unique.h"
@@ -117,10 +121,22 @@ void SingleTagYield::InitializeFitShape() {
 
 void SingleTagYield::FitYield() {
   using namespace RooFit;
+  RooArgList Variables(m_MBC, m_LuminosityWeight);
+  std::string MassCut("");
+  std::unique_ptr<RooRealVar> InvMassVar;
+  if(m_Settings.contains("InvariantMassVariable")) {
+    std::string MassVarName = m_Settings.get("InvariantMassVariable");
+    m_DataTree->SetBranchStatus(MassVarName.c_str(), 1);
+    double LowMassCut = m_Settings.getD("InvariantMassVariable_low");
+    double HighMassCut = m_Settings.getD("InvariantMassVariable_high");
+    InvMassVar = std::unique_ptr<RooRealVar>(new RooRealVar(MassVarName.c_str(), "", LowMassCut, HighMassCut));
+    MassCut = "(" + MassVarName + " > " + std::to_string(LowMassCut) + " && " + MassVarName + " < " + std::to_string(HighMassCut) + ")";
+    Variables.add(*InvMassVar);
+  }
   TH1D h1("h1", "h1", m_Settings.getI("Bins_in_fit"), 1.83, 1.8865);
-  m_DataTree->Draw("MBC >> h1", "LuminosityWeight", "goff");
+  m_DataTree->Draw("MBC >> h1", (MassCut + "*LuminosityWeight").c_str(), "goff");
   RooDataHist BinnedData("BinnedData", "BinnedData", RooArgList(m_MBC), &h1);
-  RooDataSet Data("Data", "Data", m_DataTree, RooArgList(m_MBC, m_LuminosityWeight), "", "LuminosityWeight");
+  RooDataSet Data("Data", "Data", m_DataTree, Variables, MassCut.c_str(), "LuminosityWeight");
   if(m_Settings.get("FitType") != "NoFit") {
     m_Result = m_FullModel->fitTo(BinnedData, Save(), Strategy(2));
     if(m_Settings.get("FitType") == "UnbinnedFit") {
@@ -129,6 +145,9 @@ void SingleTagYield::FitYield() {
     SaveFitParameters();
   }
   PlotSingleTagYield(Data);
+  if(m_Settings.getB("sPlotReweight")) {
+    sPlotReweight(Data);
+  }
 }
 
 void SingleTagYield::PlotSingleTagYield(const RooDataSet &Data) const {
@@ -200,4 +219,19 @@ std::pair<double, double> SingleTagYield::CalculateSingleTagYield() const {
   using namespace RooFit;
   double Fraction = static_cast<RooAbsPdf*>(m_ModelPDFs.find("SignalShapeConv"))->createIntegral(m_MBC, NormSet(m_MBC), Range("SignalRange"))->getVal();
   return std::pair<double, double>{m_Parameters.at("Yield")->getVal()*Fraction, m_Parameters.at("Yield")->getPropagatedError(*m_Result)*Fraction};
+}
+
+void SingleTagYield::sPlotReweight(RooDataSet &Data) {
+  auto FloatingParameters = m_FullModel->getParameters(Data);
+  for(auto Parameter : *FloatingParameters) {
+    static_cast<RooRealVar*>(Parameter)->setConstant(true);
+  }
+  for(auto YieldParameter : m_ModelYields) {
+    static_cast<RooRealVar*>(YieldParameter)->setConstant(false);
+  }
+  RooStats::SPlot("sData", "", Data, m_FullModel, m_ModelYields);
+  TFile Outfile(m_Settings.get("sPlotFilename").c_str(), "RECREATE");
+  auto Tree = RooStats::GetAsTTree(m_Settings.get("TreeName").c_str(), m_Settings.get("TreeName").c_str(), Data);
+  Tree->Write();
+  Outfile.Close();
 }

@@ -51,7 +51,7 @@ target_link_libraries(FitPeakingShape PUBLIC ROOT::Physics ROOT::RIO ROOT::Tree)
 
 target_link_libraries(FitSingleTagMBC PUBLIC KKpipiStrongPhase)
 target_link_libraries(FitSingleTagMBC PUBLIC ${KKPIPI_BINNED_FIT_LIB} -ldl)
-target_link_libraries(FitSingleTagMBC PUBLIC ROOT::Physics ROOT::RIO ROOT::Tree)
+target_link_libraries(FitSingleTagMBC PUBLIC ROOT::Physics ROOT::RIO ROOT::Tree ROOT::RooStats)
 
 target_link_libraries(GetDCSCorrections PUBLIC KKpipiStrongPhase)
 target_link_libraries(GetDCSCorrections PUBLIC ROOT::Physics ROOT::RIO ROOT::Tree)
