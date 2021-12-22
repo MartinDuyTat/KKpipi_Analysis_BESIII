@@ -20,6 +20,10 @@ class DoublePolynomial_Shape: public FitShape {
      * Initialize a double polynomial
      */
     virtual void Initialize();
+    /**
+     * The order of the polynomial
+     */
+    int m_Order;
 };
 
 #endif

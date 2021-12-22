@@ -41,8 +41,6 @@ SingleTagYield::SingleTagYield(TTree *DataTree, TTree *MCSignalTree, const Setti
   m_DataTree->SetBranchStatus("*", 0);
   m_DataTree->SetBranchStatus("MBC", 1);
   m_DataTree->SetBranchStatus("LuminosityWeight", 1);
-  //m_MCSignalTree->SetBranchStatus("*", 0);
-  //m_MCSignalTree->SetBranchStatus("MBC", 1);
   m_MBC.setBins(1000, "cache");
   m_MBC.setRange("SignalRange", 1.86, 1.87);
   InitializeSignalShape();

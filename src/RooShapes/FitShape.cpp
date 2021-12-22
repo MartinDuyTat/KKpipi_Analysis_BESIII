@@ -11,7 +11,11 @@
 #include"RooShapes/FitShape.h"
 
 FitShape::FitShape(const std::string &Name, const Settings &settings, RooRealVar *x):  m_Settings(settings), m_Name(Name), m_x(x) {
-  m_Yield = Utilities::load_param(m_Settings, m_Name + "_yield");
+  if(m_Settings.contains(m_Name + "_yield")) {
+    m_Yield = Utilities::load_param(m_Settings, m_Name + "_yield");
+  } else {
+    m_Yield = Unique::create<RooRealVar*>((m_Name + "_yield").c_str(), "", 0.0, 0.0, 1000000.0);
+  }
 }
 
 FitShape::~FitShape() {
