@@ -15,7 +15,11 @@ TCut DeltaECut::GetDeltaECut() const {
   if(m_TagType == "ST") {
     return GetDeltaECutFromFile(m_TagMode);
   } else if(m_TagType == "DT") {
-    return GetDeltaECutFromFile("KKpipi", "Signal") && GetDeltaECutFromFile(m_TagMode, "Tag");
+    if(m_TagMode.find("KL") == std::string::npos && m_TagMode != "KeNu") {
+      return GetDeltaECutFromFile("KKpipi", "Signal") && GetDeltaECutFromFile(m_TagMode, "Tag");
+    } else {
+      return GetDeltaECutFromFile("KKpipi", "Signal");
+    }
   } else {
     return TCut();
   }
