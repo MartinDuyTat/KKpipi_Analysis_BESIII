@@ -1,5 +1,7 @@
 // Martin Duy Tat 25th November 2021
 
+#include<string>
+#include<memory>
 #include"TTree.h"
 #include"RooDataSet.h"
 #include"RooArgSet.h"
@@ -30,7 +32,19 @@ void BinnedDataLoader::MakeDataSet() {
   std::string TagBin_Name = m_Settings.get("TagBin_variable");
   RooRealVar SignalBin(SignalBin_Name.c_str(), "", -8, 8);
   RooRealVar TagBin(TagBin_Name.c_str(), "", -8, 8);
-  m_DataSet = new RooDataSet("InputData", "", m_Tree, RooArgSet(*m_SignalMBC, *m_TagMBC, SignalBin, TagBin));
+  RooArgSet Variables(*m_SignalMBC, *m_TagMBC, SignalBin, TagBin);
+  std::unique_ptr<RooRealVar> InvMassVar;
+  std::string MassCut("");
+  if(m_Settings.contains("InvariantMassVariable")) {
+    std::string MassVarName = m_Settings.get("InvariantMassVariable");
+    m_Tree->SetBranchStatus(MassVarName.c_str(), 1);
+    double LowMassCut = m_Settings.getD("InvariantMassVariable_low");
+    double HighMassCut = m_Settings.getD("InvariantMassVariable_high");
+    InvMassVar = std::unique_ptr<RooRealVar>(new RooRealVar(MassVarName.c_str(), "", LowMassCut, HighMassCut));
+    MassCut = "(" + MassVarName + " > " + std::to_string(LowMassCut) + " && " + MassVarName + " < " + std::to_string(HighMassCut) + ")";
+    Variables.add(*InvMassVar);
+  }
+  m_DataSet = new RooDataSet("InputData", "", m_Tree, Variables, MassCut.c_str());
   RooCategory *CategoryVariable = m_Category.GetCategoryVariable();
   RooDataSet CategorySet("InputData_Category", "", RooArgSet(*CategoryVariable));
   for(int i = 0; i < m_DataSet->numEntries(); i++) {
