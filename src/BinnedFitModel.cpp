@@ -18,13 +18,12 @@
 #include"Unique.h"
 #include"RooShapes/DoubleGaussian_Shape.h"
 #include"RooShapes/DoubleCrystalBall_Shape.h"
+#include"RooShapes/Chebychev_Shape.h"
 
 BinnedFitModel::BinnedFitModel(const Settings &settings,
-			       RooRealVar *SignalMBC,
-			       RooRealVar *TagMBC): m_SignalMBC(SignalMBC),
-						    m_TagMBC(TagMBC),
-						    m_Category(settings),
-						    m_Settings(settings) {
+			       RooRealVar *SignalMBC): m_SignalMBC(SignalMBC),
+						       m_Category(settings),
+						       m_Settings(settings) {
   // First initialize the simultaneous fit with the correct categories for all bins
   auto CategoryVariable = m_Category.GetCategoryVariable();
   m_PDF = new RooSimultaneous(("Simultaneous_PDF_KKpipi_vs_" + settings.get("Mode")).c_str(), "", *CategoryVariable);
@@ -33,7 +32,7 @@ BinnedFitModel::BinnedFitModel(const Settings &settings,
   // Set up the signal shape using signal MC
   InitializeSignalShape();
   // Then set up the combinatorial shape using an Argus function
-  InitializeArgusShape();
+  InitializeCombinatorialShape();
   // Set up peaking backgrounds
   InitializePeakingBackgroundShapes();
   // Finally set up the simultaneous PDF for all bins
@@ -89,7 +88,7 @@ void BinnedFitModel::InitializeYields() {
 }
 
 void BinnedFitModel::InitializeSignalShape() {
-  m_Parameters.insert({"Mean1", Unique::create<RooRealVar*>((m_Settings.get("Mode") + "_DoubleTag_Mean1").c_str(), "", 0.0, -0.001, 0.001)});
+  m_Parameters.insert({"Mean1", Utilities::load_param(m_Settings["MBC_Shape"], m_Settings.get("Mode") + "_DoubleTag_Mean1")});
   m_Parameters.insert({"Sigma1", Utilities::load_param(m_Settings["MBC_Shape"], m_Settings.get("Mode") + "_DoubleTag_Sigma1")});
   auto Resolution = Unique::create<RooGaussian*>("Gaussian1", "", *m_SignalMBC, *m_Parameters["Mean1"], *m_Parameters["Sigma1"]);
   TChain SignalMCChain(m_Settings.get("TreeName").c_str());
@@ -97,23 +96,27 @@ void BinnedFitModel::InitializeSignalShape() {
   SignalMCFilename = Utilities::ReplaceString(SignalMCFilename, "TAG", m_Settings.get("Mode"));
   SignalMCChain.Add(SignalMCFilename.c_str());
   SignalMCChain.SetBranchStatus("*", 0);
-  SignalMCChain.SetBranchStatus("SignalMBC", 1);
-  SignalMCChain.SetBranchStatus("TagMBC", 1);
+  SignalMCChain.SetBranchStatus(m_Settings.get("FitVariable").c_str(), 1);
   TTree *ClonedMCChain = nullptr;
   if(m_Settings.getI("Events_in_MC") < 0 || m_Settings.getI("Events_in_MC") > SignalMCChain.GetEntries()) {
     ClonedMCChain = &SignalMCChain;
   } else {
     ClonedMCChain = SignalMCChain.CloneTree(m_Settings.getI("Events_in_MC"));
   }
-  RooDataSet MCSignal("MCSignal", "", ClonedMCChain, RooArgList(*m_SignalMBC, *m_TagMBC));
+  RooDataSet MCSignal("MCSignal", "", ClonedMCChain, RooArgList(*m_SignalMBC));
   auto SignalShape = Unique::create<RooKeysPdf*>("SignalShape", "", *m_SignalMBC, MCSignal);
   m_SignalShapeConv = Unique::create<RooFFTConvPdf*>("SignalShapeConv", "", *m_SignalMBC, *SignalShape, *Resolution);
 }
 
-void BinnedFitModel::InitializeArgusShape() {
-  m_Parameters.insert({"End", Unique::create<RooRealVar*>("End", "", 1.8865)});
-  m_Parameters.insert({"c", Utilities::load_param(m_Settings["MBC_Shape"], m_Settings.get("Mode") + "_DoubleTag_c")});
-  m_Argus = Unique::create<RooArgusBG*>("Argus", "", *m_SignalMBC, *m_Parameters["End"], *m_Parameters["c"]);
+void BinnedFitModel::InitializeCombinatorialShape() {
+  if(m_Settings.getB("FullyReconstructed")) {
+    m_Parameters.insert({"End", Unique::create<RooRealVar*>("End", "", 1.8865)});
+    m_Parameters.insert({"c", Utilities::load_param(m_Settings["MBC_Shape"], m_Settings.get("Mode") + "_DoubleTag_c")});
+    m_Combinatorial = Unique::create<RooArgusBG*>("Argus", "", *m_SignalMBC, *m_Parameters["End"], *m_Parameters["c"]);
+  } else {
+    Chebychev_Shape CombinatorialShape("Combinatorial", m_Settings["MBC_Shape"], m_SignalMBC);
+    m_Combinatorial = CombinatorialShape.GetPDF();
+  }
 }
 
 void BinnedFitModel::InitializePeakingBackgroundShapes() {
@@ -135,7 +138,7 @@ void BinnedFitModel::InitializePeakingBackgroundShapes() {
 }
 
 RooAddPdf* BinnedFitModel::CreateBinPDF(const std::string &CategoryString) {
-  RooArgList Shapes(*m_SignalShapeConv, *m_Argus);
+  RooArgList Shapes(*m_SignalShapeConv, *m_Combinatorial);
   RooArgList Yields(*m_Yields.at(CategoryString + "_SignalYield"), *m_Yields.at(CategoryString + "_CombinatorialYield"));
   std::string Mode = m_Settings.get("Mode");
   int PeakingBackgrounds = m_Settings["MBC_Shape"].getI(Mode + "_PeakingBackgrounds");

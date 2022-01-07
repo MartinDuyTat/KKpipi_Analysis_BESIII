@@ -24,7 +24,6 @@
 #include"Category.h"
 
 DoubleTagYield::DoubleTagYield(const Settings &settings, TTree *Tree): m_SignalMBC("SignalMBC", "", 1.83, 1.8865),
-								       m_TagMBC("TagMBC", "", 1.83, 1.8865),
 								       m_Settings(settings), m_Tree(Tree) {
   for(int i = 0; i < 2; i++) {
     RooMsgService::instance().getStream(i).removeTopic(RooFit::Eval);
@@ -32,15 +31,17 @@ DoubleTagYield::DoubleTagYield(const Settings &settings, TTree *Tree): m_SignalM
     RooMsgService::instance().getStream(i).removeTopic(RooFit::Minimization);
     RooMsgService::instance().getStream(i).removeTopic(RooFit::Plotting);
   }
-  RooMsgService::instance().Print();
+  if(!m_Settings.getB("FullyReconstructed")) {
+    m_SignalMBC = RooRealVar(m_Settings.get("FitVariable").c_str(), "", m_Settings.getD("FitRange_low"), m_Settings.getD("FitRange_high"));
+  }
   m_SignalMBC.setBins(200, "cache");
 }
 
 void DoubleTagYield::DoFit() {
   using namespace RooFit;
-  BinnedDataLoader DataLoader(m_Settings, m_Tree, &m_SignalMBC, &m_TagMBC);
+  BinnedDataLoader DataLoader(m_Settings, m_Tree, &m_SignalMBC);
   RooDataSet *DataSet = DataLoader.GetDataSet();
-  BinnedFitModel FitModel(m_Settings, &m_SignalMBC, &m_TagMBC);
+  BinnedFitModel FitModel(m_Settings, &m_SignalMBC);
   RooSimultaneous *Model = FitModel.GetPDF();
   // Perform an initial fit
   auto Result = Model->fitTo(*DataSet, Save(), NumCPU(4));
@@ -119,7 +120,7 @@ void DoubleTagYield::PlotProjections(BinnedDataLoader *DataLoader, BinnedFitMode
     Pad2.cd();
     RooPlot *PullFrame = m_SignalMBC.frame();
     PullFrame->addObject(Pull);
-    TLine *Line = new TLine(1.83, 0.0, 1.8865, 0.0);
+    TLine *Line = new TLine(m_SignalMBC.getMin(), 0.0, m_SignalMBC.getMax(), 0.0);
     PullFrame->addObject(Line);
     PullFrame->SetMinimum(-5);
     PullFrame->SetMaximum(5);
@@ -142,22 +143,29 @@ void DoubleTagYield::SaveSignalYields(const BinnedFitModel &FitModel, RooFitResu
   Outfile << "status " << Result->status() << "\n";
   Outfile << "covQual " << Result->covQual() << "\n\n";
   Outfile << "* Fraction of events inside signal window: " << Fraction << "\n";
-  Outfile << "* These yields are after the sideband has been subtracted off the signal yield\n\n";
+  if(m_Settings.getB("FullyReconstructed")) {
+    Outfile << "* These yields are after the sideband has been subtracted off the signal yield\n\n";
+  }
   for(const auto & cat : category.GetCategories()) {
     std::string Name = cat + "_SignalYield";
-    TCut SidebandCut("TagMBC > 1.84 && TagMBC < 1.85 && SignalMBC > 1.86 && SignalMBC < 1.87");
-    int SignalBin = category.GetSignalBinNumber(cat);
-    if(SignalBin != 0) {
-      SidebandCut = SidebandCut && TCut(("SignalBin == " + std::to_string(SignalBin)).c_str());
+    double Sideband = 0.0;
+    if(m_Settings.getB("FullyReconstructed")) {
+      Sideband += GetSidebandYield(category.GetSignalBinNumber(cat), category.GetTagBinNumber(cat));
     }
-    int TagBin = category.GetTagBinNumber(cat);
-    if(TagBin != 0) {
-      SidebandCut = SidebandCut && TCut(("TagBin == " + std::to_string(TagBin)).c_str());
-    }
-    double Sideband = m_Tree->GetEntries(SidebandCut);
     Outfile << Name << "          " << std::setw(8) << std::right << FitModel.m_Yields.at(Name)->getVal()*Fraction - Sideband << "\n";
     Outfile << Name << "_err      " << std::setw(8) << std::right << static_cast<RooRealVar*>(FitModel.m_Yields.at(Name))->getError()*Fraction << "\n";
     Outfile << Name << "_sideband " << std::setw(8) << std::right << Sideband << "\n";
   }
   Outfile.close();
+}
+
+double DoubleTagYield::GetSidebandYield(int SignalBin, int TagBin) const {
+  TCut SidebandCut("TagMBC > 1.84 && TagMBC < 1.85 && SignalMBC > 1.86 && SignalMBC < 1.87");
+  if(SignalBin != 0) {
+    SidebandCut = SidebandCut && TCut(("SignalBin == " + std::to_string(SignalBin)).c_str());
+  }
+  if(TagBin != 0) {
+    SidebandCut = SidebandCut && TCut(("TagBin == " + std::to_string(TagBin)).c_str());
+  }
+  return static_cast<double>(m_Tree->GetEntries(SidebandCut));
 }

@@ -12,12 +12,10 @@
 
 BinnedDataLoader::BinnedDataLoader(const Settings &settings,
 				   TTree *Tree,
-				   RooRealVar *SignalMBC,
-				   RooRealVar *TagMBC): m_Settings(settings),
-							m_Tree(Tree),
-							m_SignalMBC(SignalMBC),
-							m_TagMBC(TagMBC),
-							m_Category(m_Settings) {
+				   RooRealVar *SignalMBC): m_Settings(settings),
+							   m_Tree(Tree),
+							   m_SignalMBC(SignalMBC),
+							   m_Category(m_Settings) {
   MakeDataSet();
 }
 
@@ -32,7 +30,7 @@ void BinnedDataLoader::MakeDataSet() {
   std::string TagBin_Name = m_Settings.get("TagBin_variable");
   RooRealVar SignalBin(SignalBin_Name.c_str(), "", -8, 8);
   RooRealVar TagBin(TagBin_Name.c_str(), "", -8, 8);
-  RooArgSet Variables(*m_SignalMBC, *m_TagMBC, SignalBin, TagBin);
+  RooArgSet Variables(*m_SignalMBC, SignalBin, TagBin);
   std::unique_ptr<RooRealVar> InvMassVar;
   std::string MassCut("");
   if(m_Settings.contains("InvariantMassVariable")) {

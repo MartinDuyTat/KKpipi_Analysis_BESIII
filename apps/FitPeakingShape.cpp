@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
       Filename = Utilities::ReplaceString(Filename, "MODE", Mode);
     }
     Chain.Add(Filename.c_str());
-    RooRealVar MBC(settings.get("FitVariable").c_str(), "", 1.83, 1.8865);
+    RooRealVar MBC(settings.get("FitVariable").c_str(), "", settings.getD("FitRange_low"), settings.getD("FitRange_high"));
     RooDataSet Data("Data", "", &Chain, MBC);
     std::unique_ptr<FitShape> PDF;
     if(settings["MBC_Shape"].get(Name + "_Shape") == "DoubleGaussian") {

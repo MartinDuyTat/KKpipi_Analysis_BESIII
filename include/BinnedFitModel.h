@@ -13,6 +13,7 @@
 #include"RooSimultaneous.h"
 #include"RooArgusBG.h"
 #include"RooAddPdf.h"
+#include"RooAbsPdf.h"
 #include"Settings.h"
 #include"Category.h"
 #include"RooShapes/FitShape.h"
@@ -26,7 +27,7 @@ class BinnedFitModel {
      * @param settings Fit settings
      * @param SignalMBC The fit variable
      */
-    BinnedFitModel(const Settings &settings, RooRealVar *SignalMBC, RooRealVar *TagMBC);
+    BinnedFitModel(const Settings &settings, RooRealVar *SignalMBC);
     /**
      * Destructor that deletes the simultaneous PDF and the peaking background shapes
      */
@@ -49,10 +50,6 @@ class BinnedFitModel {
      */
     RooRealVar *m_SignalMBC;
     /**
-     * Need this to apply a cut on the tag side
-     */
-    RooRealVar *m_TagMBC;
-    /**
      * Simultaneous PDF for the binned fit
      */
     RooSimultaneous *m_PDF = nullptr;
@@ -63,7 +60,7 @@ class BinnedFitModel {
     /**
      * The combinatorial shape which floats in the fit, but shared between all bins
      */
-    RooArgusBG *m_Argus = nullptr;
+    RooAbsPdf *m_Combinatorial = nullptr;
     /**
      * Map of all the peaking background shapes
      */
@@ -79,7 +76,7 @@ class BinnedFitModel {
     /**
      * Create the combinatorial component for all bins
      */
-    void InitializeArgusShape();
+    void InitializeCombinatorialShape();
     /**
      * Create the peaking background shape components for all bins
      */

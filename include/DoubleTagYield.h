@@ -40,10 +40,6 @@ class DoubleTagYield {
      */
     RooRealVar m_SignalMBC;
     /**
-     * Need this to apply a cut on the tag side
-     */
-    RooRealVar m_TagMBC;
-    /**
      * The fit settings
      */
     Settings m_Settings;
@@ -51,6 +47,11 @@ class DoubleTagYield {
      * TTree with double tag events
      */
     TTree *m_Tree;
+    /**
+     * Helper function to find sideband yield with correctly reconstructed signal side and incorrect tag side reconstruction
+     * Only use for fully reconstructed tags
+     */
+    double GetSidebandYield(int SignalBin, int TagBin) const;
 };
 
 #endif
