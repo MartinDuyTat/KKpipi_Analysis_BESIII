@@ -12,7 +12,7 @@
 
 int main(int argc, char *argv[]) {
   Settings settings = Utilities::parse_args(argc, argv);
-  std::cout << "Single tag yield fit\n";
+  std::cout << "Double tag yield fit\n";
   std::cout << "Loading ROOT files...\n";
   std::string TreeName = settings.get("TreeName");
   TChain Chain(TreeName.c_str());

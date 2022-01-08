@@ -46,7 +46,6 @@ SingleTagYield::SingleTagYield(TTree *DataTree, TTree *MCSignalTree, const Setti
   m_DataTree->SetBranchStatus("MBC", 1);
   m_DataTree->SetBranchStatus("LuminosityWeight", 1);
   m_MBC.setBins(1000, "cache");
-  m_MBC.setRange("SignalRange", 1.86, 1.87);
   InitializeSignalShape();
   InitializeArgus();
   InitializePeakingBackgrounds();
@@ -130,11 +129,11 @@ void SingleTagYield::FitYield() {
     double LowMassCut = m_Settings.getD("InvariantMassVariable_low");
     double HighMassCut = m_Settings.getD("InvariantMassVariable_high");
     InvMassVar = std::unique_ptr<RooRealVar>(new RooRealVar(MassVarName.c_str(), "", LowMassCut, HighMassCut));
-    MassCut = "(" + MassVarName + " > " + std::to_string(LowMassCut) + " && " + MassVarName + " < " + std::to_string(HighMassCut) + ")";
+    MassCut = "(" + MassVarName + " > " + std::to_string(LowMassCut) + " && " + MassVarName + " < " + std::to_string(HighMassCut) + ")*";
     Variables.add(*InvMassVar);
   }
   TH1D h1("h1", "h1", m_Settings.getI("Bins_in_fit"), 1.83, 1.8865);
-  m_DataTree->Draw("MBC >> h1", (MassCut + "*LuminosityWeight").c_str(), "goff");
+  m_DataTree->Draw("MBC >> h1", (MassCut + "LuminosityWeight").c_str(), "goff");
   RooDataHist BinnedData("BinnedData", "BinnedData", RooArgList(m_MBC), &h1);
   RooDataSet Data("Data", "Data", m_DataTree, Variables, MassCut.c_str(), "LuminosityWeight");
   if(m_Settings.get("FitType") != "NoFit") {
@@ -145,7 +144,7 @@ void SingleTagYield::FitYield() {
     SaveFitParameters();
   }
   PlotSingleTagYield(Data);
-  if(m_Settings.getB("sPlotReweight")) {
+  if(m_Settings.contains("sPlotReweight") && m_Settings.getB("sPlotReweight")) {
     sPlotReweight(Data);
   }
 }
@@ -217,8 +216,7 @@ void SingleTagYield::SaveFitParameters() const {
 
 std::pair<double, double> SingleTagYield::CalculateSingleTagYield() const {
   using namespace RooFit;
-  double Fraction = static_cast<RooAbsPdf*>(m_ModelPDFs.find("SignalShapeConv"))->createIntegral(m_MBC, NormSet(m_MBC), Range("SignalRange"))->getVal();
-  return std::pair<double, double>{m_Parameters.at("Yield")->getVal()*Fraction, m_Parameters.at("Yield")->getPropagatedError(*m_Result)*Fraction};
+  return std::pair<double, double>{m_Parameters.at("Yield")->getVal(), m_Parameters.at("Yield")->getPropagatedError(*m_Result)};
 }
 
 void SingleTagYield::sPlotReweight(RooDataSet &Data) {

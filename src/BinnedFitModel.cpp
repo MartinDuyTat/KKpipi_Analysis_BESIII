@@ -31,7 +31,7 @@ BinnedFitModel::BinnedFitModel(const Settings &settings,
   InitializeYields();
   // Set up the signal shape using signal MC
   InitializeSignalShape();
-  // Then set up the combinatorial shape using an Argus function
+  // Then set up the combinatorial shape
   InitializeCombinatorialShape();
   // Set up peaking backgrounds
   InitializePeakingBackgroundShapes();
@@ -112,7 +112,7 @@ void BinnedFitModel::InitializeCombinatorialShape() {
   if(m_Settings.getB("FullyReconstructed")) {
     m_Parameters.insert({"End", Unique::create<RooRealVar*>("End", "", 1.8865)});
     m_Parameters.insert({"c", Utilities::load_param(m_Settings["MBC_Shape"], m_Settings.get("Mode") + "_DoubleTag_c")});
-    m_Combinatorial = Unique::create<RooArgusBG*>("Argus", "", *m_SignalMBC, *m_Parameters["End"], *m_Parameters["c"]);
+    m_Combinatorial = Unique::create<RooArgusBG*>("Combinatorial", "", *m_SignalMBC, *m_Parameters["End"], *m_Parameters["c"]);
   } else {
     Chebychev_Shape CombinatorialShape("Combinatorial", m_Settings["MBC_Shape"], m_SignalMBC);
     m_Combinatorial = CombinatorialShape.GetPDF();

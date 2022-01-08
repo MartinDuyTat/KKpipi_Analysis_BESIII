@@ -105,7 +105,7 @@ void DoubleTagYield::PlotProjections(BinnedDataLoader *DataLoader, BinnedFitMode
     DataSet->plotOn(Frame, Binning(m_Settings.getI("Bins_in_plots")), Cut((std::string(CategoryVariable->GetName()) + "==" + std::string(CategoryVariable->GetName()) + "::" + Category).c_str()));
     Model->plotOn(Frame, LineColor(kBlue), Slice(*CategoryVariable, Category.c_str()), ProjWData(*CategoryVariable, *DataSet));
     RooHist *Pull = Frame->pullHist();
-    Model->plotOn(Frame, LineColor(kBlue), Components("Argus"), LineStyle(kDashed), Slice(*CategoryVariable, Category.c_str()), ProjWData(*CategoryVariable, *DataSet));
+    Model->plotOn(Frame, LineColor(kBlue), Components("Combinatorial*"), LineStyle(kDashed), Slice(*CategoryVariable, Category.c_str()), ProjWData(*CategoryVariable, *DataSet));
     if(FitModel->m_PeakingBackgroundShapes.size() > 0) {
       std::string PeakingList = "";
       for(auto iter = FitModel->m_PeakingBackgroundShapes.begin(); iter != FitModel->m_PeakingBackgroundShapes.end(); iter++) {
@@ -136,13 +136,11 @@ void DoubleTagYield::PlotProjections(BinnedDataLoader *DataLoader, BinnedFitMode
 }
 
 void DoubleTagYield::SaveSignalYields(const BinnedFitModel &FitModel, RooFitResult *Result, const Category &category) const {
-  double Fraction = FitModel.GetFractionInSignalRegion();
   std::ofstream Outfile(m_Settings.get("FittedSignalYieldsFile"));
   Outfile << std::fixed << std::setprecision(4);
   Outfile << "* KKpipi vs " << m_Settings.get("Mode") << " double tag yield fit results\n\n";
   Outfile << "status " << Result->status() << "\n";
   Outfile << "covQual " << Result->covQual() << "\n\n";
-  Outfile << "* Fraction of events inside signal window: " << Fraction << "\n";
   if(m_Settings.getB("FullyReconstructed")) {
     Outfile << "* These yields are after the sideband has been subtracted off the signal yield\n\n";
   }
@@ -152,9 +150,11 @@ void DoubleTagYield::SaveSignalYields(const BinnedFitModel &FitModel, RooFitResu
     if(m_Settings.getB("FullyReconstructed")) {
       Sideband += GetSidebandYield(category.GetSignalBinNumber(cat), category.GetTagBinNumber(cat));
     }
-    Outfile << Name << "          " << std::setw(8) << std::right << FitModel.m_Yields.at(Name)->getVal()*Fraction - Sideband << "\n";
-    Outfile << Name << "_err      " << std::setw(8) << std::right << static_cast<RooRealVar*>(FitModel.m_Yields.at(Name))->getError()*Fraction << "\n";
-    Outfile << Name << "_sideband " << std::setw(8) << std::right << Sideband << "\n";
+    Outfile << Name << "          " << std::setw(8) << std::right << FitModel.m_Yields.at(Name)->getVal() - Sideband << "\n";
+    Outfile << Name << "_err      " << std::setw(8) << std::right << static_cast<RooRealVar*>(FitModel.m_Yields.at(Name))->getError() << "\n";
+    if(m_Settings.getB("FullyReconstructed")) {
+      Outfile << Name << "_sideband " << std::setw(8) << std::right << Sideband << "\n";
+    }
   }
   Outfile.close();
 }

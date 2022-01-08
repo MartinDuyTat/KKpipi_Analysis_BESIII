@@ -162,7 +162,7 @@ int Category::GetBinNumber(const std::string &category, const std::string &Signa
     return static_cast<int>(category[pos] - '0');
   }
   // Convert char number to int with some char trickery
-  int Number = category[pos + SignalTag.length() + 4] - '0';
+  int Number = category[pos + 1] - '0';
   return Sign*Number;
 }
 
