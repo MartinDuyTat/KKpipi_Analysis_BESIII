@@ -100,7 +100,13 @@ void DoubleTagYield::PlotProjections(BinnedDataLoader *DataLoader, BinnedFitMode
     if(TagMode == "KSpipi" || TagMode == "KSKK" || TagMode == "KKpipi") {
       Title += ", tag bin " + std::to_string(TagBin);
     }
-    Title += "; M_{BC} (GeV); Events";
+    if(TagMode.substr(0, 2) == "KL") {
+      Title += "; M_{miss}^{2} (GeV^{2}); Events";
+    } else if(TagMode == "KeNu") {
+      Title += "; U_{miss} (GeV); Events";
+    } else {
+      Title += "; M_{BC} (GeV); Events";
+    }
     Frame->SetTitle(Title.c_str());
     DataSet->plotOn(Frame, Binning(m_Settings.getI("Bins_in_plots")), Cut((std::string(CategoryVariable->GetName()) + "==" + std::string(CategoryVariable->GetName()) + "::" + Category).c_str()));
     Model->plotOn(Frame, LineColor(kBlue), Slice(*CategoryVariable, Category.c_str()), ProjWData(*CategoryVariable, *DataSet));
