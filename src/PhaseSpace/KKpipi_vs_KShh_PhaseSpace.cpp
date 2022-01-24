@@ -54,8 +54,7 @@ void KKpipi_vs_KShh_PhaseSpace::SetKShhBranchAddresses(TTree *Tree) {
   Tree->SetBranchAddress("TagKalmanFitSuccess", &m_KalmanFitSuccess);
   Tree->SetBranchAddress("TagKSpx", &m_KS_P[0]);
   Tree->SetBranchAddress("TagKSpy", &m_KS_P[1]);
-  //Tree->SetBranchAddress("TagKSpz", &m_KS_P[2]);
-  Tree->SetBranchAddress("TagKSz", &m_KS_P[2]); // Typo in current BOSS version, need to rerun!
+  Tree->SetBranchAddress("TagKSpz", &m_KS_P[2]);
   Tree->SetBranchAddress("TagKSenergy", &m_KS_P[3]);
   Tree->SetBranchAddress("TagKSpxKalmanFit", &m_KS_P_KalmanFit[0]);
   Tree->SetBranchAddress("TagKSpyKalmanFit", &m_KS_P_KalmanFit[1]);
@@ -64,16 +63,18 @@ void KKpipi_vs_KShh_PhaseSpace::SetKShhBranchAddresses(TTree *Tree) {
 }
 
 std::pair<int, int> KKpipi_vs_KShh_PhaseSpace::Bin() const {
-  return std::make_pair(KKpipiBin(), GetKShhBin());
+  int KShhBin = GetKShhBin();
+  return KShhBin > 0 ? std::make_pair(KKpipiBin(), KShhBin) : std::make_pair(-KKpipiBin(), -KShhBin);
 }
 
 std::pair<int, int> KKpipi_vs_KShh_PhaseSpace::TrueBin() {
-  return std::make_pair(TrueKKpipiBin(), GetTrueKShhBin());
+  int KShhBin = GetTrueKShhBin();
+  return KShhBin > 0 ? std::make_pair(TrueKKpipiBin(), KShhBin) : std::make_pair(-TrueKKpipiBin(), -KShhBin);
 }
 
 int KKpipi_vs_KShh_PhaseSpace::LookUpBinNumber(double M2Plus, double M2Minus) const {
   Float_t BinNumberFloat = m_BinningScheme->GetBinContent(m_BinningScheme->GetXaxis()->FindBin(M2Plus), m_BinningScheme->GetYaxis()->FindBin(M2Minus));
-  return static_cast<int>(BinNumberFloat);
+  return M2Minus > M2Plus ? static_cast<int>(BinNumberFloat) : -static_cast<int>(BinNumberFloat);
 }
 
 int KKpipi_vs_KShh_PhaseSpace::GetMappedKShhBin(double M2Plus, double M2Minus) const {
@@ -92,7 +93,7 @@ int KKpipi_vs_KShh_PhaseSpace::GetMappedKShhBin(double M2Plus, double M2Minus) c
         int NewBin = static_cast<int>(m_BinningScheme->GetBinContent(x + iter->first, y + iter->second));
         // Once we reach the Dalitz boundary the bin number is non-zero
         if(NewBin != 0) {
-          return NewBin;
+          return M2Minus > M2Plus ? NewBin : -NewBin;
         }
       }
     }
