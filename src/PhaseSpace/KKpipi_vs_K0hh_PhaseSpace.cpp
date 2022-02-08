@@ -8,30 +8,41 @@
 #include"TFile.h"
 #include"TTree.h"
 #include"TLorentzVector.h"
-#include"PhaseSpace/KKpipi_vs_KShh_PhaseSpace.h"
+#include"PhaseSpace/KKpipi_vs_K0hh_PhaseSpace.h"
 
-KKpipi_vs_KShh_PhaseSpace::KKpipi_vs_KShh_PhaseSpace(TTree *Tree, int Bins, bool ReconstructedBins, bool TrueBins, const std::string &Mode): KKpipi_PhaseSpace(Tree, Bins, ReconstructedBins, TrueBins), m_Mode(Mode) {
+KKpipi_vs_K0hh_PhaseSpace::KKpipi_vs_K0hh_PhaseSpace(TTree *Tree, int Bins, bool ReconstructedBins, bool TrueBins, const std::string &Mode, bool KKpipiPartReco): KKpipi_PhaseSpace(Tree, Bins, ReconstructedBins, TrueBins), m_Mode(Mode) {
   std::string BinningFilename;
-  if(Mode == "KSpipi") {
+  if(Mode.substr(2, Mode.length()) == "pipi") {
     BinningFilename = std::string(BINNING_SCHEME_DIR) + "KsPiPi_equal.root";
     if(ReconstructedBins) {
-      SetKSpipiBranchAddresses(Tree);
+      SetK0pipiBranchAddresses(Tree);
     }
   /*} else if(Mode == "KSKK") {
     BinningFilename = std::string(BINNING_SCHEME_DIR) + "KsKK_2bins.root";*/
   } else {
-    throw std::invalid_argument("Mode " + Mode + " is not a valid KShh mode");
+    throw std::invalid_argument("Mode " + Mode + " is not a valid K0hh mode");
   }
   TFile BinningFile(BinningFilename.c_str(), "READ");
   BinningFile.GetObject("dkpp_bin_h", m_BinningScheme);
   m_BinningScheme->SetDirectory(0);
   BinningFile.Close();
   if(ReconstructedBins) {
-    SetKShhBranchAddresses(Tree);
+    if(Mode.substr(0, 2) == "KS") {
+      SetKShhBranchAddresses(Tree);
+    } else if(Mode.substr(0, 2) == "KL") {
+      SetKLhhBranchAddresses(Tree);
+    } else {
+      throw std::invalid_argument("Mode " + Mode + " is not a valid K0hh mode");
+    }
+    if(!KKpipiPartReco) {
+      Tree->SetBranchAddress("TagKalmanFitSuccess", &m_KalmanFitSuccess);
+    } else {
+      Tree->SetBranchAddress("SignalKalmanFitSuccess", &m_KalmanFitSuccess);
+    }
   }
 }
 
-void KKpipi_vs_KShh_PhaseSpace::SetKSpipiBranchAddresses(TTree *Tree) {
+void KKpipi_vs_K0hh_PhaseSpace::SetK0pipiBranchAddresses(TTree *Tree) {
   Tree->SetBranchAddress("TagPiPluspx", &m_hPlus_P[0]);
   Tree->SetBranchAddress("TagPiPluspy", &m_hPlus_P[1]);
   Tree->SetBranchAddress("TagPiPluspz", &m_hPlus_P[2]);
@@ -50,34 +61,44 @@ void KKpipi_vs_KShh_PhaseSpace::SetKSpipiBranchAddresses(TTree *Tree) {
   Tree->SetBranchAddress("TagPiMinusenergyKalmanFit", &m_hMinus_P_KalmanFit[3]);
 }
 
-void KKpipi_vs_KShh_PhaseSpace::SetKShhBranchAddresses(TTree *Tree) {
-  Tree->SetBranchAddress("TagKalmanFitSuccess", &m_KalmanFitSuccess);
-  Tree->SetBranchAddress("TagKSpx", &m_KS_P[0]);
-  Tree->SetBranchAddress("TagKSpy", &m_KS_P[1]);
-  Tree->SetBranchAddress("TagKSpz", &m_KS_P[2]);
-  Tree->SetBranchAddress("TagKSenergy", &m_KS_P[3]);
-  Tree->SetBranchAddress("TagKSpxKalmanFit", &m_KS_P_KalmanFit[0]);
-  Tree->SetBranchAddress("TagKSpyKalmanFit", &m_KS_P_KalmanFit[1]);
-  Tree->SetBranchAddress("TagKSpzKalmanFit", &m_KS_P_KalmanFit[2]);
-  Tree->SetBranchAddress("TagKSenergyKalmanFit", &m_KS_P_KalmanFit[3]);
+void KKpipi_vs_K0hh_PhaseSpace::SetKShhBranchAddresses(TTree *Tree) {
+  Tree->SetBranchAddress("TagKSpx", &m_K0_P[0]);
+  Tree->SetBranchAddress("TagKSpy", &m_K0_P[1]);
+  Tree->SetBranchAddress("TagKSpz", &m_K0_P[2]);
+  Tree->SetBranchAddress("TagKSenergy", &m_K0_P[3]);
+  Tree->SetBranchAddress("TagKSpxKalmanFit", &m_K0_P_KalmanFit[0]);
+  Tree->SetBranchAddress("TagKSpyKalmanFit", &m_K0_P_KalmanFit[1]);
+  Tree->SetBranchAddress("TagKSpzKalmanFit", &m_K0_P_KalmanFit[2]);
+  Tree->SetBranchAddress("TagKSenergyKalmanFit", &m_K0_P_KalmanFit[3]);
 }
 
-std::pair<int, int> KKpipi_vs_KShh_PhaseSpace::Bin() const {
-  int KShhBin = GetKShhBin();
-  return KShhBin > 0 ? std::make_pair(KKpipiBin(), KShhBin) : std::make_pair(-KKpipiBin(), -KShhBin);
+void KKpipi_vs_K0hh_PhaseSpace::SetKLhhBranchAddresses(TTree *Tree) {
+  Tree->SetBranchAddress("TagKLpx", &m_K0_P[0]);
+  Tree->SetBranchAddress("TagKLpy", &m_K0_P[1]);
+  Tree->SetBranchAddress("TagKLpz", &m_K0_P[2]);
+  Tree->SetBranchAddress("TagKLenergy", &m_K0_P[3]);
+  Tree->SetBranchAddress("TagKLpxKalmanFit", &m_K0_P_KalmanFit[0]);
+  Tree->SetBranchAddress("TagKLpyKalmanFit", &m_K0_P_KalmanFit[1]);
+  Tree->SetBranchAddress("TagKLpzKalmanFit", &m_K0_P_KalmanFit[2]);
+  Tree->SetBranchAddress("TagKLenergyKalmanFit", &m_K0_P_KalmanFit[3]);
 }
 
-std::pair<int, int> KKpipi_vs_KShh_PhaseSpace::TrueBin() {
-  int KShhBin = GetTrueKShhBin();
-  return KShhBin > 0 ? std::make_pair(TrueKKpipiBin(), KShhBin) : std::make_pair(-TrueKKpipiBin(), -KShhBin);
+std::pair<int, int> KKpipi_vs_K0hh_PhaseSpace::Bin() const {
+  int K0hhBin = GetK0hhBin();
+  return K0hhBin > 0 ? std::make_pair(KKpipiBin(), K0hhBin) : std::make_pair(-KKpipiBin(), -K0hhBin);
 }
 
-int KKpipi_vs_KShh_PhaseSpace::LookUpBinNumber(double M2Plus, double M2Minus) const {
+std::pair<int, int> KKpipi_vs_K0hh_PhaseSpace::TrueBin() {
+  int K0hhBin = GetTrueK0hhBin();
+  return K0hhBin > 0 ? std::make_pair(TrueKKpipiBin(), K0hhBin) : std::make_pair(-TrueKKpipiBin(), -K0hhBin);
+}
+
+int KKpipi_vs_K0hh_PhaseSpace::LookUpBinNumber(double M2Plus, double M2Minus) const {
   Float_t BinNumberFloat = m_BinningScheme->GetBinContent(m_BinningScheme->GetXaxis()->FindBin(M2Plus), m_BinningScheme->GetYaxis()->FindBin(M2Minus));
   return M2Minus > M2Plus ? static_cast<int>(BinNumberFloat) : -static_cast<int>(BinNumberFloat);
 }
 
-int KKpipi_vs_KShh_PhaseSpace::GetMappedKShhBin(double M2Plus, double M2Minus) const {
+int KKpipi_vs_K0hh_PhaseSpace::GetMappedK0hhBin(double M2Plus, double M2Minus) const {
   int x = m_BinningScheme->GetXaxis()->FindBin(M2Plus);
   int y = m_BinningScheme->GetYaxis()->FindBin(M2Minus);
   int i = 1;
@@ -101,19 +122,19 @@ int KKpipi_vs_KShh_PhaseSpace::GetMappedKShhBin(double M2Plus, double M2Minus) c
   }
 }
 
-int KKpipi_vs_KShh_PhaseSpace::GetKShhBin() const {
-  double M2Plus = m_KalmanFitSuccess == 1 ? (m_KS_P_KalmanFit + m_hPlus_P_KalmanFit).M2() : (m_KS_P + m_hPlus_P).M2();
-  double M2Minus = m_KalmanFitSuccess == 1 ? (m_KS_P_KalmanFit + m_hMinus_P_KalmanFit).M2() : (m_KS_P + m_hMinus_P).M2();
+int KKpipi_vs_K0hh_PhaseSpace::GetK0hhBin() const {
+  double M2Plus = m_KalmanFitSuccess == 1 ? (m_K0_P_KalmanFit + m_hPlus_P_KalmanFit).M2() : (m_K0_P + m_hPlus_P).M2();
+  double M2Minus = m_KalmanFitSuccess == 1 ? (m_K0_P_KalmanFit + m_hMinus_P_KalmanFit).M2() : (m_K0_P + m_hMinus_P).M2();
   int Bin = LookUpBinNumber(M2Plus, M2Minus);
   if(Bin != 0) {
     return Bin;    
   } else {
-    return GetMappedKShhBin(M2Plus, M2Minus);
+    return GetMappedK0hhBin(M2Plus, M2Minus);
 
   }
 }
 
-int KKpipi_vs_KShh_PhaseSpace::GetTrueKShhBin() {
+int KKpipi_vs_K0hh_PhaseSpace::GetTrueK0hhBin() {
   // Get index of signal and tag D in truth information
   FindDIndex();
   // Get the end index of the tag D
@@ -123,44 +144,44 @@ int KKpipi_vs_KShh_PhaseSpace::GetTrueKShhBin() {
   } else {
     TagEnd_index = m_TrueKinematics.SignalD_index;
   }
-  // Indices of KS, hPlus, hMinus in truth information
-  std::vector<int>::size_type KS_index, hPlus_index, hMinus_index;
+  // Indices of K0, hPlus, hMinus in truth information
+  std::vector<int>::size_type K0_index, hPlus_index, hMinus_index;
   // Particle ID of h+ and h-
-  int h_ID = m_Mode == "KSpipi" ? 211 : 321;
+  int h_ID = m_Mode.substr(2, m_Mode.length()) == "pipi" ? 211 : 321;
   // begin() iterator of true IDs
   auto ID_begin = m_TrueKinematics.ParticleIDs.begin();
-  // Get index of KS in truth information
-  auto KS_iter = std::find(ID_begin + m_TrueKinematics.TagD_index + 1, ID_begin + TagEnd_index, 310);
-  if(KS_iter == ID_begin + TagEnd_index) {
-    throw std::runtime_error("Cannot find KS in truth information");
+  // Get index of K0 in truth information
+  auto K0_iter = std::find(ID_begin + m_TrueKinematics.TagD_index + 1, ID_begin + TagEnd_index, 310);
+  if(K0_iter == ID_begin + TagEnd_index) {
+    throw std::runtime_error("Cannot find K0 in truth information");
   } else {
-    KS_index = KS_iter - ID_begin;
+    K0_index = K0_iter - ID_begin;
   }
   // Repeat for hPlus
-  auto hPlus_iter = std::find(KS_iter + 3, ID_begin + TagEnd_index, h_ID);
+  auto hPlus_iter = std::find(K0_iter + 3, ID_begin + TagEnd_index, h_ID);
   if(hPlus_iter == ID_begin + TagEnd_index) {
     throw std::runtime_error("Cannot find h+ in truth information");
   } else {
     hPlus_index = hPlus_iter - ID_begin;
   }
   // Repeat for hMinus
-  auto hMinus_iter = std::find(KS_iter + 3, ID_begin + TagEnd_index, -h_ID);
+  auto hMinus_iter = std::find(K0_iter + 3, ID_begin + TagEnd_index, -h_ID);
   if(hMinus_iter == ID_begin + TagEnd_index) {
     throw std::runtime_error("Cannot find h- in truth information");
   } else {
     hMinus_index = hMinus_iter - ID_begin;
   }
   // Calculate Dalitz coordinates
-  TLorentzVector KS_P(m_TrueKinematics.TruePx[KS_index], m_TrueKinematics.TruePy[KS_index], m_TrueKinematics.TruePz[KS_index], m_TrueKinematics.TrueEnergy[KS_index]);
+  TLorentzVector K0_P(m_TrueKinematics.TruePx[K0_index], m_TrueKinematics.TruePy[K0_index], m_TrueKinematics.TruePz[K0_index], m_TrueKinematics.TrueEnergy[K0_index]);
   TLorentzVector hPlus_P(m_TrueKinematics.TruePx[hPlus_index], m_TrueKinematics.TruePy[hPlus_index], m_TrueKinematics.TruePz[hPlus_index], m_TrueKinematics.TrueEnergy[hPlus_index]);
   TLorentzVector hMinus_P(m_TrueKinematics.TruePx[hMinus_index], m_TrueKinematics.TruePy[hMinus_index], m_TrueKinematics.TruePz[hMinus_index], m_TrueKinematics.TrueEnergy[hMinus_index]);
-  double M2Plus = (KS_P + hPlus_P).M2();
-  double M2Minus = (KS_P + hMinus_P).M2();
+  double M2Plus = (K0_P + hPlus_P).M2();
+  double M2Minus = (K0_P + hMinus_P).M2();
   // Get bin number
   int Bin = LookUpBinNumber(M2Plus, M2Minus);
   if(Bin != 0) {
     return Bin;
   } else {
-    return GetMappedKShhBin(M2Plus, M2Minus);
+    return GetMappedK0hhBin(M2Plus, M2Minus);
   }
 }

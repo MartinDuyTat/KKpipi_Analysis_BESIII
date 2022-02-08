@@ -1,11 +1,11 @@
 // Martin Duy Tat 20th December 2021
 /**
- * KKpipi_vs_KShh_PhaseSpace inherits from KKpipi_PhaseSpace, but saves the two Dalitz coordinates of the KShh phase space
+ * KKpipi_vs_K0hh_PhaseSpace inherits from KKpipi_PhaseSpace, but saves the two Dalitz coordinates of the K0hh phase space
  * Only absolute bin number on the tag side is determined
  */
 
-#ifndef KKPIPI_VS_KSHH_PHASESPACE
-#define KKPIPI_VS_KSHH_PHASESPACE
+#ifndef KKPIPI_VS_K0HH_PHASESPACE
+#define KKPIPI_VS_K0HH_PHASESPACE
 
 #include<string>
 #include"TTree.h"
@@ -13,7 +13,7 @@
 #include"TLorentzVector.h"
 #include"KKpipi_PhaseSpace.h"
 
-class KKpipi_vs_KShh_PhaseSpace: public KKpipi_PhaseSpace {
+class KKpipi_vs_K0hh_PhaseSpace: public KKpipi_PhaseSpace {
   public:
     /**
      * Constructor that saves the tag mode, Dalitz coordinates and binning scheme
@@ -21,9 +21,10 @@ class KKpipi_vs_KShh_PhaseSpace: public KKpipi_PhaseSpace {
      * @param Bins Number of bins in KKpipi phase space binning
      * @param ReconstructedBins Set to true to calculate the reconstructed bins
      * @param TrueBins Set to true to calculate the true bins
-     * @param Mode "KSpipi" or "KSKK"
+     * @param Mode "KSpipi", "KSKK", "KLpipi", "KLKK"
+     * @param KKpipiPartReco Set to true if the KKpipi mode is partially reconstructed
      */
-    KKpipi_vs_KShh_PhaseSpace(TTree *Tree, int Bins, bool ReconstructedBins, bool TrueBins, const std::string &Mode);
+    KKpipi_vs_K0hh_PhaseSpace(TTree *Tree, int Bins, bool ReconstructedBins, bool TrueBins, const std::string &Mode, bool KKpipiPartReco = false);
     /**
      * Get the correct phase space bin with flavour tag
      */
@@ -40,19 +41,19 @@ class KKpipi_vs_KShh_PhaseSpace: public KKpipi_PhaseSpace {
     /**
      * Map a Dalitz point outside of phase space back inside the boundary
      */
-    int GetMappedKShhBin(double M2Plus, double M2Minus) const;
+    int GetMappedK0hhBin(double M2Plus, double M2Minus) const;
     /**
      * Get bin number
      * If Dalitz point is outside phase space it's automatically mapped back inside the boundary
      */
-    int GetKShhBin() const;
+    int GetK0hhBin() const;
     /**
      * Get true bin number
      * If Dalitz point is outside phase space it's automatically mapped back inside the boundary
      */
-    int GetTrueKShhBin();
+    int GetTrueK0hhBin();
     /**
-     * The KShh mode
+     * The K0hh mode
      */
     const std::string m_Mode;
     /**
@@ -60,9 +61,9 @@ class KKpipi_vs_KShh_PhaseSpace: public KKpipi_PhaseSpace {
      */
     int m_KalmanFitSuccess;
     /**
-     * The four-momentum of \f$K_S\f$
+     * The four-momentum of \f$K_0\f$
      */
-    TLorentzVector m_KS_P;
+    TLorentzVector m_K0_P;
     /**
      * The four-momentum of \f$h^+\f$
      */
@@ -72,9 +73,9 @@ class KKpipi_vs_KShh_PhaseSpace: public KKpipi_PhaseSpace {
      */
     TLorentzVector m_hMinus_P;
     /**
-     * The four-momentum of \f$K_S\f$ after Kalman fit
+     * The four-momentum of \f$K_0\f$ after Kalman fit
      */
-    TLorentzVector m_KS_P_KalmanFit;
+    TLorentzVector m_K0_P_KalmanFit;
     /**
      * The four-momentum of \f$h^+\f$ after Kalman fit
      */
@@ -84,17 +85,21 @@ class KKpipi_vs_KShh_PhaseSpace: public KKpipi_PhaseSpace {
      */
     TLorentzVector m_hMinus_P_KalmanFit;
     /**
-     * The KShh binning scheme
+     * The K0hh binning scheme
      */
     TH2F *m_BinningScheme;
     /**
-     * Set KSpipi branch addresses
+     * Set K0pipi branch addresses
      */
-    void SetKSpipiBranchAddresses(TTree *Tree);
+    void SetK0pipiBranchAddresses(TTree *Tree);
     /**
      * Set branch addresses common to both KSpipi and KSKK
      */
     void SetKShhBranchAddresses(TTree *Tree);
+    /**
+     * Set branch addresses common to both KLpipi and KLKK
+     */
+    void SetKLhhBranchAddresses(TTree *Tree);
 };
 
 #endif

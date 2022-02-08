@@ -16,7 +16,7 @@
 #include"PhaseSpace/KKpipi_PhaseSpace.h"
 #include"PhaseSpace/KKpipi_vs_CP_PhaseSpace.h"
 #include"PhaseSpace/KKpipi_vs_Flavour_PhaseSpace.h"
-#include"PhaseSpace/KKpipi_vs_KShh_PhaseSpace.h"
+#include"PhaseSpace/KKpipi_vs_K0hh_PhaseSpace.h"
 
 namespace Utilities {
   void LoadChain(TChain *Chain, int NumberFiles, const std::string &Filename, const std::string &TreeName) {
@@ -169,7 +169,7 @@ namespace Utilities {
     if(GetTagType(Mode) == "Flavour") {
       return std::unique_ptr<KKpipi_PhaseSpace>{new KKpipi_vs_Flavour_PhaseSpace(Tree, settings["BinningScheme"].getI("NumberBins"), settings.getB("Bin_reconstructed"), settings.getB("Bin_truth"))};
     } else if(GetTagType(Mode) == "SCMB") {
-      return std::unique_ptr<KKpipi_PhaseSpace>{new KKpipi_vs_KShh_PhaseSpace(Tree, settings["BinningScheme"].getI("NumberBins"), settings.getB("Bin_reconstructed"), settings.getB("Bin_truth"), Mode)};
+      return std::unique_ptr<KKpipi_PhaseSpace>{new KKpipi_vs_K0hh_PhaseSpace(Tree, settings["BinningScheme"].getI("NumberBins"), settings.getB("Bin_reconstructed"), settings.getB("Bin_truth"), Mode, settings.contains("KKpipiPartReco") && settings.getB("KKpipiPartReco"))};
     } else if(GetTagType(Mode) == "CP") {
       return std::unique_ptr<KKpipi_PhaseSpace>{new KKpipi_vs_CP_PhaseSpace(Tree, settings["BinningScheme"].getI("NumberBins"), settings.getB("Bin_reconstructed"), settings.getB("Bin_truth"))};
     } else {
@@ -180,7 +180,7 @@ namespace Utilities {
   std::string GetTagType(const std::string &Mode) {
     if(Mode == "Kpi" || Mode == "Kpipi0" || Mode == "Kpipipi" || Mode == "KeNu") {
       return "Flavour";
-    } else if(Mode == "KSpipi" || Mode == "KSKK") {
+    } else if(Mode == "KSpipi" || Mode == "KSKK" || Mode == "KLpipi" || Mode == "KLKK") {
       return "SCMB";
     } else {
       const std::vector<std::string> CPModes{"KK", "pipi", "KSpi0pi0", "pipipi0", "KLpi0", "KSpi0", "KSeta", "KSetaPrimepipieta", "KSetaPrimerhogamma", "KSpipipi0", "KLpi0pi0"};
