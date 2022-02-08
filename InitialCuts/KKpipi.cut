@@ -1,2 +1,2 @@
 SignalTagKSFitSuccess == 0 || (SignalTagKSFitSuccess == 1 && SignalTagKSDecayLengthFit/SignalTagKSDecayLengthErrorFit < 2)
-sqrt((SignalTagPiPlusenergy + SignalTagPiMinusenergy)^2 - (SignalTagPiPluspx + SignalTagPiMinuspx)^2 - (SignalTagPiPluspy + SignalTagPiMinuspy)^2 - (SignalTagPiPluspz + SignalTagPiMinuspz)^2) < 0.477 || sqrt((SignalTagPiPlusenergy + SignalTagPiMinusenergy)^2 - (SignalTagPiPluspx + SignalTagPiMinuspx)^2 - (SignalTagPiPluspy + SignalTagPiMinuspy)^2 - (SignalTagPiPluspz + SignalTagPiMinuspz)^2) > 0.507
+SignalTagMpipi< 0.477 || SignalTagMpipi > 0.507

@@ -4,21 +4,35 @@
 #include<iostream>
 #include<sstream>
 #include<algorithm>
+#include<stdexcept>
 #include"TCut.h"
 #include"DeltaECut.h"
 #include"Settings.h"
 
-DeltaECut::DeltaECut(const std::string &TagMode, const std::string &TagType, const std::string &DataMC): m_TagMode(TagMode), m_TagType(TagType), m_DataMC(DataMC) {
+DeltaECut::DeltaECut(const std::string &TagMode,
+		     const std::string &TagType,
+		     const std::string &DataMC,
+		     bool KKpipiPartReco): m_TagMode(TagMode),
+					   m_TagType(TagType),
+					   m_DataMC(DataMC),
+					   m_KKpipiPartReco(KKpipiPartReco) {
+  if(m_TagType == "ST") {
+    if(m_TagMode.find("KL") != std::string::npos || m_TagMode == "KeNu" || m_KKpipiPartReco) {
+      throw std::invalid_argument("Cannot have partially reconstructed single tag");
+    }
+  }
 }
 
 TCut DeltaECut::GetDeltaECut() const {
   if(m_TagType == "ST") {
     return GetDeltaECutFromFile(m_TagMode);
   } else if(m_TagType == "DT") {
-    if(m_TagMode.find("KL") == std::string::npos && m_TagMode != "KeNu") {
-      return GetDeltaECutFromFile("KKpipi", "Signal") && GetDeltaECutFromFile(m_TagMode, "Tag");
-    } else {
+    if(m_TagMode.find("KL") != std::string::npos || m_TagMode == "KeNu") {
       return GetDeltaECutFromFile("KKpipi", "Signal");
+    } else if(m_KKpipiPartReco) {
+      return GetDeltaECutFromFile(m_TagMode, "Tag");
+    } else{
+      return GetDeltaECutFromFile("KKpipi", "Signal") && GetDeltaECutFromFile(m_TagMode, "Tag");
     }
   } else {
     return TCut();

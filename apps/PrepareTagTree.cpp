@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
       std::cout << "Luminosity scale is " << LuminosityScale << "\n";
       std::string OutputFilename = settings.get("OutputFilenamePrefix") + "_" + Dataset + Year + ".root";
       std::string DataMC = DataSetType == 0 ? "Data" : "MC";
-      TCut Cuts = Utilities::LoadCuts(SignalMode + RecSignalMode, TagMode + RecTagMode, TagType, DataMC, IncludeDeltaECuts, TruthMatch);
+      TCut Cuts = Utilities::LoadCuts(SignalMode + RecSignalMode, TagMode + RecTagMode, TagType, DataMC, IncludeDeltaECuts, TruthMatch, settings.contains("KKpipiPartReco") && settings.getB("KKpipiPartReco"));
       // This cut removes empty NTuples
       Cuts = Cuts && TCut("!(Run == 0 && Event == 0)");
       std::cout << "Cuts ready, will apply the following cuts:\n" << Cuts.GetTitle() << "\n";
@@ -80,6 +80,10 @@ int main(int argc, char *argv[]) {
 	NewFilename.replace(NewFilename.find("YEAR"), 4, Year);
       }
       Chain.Add(NewFilename.c_str());
+      if(Chain.GetEntries() == 0) {
+	std::cout << "WARNING: No entries in " << OutputFilename << "\n";
+	continue;
+      }
       std::cout << "Applying cuts...\n";
       TFile OutputFile(OutputFilename.c_str(), "RECREATE");
       TTree *OutputTree = applyCuts(&Chain, DataSetType, LuminosityScale);

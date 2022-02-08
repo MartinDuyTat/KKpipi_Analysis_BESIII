@@ -55,7 +55,8 @@ namespace Utilities {
 		const std::string &TagType,
 		const std::string &DataMC,
 		bool IncludeDeltaECuts,
-		bool TruthMatch) {
+		bool TruthMatch,
+		bool KKpipiPartReco) {
     std::string Mode = TagMode;
     if(Mode.find("_to_") != std::string::npos) {
       Mode = Mode.substr(Mode.find("_to_") + 4);
@@ -63,8 +64,7 @@ namespace Utilities {
     InitialCuts initialCuts(Mode, TagType);
     TCut Cuts = initialCuts.GetInitialCuts();
     if(IncludeDeltaECuts) {
-
-      DeltaECut deltaECut(Mode, TagType, DataMC);
+      DeltaECut deltaECut(Mode, TagType, DataMC, KKpipiPartReco);
       Cuts = Cuts && deltaECut.GetDeltaECut();
     }
     if(TruthMatch) {

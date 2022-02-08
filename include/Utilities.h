@@ -41,9 +41,10 @@ namespace Utilities {
    * @param TagType "ST" for single tag and "DT" for double tag
    * @param IncludeDeltaECuts Set to true to apply \f$Delta E\f$ cuts
    * @param DataMC "Data" or "MC"
-   * @param Set to true to truth match
+   * @param TruthMatch Set to true to truth match
+   * @param KKpipiPartReco Set to true if KKpipi signal mode is partially reconstructed
    */
-  TCut LoadCuts(const std::string &SignalMode, const std::string &TagMode, const std::string &TagType, const std::string &DataMC, bool IncludeDeltaECuts, bool TruthMatch = false);
+  TCut LoadCuts(const std::string &SignalMode, const std::string &TagMode, const std::string &TagType, const std::string &DataMC, bool IncludeDeltaECuts, bool TruthMatch = false, bool KKpipiPartReco = false);
   /**
    * Parse arguments and set up a Settings object
    * Copied from GGSZ code repository
