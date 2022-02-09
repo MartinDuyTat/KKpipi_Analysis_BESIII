@@ -7,14 +7,18 @@
 #include"InitialCuts.h"
 #include"CutsFromFile.h"
 
-InitialCuts::InitialCuts(const std::string &TagMode, const std::string &TagType): m_TagMode(TagMode), m_TagType(TagType) {
+InitialCuts::InitialCuts(const std::string &TagMode, const std::string &TagType, bool KKpipiPartReco): m_TagMode(TagMode), m_TagType(TagType), m_KKpipiPartReco(KKpipiPartReco) {
 }
 
 TCut InitialCuts::GetInitialCuts() const {
   if(m_TagType == "ST") {
     return GetTagCuts(m_TagMode);
   } else if(m_TagType == "DT") {
-    return GetTagCuts("KKpipi", "Signal") && GetTagCuts(m_TagMode, "Tag");
+    if(!m_KKpipiPartReco) {
+      return GetTagCuts("KKpipi", "Signal") && GetTagCuts(m_TagMode, "Tag");
+    } else {
+      return GetTagCuts("KKpipiPartReco", "Signal") && GetTagCuts(m_TagMode, "Tag");
+    }
   } else {
     return TCut();
   }

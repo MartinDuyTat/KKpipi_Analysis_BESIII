@@ -61,7 +61,7 @@ namespace Utilities {
     if(Mode.find("_to_") != std::string::npos) {
       Mode = Mode.substr(Mode.find("_to_") + 4);
     }
-    InitialCuts initialCuts(Mode, TagType);
+    InitialCuts initialCuts(Mode, TagType, KKpipiPartReco);
     TCut Cuts = initialCuts.GetInitialCuts();
     if(IncludeDeltaECuts) {
       DeltaECut deltaECut(Mode, TagType, DataMC, KKpipiPartReco);
