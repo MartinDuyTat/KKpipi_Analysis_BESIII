@@ -19,6 +19,7 @@ add_library(KKpipiStrongPhase
 	    HadronicParameters/DCS_Parameters.cpp
 	    HadronicParameters/Ki.cpp
 	    HadronicParameters/cisi.cpp
+	    PhaseSpace/DalitzUtilities.cpp
 	    PhaseSpace/KKpipi_PhaseSpace.cpp
 	    PhaseSpace/KKpipi_vs_CP_PhaseSpace.cpp
 	    PhaseSpace/KKpipi_vs_Flavour_PhaseSpace.cpp

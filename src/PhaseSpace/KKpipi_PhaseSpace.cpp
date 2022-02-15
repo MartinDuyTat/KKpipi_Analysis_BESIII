@@ -72,8 +72,6 @@ int KKpipi_PhaseSpace::KKpipiBin() const {
 }
 
 int KKpipi_PhaseSpace::TrueKKpipiBin() {
-  std::vector<double> TrueMomenta;
-  std::vector<int> DaughterIDs{321, -321, 211, -211};
   std::vector<int> IDs(m_TrueKinematics.ParticleIDs.begin(), m_TrueKinematics.ParticleIDs.begin() + m_TrueKinematics.NumberParticles);
   std::vector<double>::size_type SignalEnd_index;
   if(m_TrueKinematics.SignalD_index < m_TrueKinematics.TagD_index) {
@@ -82,6 +80,7 @@ int KKpipi_PhaseSpace::TrueKKpipiBin() {
     SignalEnd_index = m_TrueKinematics.NumberParticles;
   }
   m_TrueMomenta.clear();
+  std::vector<int> DaughterIDs{321, -321, 211, -211};
   for(auto DaughterID : DaughterIDs) {
     std::vector<double>::size_type Daughter_index = std::find(IDs.begin() + m_TrueKinematics.SignalD_index + 1, IDs.begin() + SignalEnd_index, DaughterID) - IDs.begin();
     m_TrueMomenta.push_back(m_TrueKinematics.TruePx[Daughter_index]);

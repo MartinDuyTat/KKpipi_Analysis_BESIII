@@ -35,14 +35,6 @@ class KKpipi_vs_K0hh_PhaseSpace: public KKpipi_PhaseSpace {
     virtual std::pair<int, int> TrueBin();
   private:
     /**
-     * Read bin number from lookup table
-     */
-    int LookUpBinNumber(double M2Plus, double M2Minus) const;
-    /**
-     * Map a Dalitz point outside of phase space back inside the boundary
-     */
-    int GetMappedK0hhBin(double M2Plus, double M2Minus) const;
-    /**
      * Get bin number
      * If Dalitz point is outside phase space it's automatically mapped back inside the boundary
      */
@@ -53,9 +45,13 @@ class KKpipi_vs_K0hh_PhaseSpace: public KKpipi_PhaseSpace {
      */
     int GetTrueK0hhBin();
     /**
-     * The K0hh mode
+     * The K0 mode, either "KS" or "KL"
      */
-    const std::string m_Mode;
+    const std::string m_K0Mode;
+    /**
+     * The hh mode, either "pipi" or "KK"
+     */
+    const std::string m_hhMode;
     /**
      * Flag that is 1 if Kalman fit worked
      */
@@ -89,17 +85,9 @@ class KKpipi_vs_K0hh_PhaseSpace: public KKpipi_PhaseSpace {
      */
     TH2F *m_BinningScheme;
     /**
-     * Set K0pipi branch addresses
+     * Set K0hh branch addresses
      */
-    void SetK0pipiBranchAddresses(TTree *Tree);
-    /**
-     * Set branch addresses common to both KSpipi and KSKK
-     */
-    void SetKShhBranchAddresses(TTree *Tree);
-    /**
-     * Set branch addresses common to both KLpipi and KLKK
-     */
-    void SetKLhhBranchAddresses(TTree *Tree);
+    void SetK0hhBranchAddresses(TTree *Tree);
 };
 
 #endif
