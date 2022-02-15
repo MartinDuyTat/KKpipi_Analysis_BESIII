@@ -3,14 +3,19 @@
 #include<algorithm>
 #include<stdexcept>
 #include"TTree.h"
+#include"TFile.h"
+#include"TLorentzVector.h"
 #include"PhaseSpace/KKpipi_PhaseSpace.h"
+#include"PhaseSpace/DalitzUtilities.h"
 
 KKpipi_PhaseSpace::KKpipi_PhaseSpace(TTree *Tree,
 				     int Bins,
 				     bool ReconstructedBins,
-				     bool TrueBins): m_Momenta(16),
-						     m_MomentaKalmanFit(16),
-						     m_AmplitudePhaseSpace(Bins) {
+				     bool TrueBins,
+				     bool KSKK_binning): m_Momenta(16),
+						         m_MomentaKalmanFit(16),
+						         m_AmplitudePhaseSpace(Bins),
+                                                         m_KSKKBinning(nullptr) {
   m_AmplitudePhaseSpace.SetBinEdges({1.20923});
   m_AmplitudePhaseSpace.UseVariableBinWidths(true);
   if(ReconstructedBins) {
@@ -18,6 +23,13 @@ KKpipi_PhaseSpace::KKpipi_PhaseSpace(TTree *Tree,
   }
   if(TrueBins) {
     SetBranchAddresses_True(Tree);
+    if(KSKK_binning) {
+      std::string BinningFilename = std::string(BINNING_SCHEME_DIR) + "KsKK_2bins.root";
+      TFile BinningFile(BinningFilename.c_str(), "READ");
+      BinningFile.GetObject("dkpp_bin_h", m_KSKKBinning);
+      m_KSKKBinning->SetDirectory(0);
+      BinningFile.Close();
+    }
   }
 }
 
@@ -79,16 +91,39 @@ int KKpipi_PhaseSpace::TrueKKpipiBin() {
   } else {
     SignalEnd_index = m_TrueKinematics.NumberParticles;
   }
-  m_TrueMomenta.clear();
-  std::vector<int> DaughterIDs{321, -321, 211, -211};
-  for(auto DaughterID : DaughterIDs) {
-    std::vector<double>::size_type Daughter_index = std::find(IDs.begin() + m_TrueKinematics.SignalD_index + 1, IDs.begin() + SignalEnd_index, DaughterID) - IDs.begin();
-    m_TrueMomenta.push_back(m_TrueKinematics.TruePx[Daughter_index]);
-    m_TrueMomenta.push_back(m_TrueKinematics.TruePy[Daughter_index]);
-    m_TrueMomenta.push_back(m_TrueKinematics.TruePz[Daughter_index]);
-    m_TrueMomenta.push_back(m_TrueKinematics.TrueEnergy[Daughter_index]);
+  // Reconstruct true KKpipi binning
+  if(!m_KSKKBinning) {
+    m_TrueMomenta.clear();
+    std::vector<int> DaughterIDs{321, -321, 211, -211};
+    for(auto DaughterID : DaughterIDs) {
+      std::vector<double>::size_type Daughter_index = std::find(IDs.begin() + m_TrueKinematics.SignalD_index + 1, IDs.begin() + SignalEnd_index, DaughterID) - IDs.begin();
+      m_TrueMomenta.push_back(m_TrueKinematics.TruePx[Daughter_index]);
+      m_TrueMomenta.push_back(m_TrueKinematics.TruePy[Daughter_index]);
+      m_TrueMomenta.push_back(m_TrueKinematics.TruePz[Daughter_index]);
+      m_TrueMomenta.push_back(m_TrueKinematics.TrueEnergy[Daughter_index]);
+    }
+    return m_AmplitudePhaseSpace.WhichBin(m_TrueMomenta);
+  } else {
+    std::map<int, TLorentzVector> Momenta;
+    Momenta.insert({310, TLorentzVector()});
+    Momenta.insert({321, TLorentzVector()});
+    Momenta.insert({-321, TLorentzVector()});
+    for(auto &Momentum : Momenta) {
+      std::vector<double>::size_type Daughter_index = std::find(IDs.begin() + m_TrueKinematics.SignalD_index + 1, IDs.begin() + SignalEnd_index, Momentum.first) - IDs.begin();
+      Momentum.second[0] = m_TrueKinematics.TruePx[Daughter_index];
+      Momentum.second[1] = m_TrueKinematics.TruePy[Daughter_index];
+      Momentum.second[2] = m_TrueKinematics.TruePz[Daughter_index];
+      Momentum.second[3] = m_TrueKinematics.TrueEnergy[Daughter_index];
+    }
+    double M2Plus = (Momenta[310] + Momenta[321]).M2();
+    double M2Minus = (Momenta[310] + Momenta[-321]).M2();
+    int KSKK_bin = DalitzUtilities::LookUpBinNumber(M2Plus, M2Minus, m_KSKKBinning);
+    if(KSKK_bin != 0) {
+      return KSKK_bin;
+    } else {
+      return DalitzUtilities::GetMappedK0hhBin(M2Plus, M2Minus, m_KSKKBinning);
+    }
   }
-  return m_AmplitudePhaseSpace.WhichBin(m_TrueMomenta);
 }
 
 void KKpipi_PhaseSpace::FindDIndex() {
@@ -104,12 +139,26 @@ void KKpipi_PhaseSpace::FindDIndex() {
   // Find the D0bar daughters and sort
   std::vector<int> D0barDaughters(IDs.begin() + m_TrueKinematics.TagD_index + 1, IDs.end());
   std::sort(D0barDaughters.begin(), D0barDaughters.end());
-  // State the KKpipi daughters and sort
+  // State the KKpipi daughters
   std::vector<int> SignalIDs{321, -321, 211, -211};
+  // If we're looking at KSKK background, look for KS as well
+  if(m_KSKKBinning) {
+    SignalIDs.push_back(310);
+  }
   std::sort(SignalIDs.begin(), SignalIDs.end());
-  if(std::includes(D0Daughters.begin(), D0Daughters.end(), SignalIDs.begin(), SignalIDs.end())) {
+  bool isD0Daughter = std::includes(D0Daughters.begin(), D0Daughters.end(), SignalIDs.begin(), SignalIDs.end());
+  bool foundD0KS = std::find(D0Daughters.begin(), D0Daughters.end(), 310) != D0Daughters.end();
+  if((!m_KSKKBinning && foundD0KS)) {
+    isD0Daughter = false;
+  }
+  bool isD0barDaughter = std::includes(D0barDaughters.begin(), D0barDaughters.end(), SignalIDs.begin(), SignalIDs.end());
+  bool foundD0barKS = std::find(D0barDaughters.begin(), D0barDaughters.end(), 310) != D0barDaughters.end();
+  if((!m_KSKKBinning && foundD0barKS)) {
+    isD0barDaughter = false;
+  }
+  if(isD0Daughter) {
     // If The D0 daughters include KKpipi, do nothing
-  } else if(std::includes(D0barDaughters.begin(), D0barDaughters.end(), SignalIDs.begin(), SignalIDs.end())) {
+  } else if(isD0barDaughter) {
     // If the D0bar daughters include KKpipi, swap the labels
     std::swap(m_TrueKinematics.SignalD_index, m_TrueKinematics.TagD_index);
   } else {

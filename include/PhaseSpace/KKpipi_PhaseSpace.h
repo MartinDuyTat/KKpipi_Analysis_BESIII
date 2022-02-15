@@ -11,6 +11,7 @@
 #include<vector>
 #include<utility>
 #include"TTree.h"
+#include"TH2F.h"
 #include"AmplitudePhaseSpace.h"
 #include"GeneratorKinematics.h"
 
@@ -22,8 +23,9 @@ class KKpipi_PhaseSpace {
      * @param Bins Number of bins in KKpipi phase space binning
      * @param ReconstructedBins Set to true to calculate the reconstructed bins
      * @param TrueBins Set to true to calculate the true bins
+     * @param KSKK_binning Set to true to determine the true \f$K_SKK\f$ bins
      */
-    KKpipi_PhaseSpace(TTree *Tree, int Bins, bool ReconstructedBins, bool TrueBins);
+    KKpipi_PhaseSpace(TTree *Tree, int Bins, bool ReconstructedBins, bool TrueBins, bool KSKK_binning = false);
     /**
      * Pure virtual function that returns both the signal and tag side binning
      */
@@ -75,6 +77,10 @@ class KKpipi_PhaseSpace {
      * Object that calculates the phase space point of an event
      */
     AmplitudePhaseSpace m_AmplitudePhaseSpace;
+    /**
+     * Lookup histogram for the \f$K_SKK\f$ binning scheme
+     */
+    TH2F *m_KSKKBinning;
     /**
      * Set the branch addresses of reconstructed variables
      */

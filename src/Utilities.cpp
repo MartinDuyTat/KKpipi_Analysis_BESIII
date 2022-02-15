@@ -166,12 +166,16 @@ namespace Utilities {
 
   std::unique_ptr<KKpipi_PhaseSpace> GetPhaseSpaceBinning(const Settings &settings, TTree *Tree) {
     std::string Mode = settings.get("Mode");
+    int NumberBins = settings["BinningScheme"].getI("NumberBins");
+    bool Bin_rec = settings.getB("Bin_reconstructed");
+    bool Bin_truth = settings.getB("Bin_truth");
+    bool KSKKBkg = settings.contains("KSKKBackground") && settings.getB("KSKKBackground");
     if(GetTagType(Mode) == "Flavour") {
-      return std::unique_ptr<KKpipi_PhaseSpace>{new KKpipi_vs_Flavour_PhaseSpace(Tree, settings["BinningScheme"].getI("NumberBins"), settings.getB("Bin_reconstructed"), settings.getB("Bin_truth"))};
+      return std::unique_ptr<KKpipi_PhaseSpace>{new KKpipi_vs_Flavour_PhaseSpace(Tree, NumberBins, Bin_rec, Bin_truth, KSKKBkg)};
     } else if(GetTagType(Mode) == "SCMB") {
-      return std::unique_ptr<KKpipi_PhaseSpace>{new KKpipi_vs_K0hh_PhaseSpace(Tree, settings["BinningScheme"].getI("NumberBins"), settings.getB("Bin_reconstructed"), settings.getB("Bin_truth"), Mode, settings.contains("KKpipiPartReco") && settings.getB("KKpipiPartReco"))};
+      return std::unique_ptr<KKpipi_PhaseSpace>{new KKpipi_vs_K0hh_PhaseSpace(Tree, NumberBins, Bin_rec, Bin_truth, Mode, KSKKBkg, settings.contains("KKpipiPartReco") && settings.getB("KKpipiPartReco"))};
     } else if(GetTagType(Mode) == "CP") {
-      return std::unique_ptr<KKpipi_PhaseSpace>{new KKpipi_vs_CP_PhaseSpace(Tree, settings["BinningScheme"].getI("NumberBins"), settings.getB("Bin_reconstructed"), settings.getB("Bin_truth"))};
+      return std::unique_ptr<KKpipi_PhaseSpace>{new KKpipi_vs_CP_PhaseSpace(Tree, NumberBins, Bin_rec, Bin_truth, KSKKBkg)};
     } else {
       return nullptr;
     }

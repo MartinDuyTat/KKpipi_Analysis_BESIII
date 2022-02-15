@@ -22,9 +22,10 @@ class KKpipi_vs_K0hh_PhaseSpace: public KKpipi_PhaseSpace {
      * @param ReconstructedBins Set to true to calculate the reconstructed bins
      * @param TrueBins Set to true to calculate the true bins
      * @param Mode "KSpipi", "KSKK", "KLpipi", "KLKK"
+     * @param KSKK_binning Set to true to determine the true \f$K_SKK\f$ bins
      * @param KKpipiPartReco Set to true if the KKpipi mode is partially reconstructed
      */
-    KKpipi_vs_K0hh_PhaseSpace(TTree *Tree, int Bins, bool ReconstructedBins, bool TrueBins, const std::string &Mode, bool KKpipiPartReco = false);
+    KKpipi_vs_K0hh_PhaseSpace(TTree *Tree, int Bins, bool ReconstructedBins, bool TrueBins, const std::string &Mode, bool KSKK_binning = false, bool KKpipiPartReco = false);
     /**
      * Get the correct phase space bin with flavour tag
      */

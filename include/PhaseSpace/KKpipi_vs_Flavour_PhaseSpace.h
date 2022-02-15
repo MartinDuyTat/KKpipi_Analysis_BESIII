@@ -20,8 +20,9 @@ class KKpipi_vs_Flavour_PhaseSpace: public KKpipi_PhaseSpace {
      * @param Bins Number of bins in KKpipi phase space binning
      * @param ReconstructedBins Set to true to calculate the reconstructed bins
      * @param TrueBins Set to true to calculate the true bins
+     * @param KSKK_binning Set to true to determine the true \f$K_SKK\f$ bins
      */
-    KKpipi_vs_Flavour_PhaseSpace(TTree *Tree, int Bins, bool ReconstructedBins, bool TrueBins);
+    KKpipi_vs_Flavour_PhaseSpace(TTree *Tree, int Bins, bool ReconstructedBins, bool TrueBins, bool KSKK_binning = false);
     /**
      * Get the correct phase space bin with flavour tag
      */

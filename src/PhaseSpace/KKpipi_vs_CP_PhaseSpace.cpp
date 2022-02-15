@@ -5,7 +5,7 @@
 #include"TMath.h"
 #include"PhaseSpace/KKpipi_vs_CP_PhaseSpace.h"
 
-KKpipi_vs_CP_PhaseSpace::KKpipi_vs_CP_PhaseSpace(TTree *Tree, int Bins, bool ReconstructedBins, bool TrueBins): KKpipi_PhaseSpace(Tree, Bins, ReconstructedBins, TrueBins) {
+KKpipi_vs_CP_PhaseSpace::KKpipi_vs_CP_PhaseSpace(TTree *Tree, int Bins, bool ReconstructedBins, bool TrueBins, bool KSKK_binning): KKpipi_PhaseSpace(Tree, Bins, ReconstructedBins, TrueBins, KSKK_binning) {
 }
 
 std::pair<int, int> KKpipi_vs_CP_PhaseSpace::Bin() const {

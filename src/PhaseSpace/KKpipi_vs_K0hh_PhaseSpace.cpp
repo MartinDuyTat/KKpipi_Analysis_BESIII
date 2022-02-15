@@ -11,7 +11,7 @@
 #include"PhaseSpace/KKpipi_vs_K0hh_PhaseSpace.h"
 #include"PhaseSpace/DalitzUtilities.h"
 
-KKpipi_vs_K0hh_PhaseSpace::KKpipi_vs_K0hh_PhaseSpace(TTree *Tree, int Bins, bool ReconstructedBins, bool TrueBins, const std::string &Mode, bool KKpipiPartReco): KKpipi_PhaseSpace(Tree, Bins, ReconstructedBins, TrueBins), m_K0Mode(Mode.substr(0, 2)), m_hhMode(Mode.substr(2)) {
+KKpipi_vs_K0hh_PhaseSpace::KKpipi_vs_K0hh_PhaseSpace(TTree *Tree, int Bins, bool ReconstructedBins, bool TrueBins, const std::string &Mode, bool KSKK_binning, bool KKpipiPartReco): KKpipi_PhaseSpace(Tree, Bins, ReconstructedBins, TrueBins, KSKK_binning), m_K0Mode(Mode.substr(0, 2)), m_hhMode(Mode.substr(2)) {
   if(m_K0Mode != "KS" && m_K0Mode != "KL") {
     throw std::invalid_argument("K0 mode " + m_K0Mode + " not valid");
   } 
@@ -64,7 +64,7 @@ void KKpipi_vs_K0hh_PhaseSpace::SetK0hhBranchAddresses(TTree *Tree) {
   Tree->SetBranchAddress(("Tag" + hName + "MinusenergyKalmanFit").c_str(), &m_hMinus_P_KalmanFit[3]);
   Tree->SetBranchAddress(("Tag" + m_K0Mode + "px").c_str(), &m_K0_P[0]);
   Tree->SetBranchAddress(("Tag" + m_K0Mode + "py").c_str(), &m_K0_P[1]);
-  Tree->SetBranchAddress(("Tag" + m_K0Mode + "z").c_str(), &m_K0_P[2]); // bug to be fixed in BOSS
+  Tree->SetBranchAddress(("Tag" + m_K0Mode + "pz").c_str(), &m_K0_P[2]); // bug to be fixed in BOSS
   Tree->SetBranchAddress(("Tag" + m_K0Mode + "energy").c_str(), &m_K0_P[3]);
   Tree->SetBranchAddress(("Tag" + m_K0Mode + "pxKalmanFit").c_str(), &m_K0_P_KalmanFit[0]);
   Tree->SetBranchAddress(("Tag" + m_K0Mode + "pyKalmanFit").c_str(), &m_K0_P_KalmanFit[1]);

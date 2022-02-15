@@ -10,7 +10,7 @@ namespace DalitzUtilities {
     int x = BinningScheme->GetXaxis()->FindBin(M2Plus);
     int y = BinningScheme->GetYaxis()->FindBin(M2Minus);
     Float_t BinNumberFloat = BinningScheme->GetBinContent(x, y);
-    return M2Minus > M2Plus ? static_cast<int>(BinNumberFloat) : -static_cast<int>(BinNumberFloat);
+    return M2Plus > M2Minus ? static_cast<int>(BinNumberFloat) : -static_cast<int>(BinNumberFloat);
   }
 
   int GetMappedK0hhBin(double M2Plus, double M2Minus, const TH2F *BinningScheme) {
@@ -29,7 +29,7 @@ namespace DalitzUtilities {
 	  int NewBin = static_cast<int>(BinningScheme->GetBinContent(x + iter->first, y + iter->second));
 	  // Once we reach the Dalitz boundary the bin number is non-zero
 	  if(NewBin != 0) {
-	    return M2Minus > M2Plus ? NewBin : -NewBin;
+	    return M2Plus > M2Minus ? NewBin : -NewBin;
 	  }
 	}
       }

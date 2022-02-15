@@ -6,7 +6,7 @@
 #include"TTree.h"
 #include"PhaseSpace/KKpipi_vs_Flavour_PhaseSpace.h"
 
-KKpipi_vs_Flavour_PhaseSpace::KKpipi_vs_Flavour_PhaseSpace(TTree *Tree, int Bins, bool ReconstructedBins, bool TrueBins): KKpipi_PhaseSpace(Tree, Bins, ReconstructedBins, TrueBins) {
+KKpipi_vs_Flavour_PhaseSpace::KKpipi_vs_Flavour_PhaseSpace(TTree *Tree, int Bins, bool ReconstructedBins, bool TrueBins, bool KSKK_binning): KKpipi_PhaseSpace(Tree, Bins, ReconstructedBins, TrueBins, KSKK_binning) {
   if(ReconstructedBins) {
     Tree->SetBranchAddress("TagKCharge", &m_KaonCharge);
   }
