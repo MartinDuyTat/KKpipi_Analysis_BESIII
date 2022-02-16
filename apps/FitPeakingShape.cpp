@@ -19,6 +19,7 @@
 #include"RooShapes/FitShape.h"
 #include"RooShapes/DoubleGaussian_Shape.h"
 #include"RooShapes/DoubleCrystalBall_Shape.h"
+#include"RooShapes/CrystalBall_Shape.h"
 
 int main(int argc, char *argv[]) {
   using namespace RooFit;
@@ -64,12 +65,15 @@ int main(int argc, char *argv[]) {
     RooRealVar MBC(settings.get("FitVariable").c_str(), "", settings.getD("FitRange_low"), settings.getD("FitRange_high"));
     RooDataSet Data("Data", "", &Chain, MBC);
     std::unique_ptr<FitShape> PDF;
-    if(settings["MBC_Shape"].get(Name + "_Shape") == "DoubleGaussian") {
+    std::string PDFShape = settings["MBC_Shape"].get(Name + "_Shape");
+    if(PDFShape == "DoubleGaussian") {
       PDF = std::unique_ptr<FitShape>{new DoubleGaussian_Shape(Name, settings["MBC_Shape"][Name + "_FitSettings"], &MBC)};
-    } else if(settings["MBC_Shape"].get(Name + "_Shape") == "DoubleCrystalBall") {
+    } else if(PDFShape == "DoubleCrystalBall") {
       PDF = std::unique_ptr<FitShape>{new DoubleCrystalBall_Shape(Name, settings["MBC_Shape"][Name + "_FitSettings"], &MBC)};
+    } else if(PDFShape == "CrystalBall") {
+      PDF = std::unique_ptr<FitShape>{new CrystalBall_Shape(Name, settings["MBC_Shape"][Name + "_FitSettings"], &MBC)};
     } else {
-      throw std::invalid_argument("Unknown peaking background shape");
+      throw std::invalid_argument("Unknown peaking background shape: " + PDFShape);
     }
     RooFitResult *Result = PDF->GetPDF()->fitTo(Data, Save());
     TCanvas c("c", "", 1600, 1200);

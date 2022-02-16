@@ -18,6 +18,7 @@
 #include"Unique.h"
 #include"RooShapes/DoubleGaussian_Shape.h"
 #include"RooShapes/DoubleCrystalBall_Shape.h"
+#include"RooShapes/CrystalBall_Shape.h"
 #include"RooShapes/Chebychev_Shape.h"
 
 BinnedFitModel::BinnedFitModel(const Settings &settings,
@@ -77,7 +78,9 @@ void BinnedFitModel::InitializeYields() {
     double BackgroundSignalRatio = m_Settings["MBC_Shape"].getD(Name + "_BackgroundToSignalRatio");
     // For inclusive fit, quantum correlation is accounted for with a simple correction factor
     if(m_Settings.getB("Inclusive_fit") && m_Settings["MBC_Shape"].contains(Name + "_QuantumCorrelationFactor")) {
-      BackgroundSignalRatio *= m_Settings["MBC_Shape"].getD(Name + "_QuantumCorrelationFactor");
+      double QCFactor = m_Settings["MBC_Shape"].getD(Name + "_QuantumCorrelationFactor");
+      std::cout << "Quantum correlation correction factor: " << QCFactor << "\n";
+      BackgroundSignalRatio *= QCFactor;
     }
     for(const auto &CategoryString : m_Category.GetCategories()) {
       double BinYieldRatio = BackgroundSignalRatio*m_Settings["MBC_Shape"].getD(Name + "_" + CategoryString + "_frac_Yield");
@@ -130,8 +133,10 @@ void BinnedFitModel::InitializePeakingBackgroundShapes() {
       PeakingPDF = new DoubleGaussian_Shape(Name, m_Settings["MBC_Shape"], m_SignalMBC);
     } else if(PeakingShape == "DoubleCrystalBall") {
       PeakingPDF = new DoubleCrystalBall_Shape(Name, m_Settings["MBC_Shape"], m_SignalMBC);
+    } else if(PeakingShape == "CrystalBall") {
+      PeakingPDF = new CrystalBall_Shape(Name, m_Settings["MBC_Shape"], m_SignalMBC);
     } else {
-      throw std::invalid_argument("Unknown peaking background shape");
+      throw std::invalid_argument("Unknown peaking background shape: " + PeakingShape);
     }
     m_PeakingBackgroundShapes.insert({Name, PeakingPDF});
   }
