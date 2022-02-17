@@ -60,10 +60,16 @@ void FPlusFitter::AddMeasurement_CP(const std::string &TagMode) {
   // Get raw single tag yields and efficiency
   double ST_Yield = m_Settings[TagMode + "_ST_Yield"].getD(TagMode + "_SingleTag_Yield");
   double ST_Yield_err = m_Settings[TagMode + "_ST_Yield"].getD(TagMode + "_SingleTag_Yield_err");
+  double ST_Eff = m_Settings["ST_Efficiency"].getD(TagMode + "_SingleTagEfficiency");
+  ST_Yield /= ST_Eff;
+  ST_Yield_err /= ST_Eff;
   // Get raw double tag yields and efficiency
   std::string DT_Name("DoubleTag_CP_KKpipi_vs_" + TagMode + "_SignalBin0_SignalYield");
   double DT_Yield = m_Settings[TagMode + "_DT_Yield"].getD(DT_Name);
   double DT_Yield_err = m_Settings[TagMode + "_DT_Yield"].getD(DT_Name + "_err");
+  double DT_Eff = m_Settings["DT_Efficiency"].getD(TagMode + "_DoubleTagEfficiency");
+  DT_Yield /= DT_Eff;
+  DT_Yield_err /= DT_Eff;
   // Create variable with a normalized yield and add to dataset
   auto NormalizedYield = Unique::create<RooRealVar*>((TagMode + "_Normalized_Yield").c_str(), "", DT_Yield/ST_Yield);
   m_NormalizedYields.add(*NormalizedYield);
@@ -86,6 +92,9 @@ void FPlusFitter::AddMeasurement_KShh(const std::string &TagMode) {
   // Get raw single tag yields and efficiency
   double ST_Yield = m_Settings[TagMode + "_ST_Yield"].getD(TagMode + "_SingleTag_Yield");
   double ST_Yield_err = m_Settings[TagMode + "_ST_Yield"].getD(TagMode + "_SingleTag_Yield_err");
+  double ST_Eff = m_Settings["ST_Efficiency"].getD(TagMode + "_SingleTagEfficiency");
+  ST_Yield /= ST_Eff;
+  ST_Yield_err /= ST_Eff;
   // Get number of bins
   int Bins = m_Settings[TagMode + "_BinningScheme"].getI("NumberBins");
   // Get double tag yield in each bin and correct for bin migration
@@ -101,6 +110,9 @@ void FPlusFitter::AddMeasurement_KShh(const std::string &TagMode) {
   EffMatrixFile.GetObject("EffMatrix", EffMatrix);
   EffMatrix->Invert();
   TMatrixT<double> DT_Yields_EffCorrected = *EffMatrix*DT_Yields;
+  for(int i = 0; i < Bins; i++) {
+    DT_Yields_err(i, 0) *= (*EffMatrix)(i, i);
+  }
   EffMatrixFile.Close();
   std::cout << "Adding " << TagMode << " tag mode\n";
   for(int i = 0; i < Bins; i++) {

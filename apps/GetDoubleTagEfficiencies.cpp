@@ -66,17 +66,6 @@ int main(int argc, char *argv[]) {
       EffMatrix(i, j) /= GeneratedEvents[j];
     }
   }
-  if(settings.contains("Inclusive_fit") && settings.getB("Inclusive_fit")) {
-    for(std::size_t j = 0; j < GeneratedEvents.size(); j++) {
-      double Sum = 0.0;
-      for(std::size_t i = 0; i < GeneratedEvents.size(); i++) {
-	Sum += EffMatrix(i, j);
-      }
-      for(std::size_t i = 0; i < GeneratedEvents.size(); i++) {
-	EffMatrix(i, j) /= Sum;
-      }
-    }
-  }
   EffMatrix.Write("EffMatrix");
   std::cout << "Efficiency matrix ready\n";
   std::cout << "Double tag efficiency studies done!\n";
