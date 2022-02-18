@@ -52,6 +52,12 @@ class DoubleTagYield {
      * Only use for fully reconstructed tags
      */
     double GetSidebandYield(int SignalBin, int TagBin) const;
+    /**
+     * Function that performs the sPlot background subtraction
+     * @param Data DataSet
+     * @param FitModel Fit model
+     */
+    void sPlotReweight(RooDataSet &Data, BinnedFitModel &FitModel);
 };
 
 #endif

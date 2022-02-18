@@ -27,7 +27,7 @@
 #include"RooPlot.h"
 #include"RooHist.h"
 #include"RooStats/SPlot.h"
-#include "RooStats/RooStatsUtils.h"
+#include"RooStats/RooStatsUtils.h"
 #include"SingleTagYield.h"
 #include"Settings.h"
 #include"Unique.h"
@@ -121,7 +121,7 @@ void SingleTagYield::InitializeFitShape() {
 void SingleTagYield::FitYield() {
   using namespace RooFit;
   RooArgList Variables(m_MBC, m_LuminosityWeight);
-  std::string MassCut("");
+  std::string MassCut(""), MassCutBinned("");
   std::unique_ptr<RooRealVar> InvMassVar;
   if(m_Settings.contains("InvariantMassVariable")) {
     std::string MassVarName = m_Settings.get("InvariantMassVariable");
@@ -129,11 +129,12 @@ void SingleTagYield::FitYield() {
     double LowMassCut = m_Settings.getD("InvariantMassVariable_low");
     double HighMassCut = m_Settings.getD("InvariantMassVariable_high");
     InvMassVar = std::unique_ptr<RooRealVar>(new RooRealVar(MassVarName.c_str(), "", LowMassCut, HighMassCut));
-    MassCut = "(" + MassVarName + " > " + std::to_string(LowMassCut) + " && " + MassVarName + " < " + std::to_string(HighMassCut) + ")*";
+    MassCut = MassVarName + " > " + std::to_string(LowMassCut) + " && " + MassVarName + " < " + std::to_string(HighMassCut);
+    MassCutBinned = MassCut + "*LuminosityWeight";
     Variables.add(*InvMassVar);
   }
   TH1D h1("h1", "h1", m_Settings.getI("Bins_in_fit"), 1.83, 1.8865);
-  m_DataTree->Draw("MBC >> h1", (MassCut + "LuminosityWeight").c_str(), "goff");
+  m_DataTree->Draw("MBC >> h1", MassCutBinned.c_str(), "goff");
   RooDataHist BinnedData("BinnedData", "BinnedData", RooArgList(m_MBC), &h1);
   RooDataSet Data("Data", "Data", m_DataTree, Variables, MassCut.c_str(), "LuminosityWeight");
   if(m_Settings.get("FitType") != "NoFit") {

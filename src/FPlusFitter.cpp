@@ -60,14 +60,24 @@ void FPlusFitter::AddMeasurement_CP(const std::string &TagMode) {
   // Get raw single tag yields and efficiency
   double ST_Yield = m_Settings[TagMode + "_ST_Yield"].getD(TagMode + "_SingleTag_Yield");
   double ST_Yield_err = m_Settings[TagMode + "_ST_Yield"].getD(TagMode + "_SingleTag_Yield_err");
-  double ST_Eff = m_Settings["ST_Efficiency"].getD(TagMode + "_SingleTagEfficiency");
+  double ST_Eff;
+  if(TagMode == "KSomega") {
+    ST_Eff = m_Settings["ST_Efficiency"].getD("KSpipipi0_SingleTagEfficiency");
+  } else {
+    ST_Eff = m_Settings["ST_Efficiency"].getD(TagMode + "_SingleTagEfficiency");
+  }
   ST_Yield /= ST_Eff;
   ST_Yield_err /= ST_Eff;
   // Get raw double tag yields and efficiency
   std::string DT_Name("DoubleTag_CP_KKpipi_vs_" + TagMode + "_SignalBin0_SignalYield");
   double DT_Yield = m_Settings[TagMode + "_DT_Yield"].getD(DT_Name);
   double DT_Yield_err = m_Settings[TagMode + "_DT_Yield"].getD(DT_Name + "_err");
-  double DT_Eff = m_Settings["DT_Efficiency"].getD(TagMode + "_DoubleTagEfficiency");
+  double DT_Eff;
+  if(TagMode == "KSomega") {
+    DT_Eff = m_Settings["DT_Efficiency"].getD("KSpipipi0_DoubleTagEfficiency");
+  } else {
+    DT_Eff = m_Settings["DT_Efficiency"].getD(TagMode + "_DoubleTagEfficiency");
+  }
   DT_Yield /= DT_Eff;
   DT_Yield_err /= DT_Eff;
   // Create variable with a normalized yield and add to dataset
@@ -83,7 +93,8 @@ void FPlusFitter::AddMeasurement_CP(const std::string &TagMode) {
 
 void FPlusFitter::AddPrediction_CP(const std::string &TagMode) {
   double FPlus_Tag = m_Settings["FPlus_TagModes"].getD(TagMode);
-  TString Formula(Form("@1*(1 - (2*%f - 1)*(2*@0 - 1))", FPlus_Tag));
+  double y_CP = m_Settings.getD("y_CP");
+  TString Formula(Form("@1*(1 - (2*%f - 1)*(2*@0 - 1))*(1 - (2*%f - 1)*%f)", FPlus_Tag, FPlus_Tag, y_CP));
   auto PredictedYield = Unique::create<RooFormulaVar*>((TagMode + "_Normalized_Yield_Prediction").c_str(), Formula, RooArgList(m_FPlus, m_KKpipi_BF));
   m_PredictedYields.add(*PredictedYield);
 }

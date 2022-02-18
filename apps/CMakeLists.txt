@@ -39,7 +39,7 @@ target_link_libraries(FitDeltaE PUBLIC ROOT::Physics ROOT::RIO ROOT::Tree)
 
 target_link_libraries(FitDoubleTagMBC PUBLIC KKpipiStrongPhase)
 target_link_libraries(FitDoubleTagMBC PUBLIC ${KKPIPI_BINNED_FIT_LIB} -ldl)
-target_link_libraries(FitDoubleTagMBC PUBLIC ROOT::Physics ROOT::RIO ROOT::Tree)
+target_link_libraries(FitDoubleTagMBC PUBLIC ROOT::Physics ROOT::RIO ROOT::Tree ROOT::RooStats)
 
 target_link_libraries(FitFPlus PUBLIC KKpipiStrongPhase)
 target_link_libraries(FitFPlus PUBLIC ${KKPIPI_BINNED_FIT_LIB} -ldl)

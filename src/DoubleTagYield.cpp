@@ -10,6 +10,7 @@
 #include"TAxis.h"
 #include"TLine.h"
 #include"TCut.h"
+#include"TFile.h"
 #include"RooRealVar.h"
 #include"RooDataSet.h"
 #include"RooFitResult.h"
@@ -17,6 +18,8 @@
 #include"RooPlot.h"
 #include"RooHist.h"
 #include"RooMsgService.h"
+#include"RooStats/SPlot.h"
+#include"RooStats/RooStatsUtils.h"
 #include"DoubleTagYield.h"
 #include"Settings.h"
 #include"BinnedDataLoader.h"
@@ -66,6 +69,9 @@ void DoubleTagYield::DoFit() {
   Result->Print();
   PlotProjections(&DataLoader, &FitModel);
   SaveSignalYields(FitModel, Result, *DataLoader.GetCategoryObject());
+  if(m_Settings.contains("sPlotReweight") && m_Settings.getB("sPlotReweight")) {
+    sPlotReweight(*DataSet, FitModel);
+  }
 }
 
 void DoubleTagYield::PlotProjections(BinnedDataLoader *DataLoader, BinnedFitModel *FitModel) {
@@ -174,4 +180,25 @@ double DoubleTagYield::GetSidebandYield(int SignalBin, int TagBin) const {
     SidebandCut = SidebandCut && TCut(("TagBin == " + std::to_string(TagBin)).c_str());
   }
   return static_cast<double>(m_Tree->GetEntries(SidebandCut));
+}
+
+void DoubleTagYield::sPlotReweight(RooDataSet &Data, BinnedFitModel &FitModel) {
+  auto FloatingParameters = FitModel.GetPDF()->getParameters(Data);
+  for(auto Parameter : *FloatingParameters) {
+    auto CastedParameter = dynamic_cast<RooRealVar*>(Parameter);
+    if(CastedParameter) {
+      CastedParameter->setConstant(true);
+    }
+  }
+  RooArgList YieldParameters;
+  for(const auto &CategoryString : FitModel.m_Category.GetCategories()) {
+    auto YieldParameter = static_cast<RooRealVar*>(FitModel.m_Yields.at(CategoryString + "_SignalYield"));
+    YieldParameter->setConstant(false);
+    YieldParameters.add(*YieldParameter);
+  }
+  RooStats::SPlot("sData", "", Data, FitModel.GetPDF(), YieldParameters);
+  TFile Outfile(m_Settings.get("sPlotFilename").c_str(), "RECREATE");
+  auto Tree = RooStats::GetAsTTree(m_Settings.get("TreeName").c_str(), m_Settings.get("TreeName").c_str(), Data);
+  Tree->Write();
+  Outfile.Close();
 }
