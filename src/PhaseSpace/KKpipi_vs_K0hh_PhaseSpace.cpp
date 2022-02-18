@@ -120,14 +120,14 @@ int KKpipi_vs_K0hh_PhaseSpace::GetTrueK0hhBin() {
     K0_index = K0_iter - ID_begin;
   }
   // Repeat for hPlus
-  auto hPlus_iter = std::find(K0_iter + 3, ID_begin + TagEnd_index, h_ID);
+  auto hPlus_iter = std::find(K0_iter + (K0_ID == 310 ? 3 : 1), ID_begin + TagEnd_index, h_ID);
   if(hPlus_iter == ID_begin + TagEnd_index) {
     throw std::runtime_error("Cannot find h+ in truth information");
   } else {
     hPlus_index = hPlus_iter - ID_begin;
   }
   // Repeat for hMinus
-  auto hMinus_iter = std::find(K0_iter + 3, ID_begin + TagEnd_index, -h_ID);
+  auto hMinus_iter = std::find(K0_iter + (K0_ID == 310 ? 3 : 1), ID_begin + TagEnd_index, -h_ID);
   if(hMinus_iter == ID_begin + TagEnd_index) {
     throw std::runtime_error("Cannot find h- in truth information");
   } else {

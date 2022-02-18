@@ -28,7 +28,7 @@ FPlusFitter::FPlusFitter(const Settings &settings): m_FPlus("FPlus", "", 0.0, 1.
 }
 
 void FPlusFitter::AddTag(const std::string &TagMode) {
-  if(TagMode == "KSpipi" || TagMode == "KSKK") {
+  if(TagMode == "KSpipi" || TagMode == "KSKK" || TagMode == "KLpipi" || TagMode == "KLKK") {
     AddMeasurement_KShh(TagMode);
     AddPrediction_KShh(TagMode);
   } else {
@@ -141,7 +141,13 @@ void FPlusFitter::AddPrediction_KShh(const std::string &TagMode) {
     double ci = m_Settings[TagMode + "_BinningScheme"]["cisi"].getD(TagMode + "_c" + std::to_string(i));
     double Ki = m_Settings[TagMode + "_BinningScheme"]["Ki"].getD(TagMode + "_K_p" + std::to_string(i));
     double Kbari = m_Settings[TagMode + "_BinningScheme"]["Ki"].getD(TagMode + "_K_m" + std::to_string(i));
-    TString Formula(Form("0.5*@1*(%f + %f - 2*%f*sqrt(%f*%f)*(2*@0 - 1))", Ki, Kbari, ci, Ki, Kbari));
+    std::string FormulaString;
+    if(TagMode.substr(0, 2) == "KS") {
+      FormulaString = "0.5*@1*(%f + %f - 2*%f*sqrt(%f*%f)*(2*@0 - 1))";
+    } else {
+      FormulaString = "0.5*@1*(%f + %f + 2*%f*sqrt(%f*%f)*(2*@0 - 1))";
+    }
+    TString Formula(Form(FormulaString.c_str(), Ki, Kbari, ci, Ki, Kbari));
     auto PredictedYield = Unique::create<RooFormulaVar*>((TagMode + "_Normalized_Yield_Prediction_Bin" + std::to_string(i)).c_str(), Formula, RooArgList(m_FPlus, m_KKpipi_BF));
     m_PredictedYields.add(*PredictedYield);
   }
