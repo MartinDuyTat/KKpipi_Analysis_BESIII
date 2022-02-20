@@ -28,7 +28,7 @@ FPlusFitter::FPlusFitter(const Settings &settings): m_FPlus("FPlus", "", 0.0, 1.
 }
 
 void FPlusFitter::AddTag(const std::string &TagMode) {
-  if(TagMode == "KSpipi" || TagMode == "KSKK" || TagMode == "KLpipi" || TagMode == "KLKK") {
+  if(TagMode == "KSpipi" || TagMode == "KSKK" || TagMode == "KLpipi" || TagMode == "KLKK" || TagMode == "KSpipiPartReco") {
     AddMeasurement_KShh(TagMode);
     AddPrediction_KShh(TagMode);
   } else {
@@ -82,6 +82,9 @@ void FPlusFitter::AddMeasurement_CP(const std::string &TagMode) {
   DT_Yield_err /= DT_Eff;
   // Create variable with a normalized yield and add to dataset
   auto NormalizedYield = Unique::create<RooRealVar*>((TagMode + "_Normalized_Yield").c_str(), "", DT_Yield/ST_Yield);
+  if(NormalizedYield->getVal() < 0.0) {
+    NormalizedYield->setVal(0.0);
+  }
   m_NormalizedYields.add(*NormalizedYield);
   // Save statistical uncertainty
   m_Uncertainties.push_back(TMath::Sqrt(TMath::Power(DT_Yield_err/DT_Yield, 2)
@@ -128,6 +131,9 @@ void FPlusFitter::AddMeasurement_KShh(const std::string &TagMode) {
   std::cout << "Adding " << TagMode << " tag mode\n";
   for(int i = 0; i < Bins; i++) {
     auto NormalizedYield = Unique::create<RooRealVar*>((TagMode + "_Normalized_Yield_Bin" + std::to_string(i + 1)).c_str(), "", DT_Yields_EffCorrected(i, 0)/ST_Yield);
+    if(NormalizedYield->getVal() < 0.0) {
+      NormalizedYield->setVal(0.0);
+    }
     m_NormalizedYields.add(*NormalizedYield);
     m_Uncertainties.push_back(TMath::Sqrt(TMath::Power(DT_Yields_err(i, 0)/DT_Yields_EffCorrected(i, 0), 2)
                                         + TMath::Power(ST_Yield_err/ST_Yield, 2))*DT_Yields_EffCorrected(i, 0)/ST_Yield);
@@ -137,15 +143,16 @@ void FPlusFitter::AddMeasurement_KShh(const std::string &TagMode) {
 
 void FPlusFitter::AddPrediction_KShh(const std::string &TagMode) {
   int Bins = m_Settings[TagMode + "_BinningScheme"].getI("NumberBins");
+  std::string BinningTag = TagMode == "KSpipiPartReco" ? "KSpipi" : TagMode;
   for(int i = 1; i <= Bins; i++) {
-    double ci = m_Settings[TagMode + "_BinningScheme"]["cisi"].getD(TagMode + "_c" + std::to_string(i));
-    double Ki = m_Settings[TagMode + "_BinningScheme"]["Ki"].getD(TagMode + "_K_p" + std::to_string(i));
-    double Kbari = m_Settings[TagMode + "_BinningScheme"]["Ki"].getD(TagMode + "_K_m" + std::to_string(i));
+    double ci = m_Settings[TagMode + "_BinningScheme"]["cisi"].getD(BinningTag + "_c" + std::to_string(i));
+    double Ki = m_Settings[TagMode + "_BinningScheme"]["Ki"].getD(BinningTag + "_K_p" + std::to_string(i));
+    double Kbari = m_Settings[TagMode + "_BinningScheme"]["Ki"].getD(BinningTag + "_K_m" + std::to_string(i));
     std::string FormulaString;
     if(TagMode.substr(0, 2) == "KS") {
-      FormulaString = "0.5*@1*(%f + %f - 2*%f*sqrt(%f*%f)*(2*@0 - 1))";
+      FormulaString = "@1*(%f + %f - 2*%f*sqrt(%f*%f)*(2*@0 - 1))";
     } else {
-      FormulaString = "0.5*@1*(%f + %f + 2*%f*sqrt(%f*%f)*(2*@0 - 1))";
+      FormulaString = "@1*(%f + %f + 2*%f*sqrt(%f*%f)*(2*@0 - 1))";
     }
     TString Formula(Form(FormulaString.c_str(), Ki, Kbari, ci, Ki, Kbari));
     auto PredictedYield = Unique::create<RooFormulaVar*>((TagMode + "_Normalized_Yield_Prediction_Bin" + std::to_string(i)).c_str(), Formula, RooArgList(m_FPlus, m_KKpipi_BF));

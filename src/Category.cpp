@@ -23,7 +23,7 @@ Category::Category(const Settings &settings): m_TagMode(settings.get("Mode")),
   if(m_TagMode == "Kpi" || m_TagMode == "Kpipi0" || m_TagMode == "Kpipipi" || m_TagMode == "KeNu") {
     m_Type = "Flavour";
     m_TagBins = 0;
-  } else if(m_TagMode == "KSpipi" || m_TagMode == "KLpipi") {
+  } else if(m_TagMode == "KSpipi" || m_TagMode == "KLpipi" || m_TagMode == "KSpipiPartReco") {
     m_Type = "SCMB";
     m_TagBins = 8;
   } else if(m_TagMode == "KSKK") {
