@@ -1,0 +1,5 @@
+SignalTagKSPiPlusMotherTrueID != 310
+SignalTagKSPiMinusMotherTrueID != 310
+SignalTagHighEEtaPhotonMotherTrueID == 221
+SignalTagLowEEtaPhotonMotherTrueID == 221
+SignalTagIsSameDMotherAll == 1

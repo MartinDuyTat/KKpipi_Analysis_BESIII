@@ -37,7 +37,7 @@ DoubleTagYield::DoubleTagYield(const Settings &settings, TTree *Tree): m_SignalM
   if(!m_Settings.getB("FullyReconstructed")) {
     m_SignalMBC = RooRealVar(m_Settings.get("FitVariable").c_str(), "", m_Settings.getD("FitRange_low"), m_Settings.getD("FitRange_high"));
   }
-  m_SignalMBC.setBins(200, "cache");
+  m_SignalMBC.setBins(500, "cache");
 }
 
 void DoubleTagYield::DoFit() {
