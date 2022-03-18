@@ -20,6 +20,7 @@
 #include"RooShapes/DoubleGaussian_Shape.h"
 #include"RooShapes/DoubleCrystalBall_Shape.h"
 #include"RooShapes/CrystalBall_Shape.h"
+#include"RooShapes/Chebychev_Shape.h"
 
 int main(int argc, char *argv[]) {
   using namespace RooFit;
@@ -79,7 +80,19 @@ int main(int argc, char *argv[]) {
       WeightVar = RooRealVar(WeightName.c_str(), "", 0.0, 1.0);
       Variables.add(WeightVar);
     }
-    RooDataSet Data("Data", "", &Chain, Variables, WeightName.c_str());
+    std::string Cut("");
+    RooRealVar iDcyTr("iDcyTr", "", 0, 100000);
+    if(settings["MBC_Shape"].contains(Name + "_ComponentsToIgnore")) {
+      Variables.add(iDcyTr);
+      auto ComponentsToIgnore = Utilities::ConvertStringToVector(settings["MBC_Shape"].get(Name + "_ComponentsToIgnore"));
+      for(const auto ComponentToIgnore : ComponentsToIgnore) {
+	Cut += "iDcyTr != " + ComponentToIgnore;
+	if(!(ComponentToIgnore == ComponentsToIgnore.back())) {
+	  Cut += " && ";
+	}
+      }
+    }
+    RooDataSet Data("Data", "", &Chain, Variables, Cut.c_str(), WeightName.c_str());
     std::unique_ptr<FitShape> PDF;
     std::string PDFShape = settings["MBC_Shape"].get(Name + "_Shape");
     if(PDFShape == "DoubleGaussian") {
@@ -88,6 +101,8 @@ int main(int argc, char *argv[]) {
       PDF = std::unique_ptr<FitShape>{new DoubleCrystalBall_Shape(Name, settings["MBC_Shape"][Name + "_FitSettings"], &MBC)};
     } else if(PDFShape == "CrystalBall") {
       PDF = std::unique_ptr<FitShape>{new CrystalBall_Shape(Name, settings["MBC_Shape"][Name + "_FitSettings"], &MBC)};
+    } else if(PDFShape == "Chebychev") {
+      PDF = std::unique_ptr<FitShape>{new Chebychev_Shape(Name, settings["MBC_Shape"][Name + "_FitSettings"], &MBC)};
     } else {
       throw std::invalid_argument("Unknown peaking background shape: " + PDFShape);
     }
