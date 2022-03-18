@@ -30,6 +30,8 @@ int main(int argc, char *argv[]) {
   std::string Mode = settings.get("Mode");
   std::string TagType = settings.get("TagType");
   int PeakingBackgrounds = settings["MBC_Shape"].getI(Mode + "_PeakingBackgrounds");
+  std::vector<RooFitResult*> Results;
+  std::vector<double> Yields;
   for(int i = 0; i < PeakingBackgrounds; i++) {
     std::cout << "Fitting peaking background " << i << "\n";
     std::string Name = Mode + "_PeakingBackground" + std::to_string(i);
@@ -49,21 +51,35 @@ int main(int argc, char *argv[]) {
     } else {
       RecTagMode = TagMode;
     }
-    TChain Chain(TreeName.c_str());
-    std::string Filename = settings["Datasets_WithDeltaECuts"].get("SignalMC_Peaking_" + TagType);
-    if(TagType == "ST") {
-      Filename = Utilities::ReplaceString(Filename, "BACKGROUND", TagMode);
-      Filename = Utilities::ReplaceString(Filename, "TAG", RecTagMode);
-    } else if(TagType == "DT") {
-      Filename = Utilities::ReplaceString(Filename, "SIGNAL1", SignalMode);
-      Filename = Utilities::ReplaceString(Filename, "TAG1", TagMode);
-      Filename = Utilities::ReplaceString(Filename, "SIGNAL2", RecSignalMode);
-      Filename = Utilities::ReplaceString(Filename, "TAG2", RecTagMode);
-      Filename = Utilities::ReplaceString(Filename, "MODE", Mode);
+    std::string Filename;
+    if(settings["MBC_Shape"].contains(Name + "_Filename")) {
+      Filename = settings["MBC_Shape"].get(Name + "_Filename");
+    } else {
+      Filename = settings["Datasets_WithDeltaECuts"].get("SignalMC_Peaking_" + TagType);
+      if(TagType == "ST") {
+	Filename = Utilities::ReplaceString(Filename, "BACKGROUND", TagMode);
+	Filename = Utilities::ReplaceString(Filename, "TAG", RecTagMode);
+      } else if(TagType == "DT") {
+	Filename = Utilities::ReplaceString(Filename, "SIGNAL1", SignalMode);
+	Filename = Utilities::ReplaceString(Filename, "TAG1", TagMode);
+	Filename = Utilities::ReplaceString(Filename, "SIGNAL2", RecSignalMode);
+	Filename = Utilities::ReplaceString(Filename, "TAG2", RecTagMode);
+	Filename = Utilities::ReplaceString(Filename, "MODE", Mode);
+      }
     }
+    TChain Chain(TreeName.c_str());
     Chain.Add(Filename.c_str());
     RooRealVar MBC(settings.get("FitVariable").c_str(), "", settings.getD("FitRange_low"), settings.getD("FitRange_high"));
-    RooDataSet Data("Data", "", &Chain, MBC);
+    RooArgSet Variables;
+    Variables.add(MBC);
+    std::string WeightName("");
+    RooRealVar WeightVar;
+    if(settings["MBC_Shape"].contains(Name + "_Weight")) {
+      WeightName = settings["MBC_Shape"].get(Name + "_Weight");
+      WeightVar = RooRealVar(WeightName.c_str(), "", 0.0, 1.0);
+      Variables.add(WeightVar);
+    }
+    RooDataSet Data("Data", "", &Chain, Variables, WeightName.c_str());
     std::unique_ptr<FitShape> PDF;
     std::string PDFShape = settings["MBC_Shape"].get(Name + "_Shape");
     if(PDFShape == "DoubleGaussian") {
@@ -75,7 +91,19 @@ int main(int argc, char *argv[]) {
     } else {
       throw std::invalid_argument("Unknown peaking background shape: " + PDFShape);
     }
-    RooFitResult *Result = PDF->GetPDF()->fitTo(Data, Save());
+    Results.push_back(PDF->GetPDF()->fitTo(Data, Save()));
+    if(WeightName == "") {
+      Yields.push_back(Chain.GetEntries());
+    } else {
+      double Total = 0.0;
+      double ChainWeight;
+      Chain.SetBranchAddress(WeightName.c_str(), &ChainWeight);
+      for(int j = 0; j < Chain.GetEntries(); j++) {
+	Chain.GetEntry(j);
+	Total += ChainWeight;
+      }
+      Yields.push_back(Total);
+    }
     TCanvas c("c", "", 1600, 1200);
     RooPlot *Frame = MBC.frame();
     Data.plotOn(Frame, Binning(100));
@@ -87,8 +115,11 @@ int main(int argc, char *argv[]) {
     }
     Frame->Draw();
     c.SaveAs(settings["MBC_Shape"].get(Name + "_PlotFilename").c_str());
+  }
+  int n = 0;
+  for(auto Result : Results) {
     Result->Print();
-    std::cout << "Fit results for peaking background " << i << ":\n";
+    std::cout << "Fit results for peaking background " << n << ":\n";
     std::cout << "Status " << Result->status() << "\n";
     std::cout << "covQual " << Result->covQual() << "\n";
     RooArgList floating_param = Result->floatParsFinal();
@@ -96,7 +127,9 @@ int main(int argc, char *argv[]) {
       RooRealVar *param = static_cast<RooRealVar*>(floating_param.at(i));
       std::cout << param->GetName() << " " << param->getVal() << "\n";
     }
+    std::cout << Mode << "_PeakingBackground" << n << "_Yield " << Yields[n] << "\n";
     std::cout << "\n";
+    n++;
   }
   std::cout << "Peaking backgrounds are now accounted for" << "\n";
   return 0;
