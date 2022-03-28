@@ -2,6 +2,7 @@
 
 #include<algorithm>
 #include<stdexcept>
+#include<iostream>
 #include"TTree.h"
 #include"TFile.h"
 #include"TLorentzVector.h"
@@ -84,6 +85,9 @@ int KKpipi_PhaseSpace::KKpipiBin() const {
 }
 
 int KKpipi_PhaseSpace::TrueKKpipiBin() {
+  if(m_KSKKBinning) {
+    FindDIndex();
+  }
   std::vector<int> IDs(m_TrueKinematics.ParticleIDs.begin(), m_TrueKinematics.ParticleIDs.begin() + m_TrueKinematics.NumberParticles);
   std::vector<double>::size_type SignalEnd_index;
   if(m_TrueKinematics.SignalD_index < m_TrueKinematics.TagD_index) {
@@ -121,6 +125,8 @@ int KKpipi_PhaseSpace::TrueKKpipiBin() {
     if(KSKK_bin != 0) {
       return KSKK_bin;
     } else {
+      std::cout << "Warning: True Dalitz coordinate outside of phase space ";
+      std::cout << "(" << M2Plus << ", " << M2Minus << ")\n";
       return DalitzUtilities::GetMappedK0hhBin(M2Plus, M2Minus, m_KSKKBinning);
     }
   }
