@@ -24,8 +24,9 @@ class KKpipi_vs_K0hh_PhaseSpace: public KKpipi_PhaseSpace {
      * @param Mode "KSpipi", "KSKK", "KLpipi", "KLKK"
      * @param KSKK_binning Set to true to determine the true \f$K_SKK\f$ bins
      * @param KKpipiPartReco Set to true if the KKpipi mode is partially reconstructed
+     * @param KStoKLBackground Set to true if we're looking at KS background in KL tags
      */
-    KKpipi_vs_K0hh_PhaseSpace(TTree *Tree, int Bins, bool ReconstructedBins, bool TrueBins, const std::string &Mode, bool KSKK_binning = false, bool KKpipiPartReco = false);
+    KKpipi_vs_K0hh_PhaseSpace(TTree *Tree, int Bins, bool ReconstructedBins, bool TrueBins, const std::string &Mode, bool KSKK_binning = false, bool KKpipiPartReco = false, bool KStoKLBackground = false);
     /**
      * Get the correct phase space bin with flavour tag
      */
@@ -89,6 +90,10 @@ class KKpipi_vs_K0hh_PhaseSpace: public KKpipi_PhaseSpace {
      * Set K0hh branch addresses
      */
     void SetK0hhBranchAddresses(TTree *Tree);
+    /**
+     * Flag that is true if we're considering KS to KL background
+     */
+    bool m_KStoKLBackground;
 };
 
 #endif

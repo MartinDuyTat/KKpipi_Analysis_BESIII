@@ -11,7 +11,7 @@
 #include"PhaseSpace/KKpipi_vs_K0hh_PhaseSpace.h"
 #include"PhaseSpace/DalitzUtilities.h"
 
-KKpipi_vs_K0hh_PhaseSpace::KKpipi_vs_K0hh_PhaseSpace(TTree *Tree, int Bins, bool ReconstructedBins, bool TrueBins, const std::string &Mode, bool KSKK_binning, bool KKpipiPartReco): KKpipi_PhaseSpace(Tree, Bins, ReconstructedBins, TrueBins, KSKK_binning), m_K0Mode(Mode.substr(0, 2)), m_hhMode(Mode.substr(2)) {
+KKpipi_vs_K0hh_PhaseSpace::KKpipi_vs_K0hh_PhaseSpace(TTree *Tree, int Bins, bool ReconstructedBins, bool TrueBins, const std::string &Mode, bool KSKK_binning, bool KKpipiPartReco, bool KStoKLBackground): KKpipi_PhaseSpace(Tree, Bins, ReconstructedBins, TrueBins, KSKK_binning), m_K0Mode(Mode.substr(0, 2)), m_hhMode(Mode.substr(2)), m_KStoKLBackground(KStoKLBackground) {
   if(m_K0Mode != "KS" && m_K0Mode != "KL") {
     throw std::invalid_argument("K0 mode " + m_K0Mode + " not valid");
   } 
@@ -109,7 +109,12 @@ int KKpipi_vs_K0hh_PhaseSpace::GetTrueK0hhBin() {
   // Particle ID of h+ and h-
   int h_ID = m_hhMode == "pipi" ? 211 : 321;
   // Particle ID of K0
-  int K0_ID = m_K0Mode == "KS" ? 310 : 130;
+  int K0_ID;
+  if(m_KStoKLBackground || m_K0Mode == "KS") {
+    K0_ID = 310;
+  } else {
+    K0_ID = 130;
+  }
   // begin() iterator of true IDs
   auto ID_begin = m_TrueKinematics.ParticleIDs.begin();
   // Get index of K0 in truth information
@@ -119,15 +124,24 @@ int KKpipi_vs_K0hh_PhaseSpace::GetTrueK0hhBin() {
   } else {
     K0_index = K0_iter - ID_begin;
   }
+  // Number of daughters to skip between 130/310 and the D daughters
+  int SkipDaughters = 0;
+  if(m_KStoKLBackground) {
+    SkipDaughters = 7;
+  } else if(K0_ID == 310) {
+    SkipDaughters = 3;
+  } else if(K0_ID == 130) {
+    SkipDaughters = 1;
+  }
   // Repeat for hPlus
-  auto hPlus_iter = std::find(K0_iter + (K0_ID == 310 ? 3 : 1), ID_begin + TagEnd_index, h_ID);
+  auto hPlus_iter = std::find(K0_iter + SkipDaughters, ID_begin + TagEnd_index, h_ID);
   if(hPlus_iter == ID_begin + TagEnd_index) {
     throw std::runtime_error("Cannot find h+ in truth information");
   } else {
     hPlus_index = hPlus_iter - ID_begin;
   }
   // Repeat for hMinus
-  auto hMinus_iter = std::find(K0_iter + (K0_ID == 310 ? 3 : 1), ID_begin + TagEnd_index, -h_ID);
+  auto hMinus_iter = std::find(K0_iter + SkipDaughters, ID_begin + TagEnd_index, -h_ID);
   if(hMinus_iter == ID_begin + TagEnd_index) {
     throw std::runtime_error("Cannot find h- in truth information");
   } else {

@@ -1,0 +1,4 @@
+SignalTagKSPiPlusMotherTrueID == 310
+SignalTagKSPiMinusMotherTrueID == 310
+SignalTagPIDTrue == 1
+SignalTagIsSameDMother == 1

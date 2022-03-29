@@ -57,6 +57,8 @@ int main(int argc, char *argv[]) {
 	InputFilename = Utilities::ReplaceString(InputFilename, "TAG", "KSomegapipipi0");
       } else if(TagMode + RecTagMode == "KSpi0_to_KLpi0") {
 	InputFilename = Utilities::ReplaceString(InputFilename, "TAG", "KSpi0_KS2pi0pi0");
+      } else if(TagMode + RecTagMode == "KSpipi_to_KLpipi") {
+	InputFilename = Utilities::ReplaceString(InputFilename, "TAG", "KSpipi_KS2pi0pi0");
       } else {
 	InputFilename = Utilities::ReplaceString(InputFilename, "TAG", TagMode);
       }

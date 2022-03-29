@@ -173,7 +173,8 @@ namespace Utilities {
     if(GetTagType(Mode) == "Flavour") {
       return std::unique_ptr<KKpipi_PhaseSpace>{new KKpipi_vs_Flavour_PhaseSpace(Tree, NumberBins, Bin_rec, Bin_truth, KSKKBkg)};
     } else if(GetTagType(Mode) == "SCMB") {
-      return std::unique_ptr<KKpipi_PhaseSpace>{new KKpipi_vs_K0hh_PhaseSpace(Tree, NumberBins, Bin_rec, Bin_truth, Mode, KSKKBkg, settings.contains("KKpipiPartReco") && settings.getB("KKpipiPartReco"))};
+      bool KStoKLBackground = Mode.substr(0, 2) == "KL" && settings.get("TagMode").substr(0, 2) == "KS";
+      return std::unique_ptr<KKpipi_PhaseSpace>{new KKpipi_vs_K0hh_PhaseSpace(Tree, NumberBins, Bin_rec, Bin_truth, Mode, KSKKBkg, settings.contains("KKpipiPartReco") && settings.getB("KKpipiPartReco"), KStoKLBackground)};
     } else if(GetTagType(Mode) == "CP") {
       return std::unique_ptr<KKpipi_PhaseSpace>{new KKpipi_vs_CP_PhaseSpace(Tree, NumberBins, Bin_rec, Bin_truth, KSKKBkg)};
     } else {
