@@ -34,8 +34,11 @@ int main(int argc, char *argv[]) {
   std::vector<RooFitResult*> Results;
   std::vector<double> Yields;
   for(int i = 0; i < PeakingBackgrounds; i++) {
-    std::cout << "Fitting peaking background " << i << "\n";
     std::string Name = Mode + "_PeakingBackground" + std::to_string(i);
+    if(settings["MBC_Shape"].contains(Name + "_FitShape") && !settings["MBC_Shape"].getB(Name + "_FitShape")) {
+      continue;
+    }
+    std::cout << "Fitting peaking background " << i << "\n";
     std::string SignalMode("");
     if(TagType == "DT") {
       SignalMode = settings["MBC_Shape"].get(Name + "_SignalMode");

@@ -1,0 +1,6 @@
+TagPi0Chi2Fit1 < 20
+TagPi0Chi2Fit2 < 20
+TagMissingMass2 > 0.0
+TagMissingMass2 < 0.9
+SignalMBC > 1.855
+SignalMBC < 1.875

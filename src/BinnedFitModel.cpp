@@ -55,46 +55,28 @@ RooSimultaneous* BinnedFitModel::GetPDF() {
 }
 
 void BinnedFitModel::InitializeYields() {
-  RooArgList SignalYieldVars;
-  int Bins = 0;
+  std::string Mode = m_Settings.get("Mode");
+  int PeakingBackgrounds = m_Settings["MBC_Shape"].getI(Mode + "_PeakingBackgrounds");
   for(const auto &CategoryString : m_Category.GetCategories()) {
     m_Yields.insert({CategoryString + "_CombinatorialYield", Unique::create<RooRealVar*>((CategoryString + "_CombinatorialYield").c_str(), "", 1.0, 0.0, 1000.0)});
     m_Yields.insert({CategoryString + "_SignalYield", Unique::create<RooRealVar*>((CategoryString + "_SignalYield").c_str(), "", 10.0, 0.0, 1000.0)});
-    SignalYieldVars.add(*m_Yields.at(CategoryString + "_SignalYield"));
-    Bins++;
-  }
-  std::string Formula("");
-  for(int i = 0; i < Bins; i++) {
-    if(i != 0) {
-      Formula += "+";
-    }
-    Formula += "@";
-    Formula += std::to_string(i);
-  }
-  std::string Mode = m_Settings.get("Mode");
-  int PeakingBackgrounds = m_Settings["MBC_Shape"].getI(Mode + "_PeakingBackgrounds");
-  for(int i = 0; i < PeakingBackgrounds; i++) {
-    std::string Name = Mode + "_PeakingBackground" + std::to_string(i);
-    if(!m_Settings["MBC_Shape"].contains(Name + "_Yield")) {
-      double BackgroundSignalRatio = m_Settings["MBC_Shape"].getD(Name + "_BackgroundToSignalRatio");
-      // For inclusive fit, quantum correlation is accounted for with a simple correction factor
-      if(m_Settings.getB("Inclusive_fit") && m_Settings["MBC_Shape"].contains(Name + "_QuantumCorrelationFactor")) {
-	double QCFactor = m_Settings["MBC_Shape"].getD(Name + "_QuantumCorrelationFactor");
-	std::cout << "Adding peaking background with quantum correlation correction factor: " << QCFactor << "\n";
-	BackgroundSignalRatio *= QCFactor;
-      }
-      for(const auto &CategoryString : m_Category.GetCategories()) {
-	double BinYieldRatio = BackgroundSignalRatio*m_Settings["MBC_Shape"].getD(Name + "_" + CategoryString + "_frac_Yield");
-	std::string PeakingYieldName = CategoryString + "_PeakingBackground" + std::to_string(i) + "Yield";
-	RooAbsReal *PeakingYield = Unique::create<RooFormulaVar*>(PeakingYieldName.c_str(), Form(("%f*(" + Formula + ")").c_str(), BinYieldRatio), SignalYieldVars);
+    for(int i = 0; i < PeakingBackgrounds; i++) {
+      std::string Name = Mode + "_PeakingBackground" + std::to_string(i) + "_" + CategoryString;
+      std::string PeakingYieldName = CategoryString + "_PeakingBackground" + std::to_string(i) + "Yield";
+      if(!m_Settings["MBC_Shape"].contains(Name + "_Yield")) {
+	double BackgroundSignalRatio = m_Settings["MBC_Shape"].getD(Name + "_BackgroundToSignalRatio");
+	std::cout << "Adding peaking background with background-to-signal ratio: " << BackgroundSignalRatio << "\n";
+	// Quantum correlation is accounted for with a correction factor
+	if(m_Settings.getB("Inclusive_fit") && m_Settings["MBC_Shape"].contains(Name + "_QuantumCorrelationFactor")) {
+	  double QCFactor = m_Settings["MBC_Shape"].getD(Name + "_QuantumCorrelationFactor");
+	  std::cout << "Quantum correlation correction factor: " << QCFactor << "\n";
+	  BackgroundSignalRatio *= QCFactor;
+	}
+	RooAbsReal *PeakingYield = Unique::create<RooFormulaVar*>(PeakingYieldName.c_str(), Form("%f*@0", BackgroundSignalRatio), *m_Yields.at(CategoryString + "_SignalYield"));
 	m_Yields.insert({CategoryString + "_PeakingBackground" + std::to_string(i) + "Yield", PeakingYield});
-      }
-    } else {
-      double BackgroundYield = m_Settings["MBC_Shape"].getD(Name + "_Yield");
-      for(const auto &CategoryString : m_Category.GetCategories()) {
-	double BinYieldRatio = m_Settings["MBC_Shape"].getD(Name + "_" + CategoryString + "_frac_Yield");
-	std::string PeakingYieldName = CategoryString + "_PeakingBackground" + std::to_string(i) + "Yield";
-	RooAbsReal *PeakingYield = Unique::create<RooRealVar*>(PeakingYieldName.c_str(), "", BackgroundYield*BinYieldRatio);
+      } else {
+	double BackgroundYield = m_Settings["MBC_Shape"].getD(Name + "_Yield");
+	RooAbsReal *PeakingYield = Unique::create<RooRealVar*>(PeakingYieldName.c_str(), "", BackgroundYield);
 	std::cout << "Adding peaking background with yield: " << BackgroundYield << "\n";
 	m_Yields.insert({CategoryString + "_PeakingBackground" + std::to_string(i) + "Yield", PeakingYield});
       }

@@ -20,7 +20,7 @@
 #include"FPlusFitter.h"
 
 FPlusFitter::FPlusFitter(const Settings &settings): m_FPlus("FPlus", "", 0.0, 1.0),
-						    m_KKpipi_BF("KKpipi_BF", "", settings["BranchingFractions"].getD("KKpipi"), 0.000, 0.004),
+						    m_KKpipi_BF("KKpipi_BF", "", settings["BranchingFractions"].getD("KKpipi"), 0.000, 0.005),
 						    m_Settings(settings) {
   if(!m_Settings.getB("Float_KKpipi_BF")) {
     m_KKpipi_BF.setConstant();
@@ -168,5 +168,7 @@ void FPlusFitter::SaveFitResults(RooFitResult *Result) const {
   Outfile << "FPlus_err     " << m_FPlus.getError() << "\n";
   Outfile << "BF_KKpipi     " << m_KKpipi_BF.getVal() << "\n";
   Outfile << "BF_KKpipi_err " << m_KKpipi_BF.getError() << "\n";
+  Outfile << "Correlation   " << Result->correlation("FPlus", "KKpipi_BF") << "\n";
+  Outfile << "MinLL         " << Result->minNll() << "\n";
   Outfile.close();
 }
