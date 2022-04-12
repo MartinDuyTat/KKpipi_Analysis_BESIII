@@ -10,11 +10,14 @@
 #include"TChain.h"
 #include"TCanvas.h"
 #include"RooRealVar.h"
+#include"RooArgList.h"
 #include"RooDataSet.h"
 #include"RooFitResult.h"
 #include"RooPlot.h"
+#include"RooArgusBG.h"
 #include"SingleTagYield.h"
 #include"Utilities.h"
+#include"Unique.h"
 #include"Settings.h"
 #include"RooShapes/FitShape.h"
 #include"RooShapes/DoubleGaussian_Shape.h"
@@ -36,6 +39,7 @@ int main(int argc, char *argv[]) {
   for(int i = 0; i < PeakingBackgrounds; i++) {
     std::string Name = Mode + "_PeakingBackground" + std::to_string(i);
     if(settings["MBC_Shape"].contains(Name + "_FitShape") && !settings["MBC_Shape"].getB(Name + "_FitShape")) {
+      Results.push_back(nullptr);
       continue;
     }
     std::cout << "Fitting peaking background " << i << "\n";
@@ -109,7 +113,20 @@ int main(int argc, char *argv[]) {
     } else {
       throw std::invalid_argument("Unknown peaking background shape: " + PDFShape);
     }
-    Results.push_back(PDF->GetPDF()->fitTo(Data, Save()));
+    RooAbsPdf *Model = nullptr;
+    if(settings["MBC_Shape"][Name + "_FitSettings"].contains(Name + "_ArgusBackground") &&
+       settings["MBC_Shape"][Name + "_FitSettings"].getB(Name + "_ArgusBackground")) {
+      auto Nsig = Utilities::load_param(settings["MBC_Shape"][Name + "_FitSettings"], Name + "_Nsig");
+      auto Nbkg = Utilities::load_param(settings["MBC_Shape"][Name + "_FitSettings"], Name + "_Nbkg");
+      auto c = Utilities::load_param(settings["MBC_Shape"][Name + "_FitSettings"], Name + "_c");
+      auto End = Unique::create<RooRealVar*>("End", "", 1.8865);
+      auto BackgroundModel = Unique::create<RooArgusBG*>("ArgusBackground", "", MBC, *End, *c);
+      auto SignalModel = PDF->GetPDF();
+      Model = Unique::create<RooAddPdf*>("Model", "", RooArgList(*SignalModel, *BackgroundModel), RooArgList(*Nsig, *Nbkg));
+    } else {
+      Model = PDF->GetPDF();
+    }
+    Results.push_back(Model->fitTo(Data, Save(), SumW2Error(false)));
     if(WeightName == "") {
       Yields.push_back(Chain.GetEntries());
     } else {
@@ -125,7 +142,11 @@ int main(int argc, char *argv[]) {
     TCanvas c("c", "", 1600, 1200);
     RooPlot *Frame = MBC.frame();
     Data.plotOn(Frame, Binning(100));
-    PDF->GetPDF()->plotOn(Frame, LineColor(kBlue));
+    Model->plotOn(Frame, LineColor(kBlue));
+    if(settings["MBC_Shape"][Name + "_FitSettings"].contains(Name + "_ArgusBackground") &&
+       settings["MBC_Shape"][Name + "_FitSettings"].getB(Name + "_ArgusBackground")) {
+      Model->plotOn(Frame, LineColor(kBlue), LineStyle(kDashed), Components((Name + "_" + PDFShape).c_str()));
+    }
     if(TagType == "ST") {
       Frame->SetTitle((TagMode + " peaking background in " + RecTagMode + " single tag;m_{BC} (GeV);Events").c_str());
     } else if(TagType == "DT") {
@@ -136,6 +157,10 @@ int main(int argc, char *argv[]) {
   }
   int n = 0;
   for(auto Result : Results) {
+    if(!Result) {
+      n++;
+      continue;
+    }
     Result->Print();
     std::cout << "Fit results for peaking background " << n << ":\n";
     std::cout << "Status " << Result->status() << "\n";

@@ -106,8 +106,14 @@ void SingleTagYield::InitializePeakingBackgrounds() {
     } else {
       throw std::invalid_argument("Unknown peaking background shape");
     }
-    double BackgroundToSignalRatio = m_Settings["MBC_Shape"].getD(Name + "_BackgroundToSignalRatio");
-    PeakingPDF->UseRelativeYield(m_Parameters["Yield"], BackgroundToSignalRatio);
+    if(m_Settings["MBC_Shape"].contains(Name + "_yield")) {
+      double PeakingYield = m_Settings["MBC_Shape"].getD(Name + "_yield");
+      std::cout << "Adding peaking background with yield: " << PeakingYield << "\n";
+    } else {
+      double BackgroundToSignalRatio = m_Settings["MBC_Shape"].getD(Name + "_BackgroundToSignalRatio");
+      PeakingPDF->UseRelativeYield(m_Parameters["Yield"], BackgroundToSignalRatio);
+      std::cout << "Adding peaking background with background-to-signal ratio: " << BackgroundToSignalRatio << "\n";
+    }
     m_ModelPDFs.add(*PeakingPDF->GetPDF());
     m_ModelYields.add(*PeakingPDF->GetYield());
     m_PeakingBackgrounds.push_back(PeakingPDF);
