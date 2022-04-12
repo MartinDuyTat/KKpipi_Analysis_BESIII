@@ -35,6 +35,7 @@
 #include"RooShapes/FitShape.h"
 #include"RooShapes/DoubleGaussian_Shape.h"
 #include"RooShapes/DoubleCrystalBall_Shape.h"
+#include"RooShapes/CrystalBall_Shape.h"
 
 SingleTagYield::SingleTagYield(TTree *DataTree, TTree *MCSignalTree, const Settings &settings):
                                m_DataTree(DataTree),
@@ -60,18 +61,28 @@ SingleTagYield::~SingleTagYield() {
 
 void SingleTagYield::InitializeSignalShape() {
   std::string Name = m_Settings.get("Mode") + "_SingleTag_";
-  m_Parameters.insert({"frac", Unique::create<RooRealVar*>((Name + "frac").c_str(), "", 0.5, 0.0, 1.0)});
-  auto Mean1 = Utilities::load_param(m_Settings["MBC_Shape"], Name + "Mean1");
-  auto Mean2 = Utilities::load_param(m_Settings["MBC_Shape"], Name + "Mean2");
-  m_Parameters.insert({"Mean1", Mean1});
-  m_Parameters.insert({"Mean2", Mean2});
-  auto Sigma1 = Utilities::load_param(m_Settings["MBC_Shape"], Name + "Sigma1");
-  auto Sigma2 = Utilities::load_param(m_Settings["MBC_Shape"], Name + "Sigma2");
-  m_Parameters.insert({"Sigma1", Sigma1});
-  m_Parameters.insert({"Sigma2", Sigma2});
-  auto Gaussian1 = Unique::create<RooGaussian*>("Gaussian1", "", m_MBC, *m_Parameters["Mean1"], *m_Parameters["Sigma1"]);
-  auto Gaussian2 = Unique::create<RooGaussian*>("Gaussian2", "", m_MBC, *m_Parameters["Mean2"], *m_Parameters["Sigma2"]);
-  auto Resolution = Unique::create<RooAddPdf*>("Resolution", "", RooArgList(*Gaussian1, *Gaussian2), *m_Parameters["frac"]);
+  RooAbsPdf* Resolution = nullptr;
+  if(m_Settings["MBC_Shape"].contains(Name + "SingleGaussianResolution") && 
+     m_Settings["MBC_Shape"].getB(Name + "SingleGaussianResolution")) {
+    auto Mean = Utilities::load_param(m_Settings["MBC_Shape"], Name + "Mean");
+    m_Parameters.insert({"Mean", Mean});
+    auto Sigma = Utilities::load_param(m_Settings["MBC_Shape"], Name + "Sigma");
+    m_Parameters.insert({"Sigma", Sigma});
+    Resolution = Unique::create<RooGaussian*>("Gaussian", "", m_MBC, *m_Parameters["Mean"], *m_Parameters["Sigma"]);
+  } else {
+    m_Parameters.insert({"frac", Unique::create<RooRealVar*>((Name + "frac").c_str(), "", 0.5, 0.0, 1.0)});
+    auto Mean1 = Utilities::load_param(m_Settings["MBC_Shape"], Name + "Mean1");
+    auto Mean2 = Utilities::load_param(m_Settings["MBC_Shape"], Name + "Mean2");
+    m_Parameters.insert({"Mean1", Mean1});
+    m_Parameters.insert({"Mean2", Mean2});
+    auto Sigma1 = Utilities::load_param(m_Settings["MBC_Shape"], Name + "Sigma1");
+    auto Sigma2 = Utilities::load_param(m_Settings["MBC_Shape"], Name + "Sigma2");
+    m_Parameters.insert({"Sigma1", Sigma1});
+    m_Parameters.insert({"Sigma2", Sigma2});
+    auto Gaussian1 = Unique::create<RooGaussian*>("Gaussian1", "", m_MBC, *m_Parameters["Mean1"], *m_Parameters["Sigma1"]);
+    auto Gaussian2 = Unique::create<RooGaussian*>("Gaussian2", "", m_MBC, *m_Parameters["Mean2"], *m_Parameters["Sigma2"]);
+    Resolution = Unique::create<RooAddPdf*>("Resolution", "", RooArgList(*Gaussian1, *Gaussian2), *m_Parameters["frac"]);
+  }
   RooDataSet MCSignal("MCSignal", "", m_MCSignalTree, RooArgList(m_MBC));
   auto SignalShape = Unique::create<RooKeysPdf*>("SignalShape", "", m_MBC, MCSignal);
   auto SignalShapeConv = Unique::create<RooFFTConvPdf*>("SignalShapeConv", "", m_MBC, *SignalShape, *Resolution);
@@ -103,6 +114,8 @@ void SingleTagYield::InitializePeakingBackgrounds() {
       PeakingPDF = new DoubleGaussian_Shape(Name, m_Settings["MBC_Shape"], &m_MBC);
     } else if(PeakingShape == "DoubleCrystalBall") {
       PeakingPDF = new DoubleCrystalBall_Shape(Name, m_Settings["MBC_Shape"], &m_MBC);
+    } else if(PeakingShape == "CrystalBall") {
+      PeakingPDF = new CrystalBall_Shape(Name, m_Settings["MBC_Shape"], &m_MBC);
     } else {
       throw std::invalid_argument("Unknown peaking background shape");
     }
