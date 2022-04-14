@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
     } else {
       InputFilename = settings["Datasets"].get(Dataset + "_" + TagType);
       InputFilename = Utilities::ReplaceString(InputFilename, "SIGNAL", SignalMode);
-      if(TagMode == "KSpipipi0") {
+      if(TagMode == "KSpipipi0" && !settings.getB("KSpipipi0_NonResonantMC")) {
 	InputFilename = Utilities::ReplaceString(InputFilename, "TAG", "KSomegapipipi0");
       } else if(TagMode + RecTagMode == "KSpi0_to_KLpi0") {
 	InputFilename = Utilities::ReplaceString(InputFilename, "TAG", "KSpi0_KS2pi0pi0");

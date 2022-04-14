@@ -56,12 +56,12 @@ void DoubleTagYield::DoFit() {
       CombinatorialYield->setConstant();
     }
   }
-  for(const auto &Parameter : FitModel.m_Parameters) {
+  /*for(const auto &Parameter : FitModel.m_Parameters) {
     if(Parameter.first == "End") {
       continue;
     }
     Parameter.second->setConstant();
-  }
+  }*/
   // Perform a second fit if fit is binned
   if(Categories.size() > 1) {
     Result = Model->fitTo(*DataSet, Save(), NumCPU(4));

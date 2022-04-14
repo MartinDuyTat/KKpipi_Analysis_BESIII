@@ -22,11 +22,11 @@ pipipi0_DeltaE_UpperCut 0.04828
 KSpi0pi0_DeltaE_LowerCut -0.0724318
 KSpi0pi0_DeltaE_UpperCut 0.0536508
 
-*pipi_DeltaE_LowerCut -0.0320442
-*pipi_DeltaE_UpperCut 0.0295788
+pipi_DeltaE_LowerCut -0.0320442
+pipi_DeltaE_UpperCut 0.0295788
 * Use tighter cuts for now because double tag yields are extremely small
-pipi_DeltaE_LowerCut -0.02
-pipi_DeltaE_UpperCut 0.02
+*pipi_DeltaE_LowerCut -0.02
+*pipi_DeltaE_UpperCut 0.02
 
 KSetaPrimepipieta_DeltaE_LowerCut -0.0315217
 KSetaPrimepipieta_DeltaE_UpperCut 0.0283631

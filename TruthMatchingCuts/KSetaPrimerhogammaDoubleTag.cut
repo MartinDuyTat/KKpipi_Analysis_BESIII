@@ -1,5 +1,5 @@
 SignalTagKSPiPlusMotherTrueID == 310
 SignalTagKSPiMinusMotherTrueID == 310
-SignalTagEtaPPiPlusMotherTrueID = 331
-SignalTagEtaPPiMinusMotherTrueID = 331
+SignalTagEtaPPiPlusMotherTrueID == 331
+SignalTagEtaPPiMinusMotherTrueID == 331
 SignalTagPhotonMotherTrueID == 331
