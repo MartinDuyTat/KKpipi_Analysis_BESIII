@@ -170,6 +170,12 @@ void FPlusFitter::AddMeasurement_KShh(const std::string &TagMode) {
 }
 
 void FPlusFitter::AddPrediction_KShh(const std::string &TagMode) {
+  if(!m_cisi_K0pipi.Initialised) {
+    m_cisi_K0pipi.Initialise(m_Settings);
+  }
+  for(auto PDF : m_cisi_K0pipi.m_GaussianConstraintPDFs) {
+    m_GaussianConstraintPDFs.add(*PDF);
+  }
   if(m_Settings.getB("Float_KKpipi_BF")) {
     if(TagMode == "KSpipi" || TagMode == "KSpipiPartReco") {
       m_KKpipi_BF_KSpipi.setConstant(false);
@@ -180,17 +186,32 @@ void FPlusFitter::AddPrediction_KShh(const std::string &TagMode) {
   int Bins = m_Settings[TagMode + "_BinningScheme"].getI("NumberBins");
   std::string BinningTag = TagMode == "KSpipiPartReco" ? "KSpipi" : TagMode;
   for(int i = 1; i <= Bins; i++) {
-    double ci = m_Settings[TagMode + "_BinningScheme"]["cisi"].getD(BinningTag + "_c" + std::to_string(i));
-    double Ki = m_Settings[TagMode + "_BinningScheme"]["Ki"].getD(BinningTag + "_K_p" + std::to_string(i));
-    double Kbari = m_Settings[TagMode + "_BinningScheme"]["Ki"].getD(BinningTag + "_K_m" + std::to_string(i));
-    std::string FormulaString;
+    std::string Formula;
     if(TagMode.substr(0, 2) == "KS") {
-      FormulaString = "@1*(%f + %f - 2*%f*sqrt(%f*%f)*(2*@0 - 1))";
+      Formula = "@1*(@2 + @3 - 2*@4*sqrt(@2*@3)*(2*@0 - 1))";
     } else {
-      FormulaString = "@1*(%f + %f + 2*%f*sqrt(%f*%f)*(2*@0 - 1))";
+      Formula = "@1*(@2 + @3 + 2*@4*sqrt(@2*@3)*(2*@0 - 1))";
     }
-    TString Formula(Form(FormulaString.c_str(), Ki, Kbari, ci, Ki, Kbari));
-    auto PredictedYield = Unique::create<RooFormulaVar*>((TagMode + "_Normalized_Yield_Prediction_Bin" + std::to_string(i)).c_str(), Formula, RooArgList(m_FPlus, TagMode == "KLpipi" ? m_KKpipi_BF_KLpipi : m_KKpipi_BF_KSpipi));
+    RooArgList K0hhParameters;
+    K0hhParameters.add(m_FPlus);
+    if(TagMode == "KLpipi") {
+      K0hhParameters.add(m_KKpipi_BF_KLpipi);
+      K0hhParameters.add(m_cisi_K0pipi.m_Ki_KLpipi[2*(i - 1)]); // Ki
+      K0hhParameters.add(m_cisi_K0pipi.m_Ki_KLpipi[2*(i - 1) + 1]); // Kbari
+      K0hhParameters.add(m_cisi_K0pipi.m_cisi[i - 1 + 16]); // ci
+    } else {
+      K0hhParameters.add(m_KKpipi_BF_KSpipi);
+      K0hhParameters.add(m_cisi_K0pipi.m_Ki_KSpipi[2*(i - 1)]); // Ki
+      K0hhParameters.add(m_cisi_K0pipi.m_Ki_KSpipi[2*(i - 1) + 1]); // Kbari
+      K0hhParameters.add(m_cisi_K0pipi.m_cisi[i - 1]); // ci
+    }
+    if(m_Settings.getB("GaussianConstrainExternalParameters")) {
+      static_cast<RooRealVar*>(K0hhParameters.at(2))->setConstant(false);
+      static_cast<RooRealVar*>(K0hhParameters.at(3))->setConstant(false);
+      static_cast<RooRealVar*>(K0hhParameters.at(4))->setConstant(false);
+    }
+    std::string YieldName = TagMode + "_Normalized_Yield_Prediction_Bin" + std::to_string(i);
+    auto PredictedYield = Unique::create<RooFormulaVar*>(YieldName.c_str(), Formula.c_str(), K0hhParameters);
     m_PredictedYields.add(*PredictedYield);
   }
 }

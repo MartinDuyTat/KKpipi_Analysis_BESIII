@@ -15,6 +15,7 @@
 #include"RooAbsPdf.h"
 #include"RooArgSet.h"
 #include"Settings.h"
+#include"cisiK0pipi.h"
 
 class FPlusFitter {
   public:
@@ -96,6 +97,10 @@ class FPlusFitter {
      * Vector of Gaussian constraint PDFs
      */
     RooArgSet m_GaussianConstraintPDFs;
+    /**
+     * Struct storing all the information about ci, si and Ki for KSpipi and KLpipi
+     */
+    cisiK0pipi m_cisi_K0pipi;
 };
 
 #endif
