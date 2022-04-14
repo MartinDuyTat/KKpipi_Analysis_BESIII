@@ -12,6 +12,8 @@
 #include"RooArgList.h"
 #include"RooFitResult.h"
 #include"RooRealVar.h"
+#include"RooAbsPdf.h"
+#include"RooArgSet.h"
 #include"Settings.h"
 
 class FPlusFitter {
@@ -30,6 +32,11 @@ class FPlusFitter {
      * Initalize multidimensional Gaussian and the dataset, then fit to obtain CP even fraction
      */
     void InitializeAndFit();
+    /**
+     * Get the F+ factors and if there is an uncertainty, Gaussian constrain them (by default these are fixed)
+     * @param TagMode Name of tag mode
+     */
+    RooRealVar* GetFPlusTag(const std::string &TagMode);
   private:
     /**
      * Set containing all the double tag yields, normalized by the correponding single tag yields
@@ -77,6 +84,10 @@ class FPlusFitter {
      * Save the fit results
      */
     void SaveFitResults(RooFitResult *Result) const;
+    /**
+     * Vector of Gaussian constraint PDFs
+     */
+    RooArgSet m_GaussianConstraintPDFs;
 };
 
 #endif

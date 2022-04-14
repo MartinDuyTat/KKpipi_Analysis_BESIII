@@ -12,6 +12,7 @@
 #include"RooFormulaVar.h"
 #include"RooArgList.h"
 #include"RooMultiVarGaussian.h"
+#include"RooGaussian.h"
 #include"RooFitResult.h"
 #include"RooDataSet.h"
 #include"RooFitResult.h"
@@ -51,9 +52,31 @@ void FPlusFitter::InitializeAndFit() {
   Data.add(m_NormalizedYields);
   Data.Print("V");
   // Perform fit
-  auto Result = Model.fitTo(Data, RooFit::Save());
+  auto Result = Model.fitTo(Data, RooFit::Save(), RooFit::ExternalConstraints(m_GaussianConstraintPDFs));
   Result->Print("V");
   SaveFitResults(Result);
+}
+
+RooRealVar* FPlusFitter::GetFPlusTag(const std::string &TagMode) {
+  double FPlus_Tag = m_Settings["FPlus_TagModes"].getD(TagMode);
+  auto Mean = Unique::create<RooRealVar*>((TagMode + "_FPlus_Mean").c_str(), "", FPlus_Tag);
+  RooRealVar *Sigma = nullptr;
+  if(m_Settings["FPlus_TagModes"].contains(TagMode + "_err")) {
+    double FPlus_Tag_Uncertainty = m_Settings["FPlus_TagModes"].getD(TagMode + "_err");
+    Sigma = Unique::create<RooRealVar*>((TagMode + "_FPlus_Sigma").c_str(), "", FPlus_Tag_Uncertainty);
+    auto FPlusVar = Unique::create<RooRealVar*>((TagMode + "_FPlus_Var").c_str(), "", FPlus_Tag, 0.0, 1.0);
+    auto FPlusGaussian = Unique::create<RooGaussian*>((TagMode + "_Gaussian").c_str(), "", *FPlusVar, *Mean, *Sigma);
+    m_GaussianConstraintPDFs.add(*FPlusGaussian);
+    if(!m_Settings.getB("GaussianConstrainExternalParameters")) {
+      FPlusVar->setConstant(true);
+    } else {
+      std::cout << "F+ of " << TagMode << " tag mode is Gaussian constrained to ";
+      std::cout << FPlus_Tag << " \u00b1 " << FPlus_Tag_Uncertainty << "\n";
+    }
+    return FPlusVar;
+  } else {
+    return Mean;
+  }
 }
 
 void FPlusFitter::AddMeasurement_CP(const std::string &TagMode) {
@@ -95,10 +118,10 @@ void FPlusFitter::AddMeasurement_CP(const std::string &TagMode) {
 }
 
 void FPlusFitter::AddPrediction_CP(const std::string &TagMode) {
-  double FPlus_Tag = m_Settings["FPlus_TagModes"].getD(TagMode);
+  auto FPlus_Tag = GetFPlusTag(TagMode);
   double y_CP = m_Settings.getD("y_CP");
-  TString Formula(Form("@1*(1 - (2*%f - 1)*(2*@0 - 1))*(1 - (2*%f - 1)*%f)", FPlus_Tag, FPlus_Tag, y_CP));
-  auto PredictedYield = Unique::create<RooFormulaVar*>((TagMode + "_Normalized_Yield_Prediction").c_str(), Formula, RooArgList(m_FPlus, m_KKpipi_BF));
+  TString Formula(Form("@1*(1 - (2*@2 - 1)*(2*@0 - 1))/(1 - (2*@2 - 1)*%f)", y_CP));
+  auto PredictedYield = Unique::create<RooFormulaVar*>((TagMode + "_Normalized_Yield_Prediction").c_str(), Formula, RooArgList(m_FPlus, m_KKpipi_BF, *FPlus_Tag));
   m_PredictedYields.add(*PredictedYield);
 }
 
