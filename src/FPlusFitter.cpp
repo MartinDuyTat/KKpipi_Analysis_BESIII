@@ -21,11 +21,13 @@
 #include"FPlusFitter.h"
 
 FPlusFitter::FPlusFitter(const Settings &settings): m_FPlus("FPlus", "", 0.0, 1.0),
-						    m_KKpipi_BF("KKpipi_BF", "", settings["BranchingFractions"].getD("KKpipi"), 0.000, 0.005),
+						    m_KKpipi_BF_CP("KKpipi_BF_CP", "", settings["BranchingFractions"].getD("KKpipi"), 0.000, 0.005),
+						    m_KKpipi_BF_KSpipi("KKpipi_BF_KSpipi", "", settings["BranchingFractions"].getD("KKpipi"), 0.000, 0.005),
+						    m_KKpipi_BF_KLpipi("KKpipi_BF_KLpipi", "", settings["BranchingFractions"].getD("KKpipi"), 0.000, 0.005),
 						    m_Settings(settings) {
-  if(!m_Settings.getB("Float_KKpipi_BF")) {
-    m_KKpipi_BF.setConstant();
-  }
+  m_KKpipi_BF_CP.setConstant(true);
+  m_KKpipi_BF_KSpipi.setConstant(true);
+  m_KKpipi_BF_KLpipi.setConstant(true);
 }
 
 void FPlusFitter::AddTag(const std::string &TagMode) {
@@ -118,10 +120,13 @@ void FPlusFitter::AddMeasurement_CP(const std::string &TagMode) {
 }
 
 void FPlusFitter::AddPrediction_CP(const std::string &TagMode) {
+  if(m_Settings.getB("Float_KKpipi_BF")) {
+    m_KKpipi_BF_CP.setConstant(false);
+  }
   auto FPlus_Tag = GetFPlusTag(TagMode);
   double y_CP = m_Settings.getD("y_CP");
   TString Formula(Form("@1*(1 - (2*@2 - 1)*(2*@0 - 1))/(1 - (2*@2 - 1)*%f)", y_CP));
-  auto PredictedYield = Unique::create<RooFormulaVar*>((TagMode + "_Normalized_Yield_Prediction").c_str(), Formula, RooArgList(m_FPlus, m_KKpipi_BF, *FPlus_Tag));
+  auto PredictedYield = Unique::create<RooFormulaVar*>((TagMode + "_Normalized_Yield_Prediction").c_str(), Formula, RooArgList(m_FPlus, m_KKpipi_BF_CP, *FPlus_Tag));
   m_PredictedYields.add(*PredictedYield);
 }
 
@@ -165,6 +170,13 @@ void FPlusFitter::AddMeasurement_KShh(const std::string &TagMode) {
 }
 
 void FPlusFitter::AddPrediction_KShh(const std::string &TagMode) {
+  if(m_Settings.getB("Float_KKpipi_BF")) {
+    if(TagMode == "KSpipi" || TagMode == "KSpipiPartReco") {
+      m_KKpipi_BF_KSpipi.setConstant(false);
+    } else if(TagMode == "KLpipi") {
+      m_KKpipi_BF_KLpipi.setConstant(false);
+    }
+  }
   int Bins = m_Settings[TagMode + "_BinningScheme"].getI("NumberBins");
   std::string BinningTag = TagMode == "KSpipiPartReco" ? "KSpipi" : TagMode;
   for(int i = 1; i <= Bins; i++) {
@@ -178,20 +190,32 @@ void FPlusFitter::AddPrediction_KShh(const std::string &TagMode) {
       FormulaString = "@1*(%f + %f + 2*%f*sqrt(%f*%f)*(2*@0 - 1))";
     }
     TString Formula(Form(FormulaString.c_str(), Ki, Kbari, ci, Ki, Kbari));
-    auto PredictedYield = Unique::create<RooFormulaVar*>((TagMode + "_Normalized_Yield_Prediction_Bin" + std::to_string(i)).c_str(), Formula, RooArgList(m_FPlus, m_KKpipi_BF));
+    auto PredictedYield = Unique::create<RooFormulaVar*>((TagMode + "_Normalized_Yield_Prediction_Bin" + std::to_string(i)).c_str(), Formula, RooArgList(m_FPlus, TagMode == "KLpipi" ? m_KKpipi_BF_KLpipi : m_KKpipi_BF_KSpipi));
     m_PredictedYields.add(*PredictedYield);
   }
 }
 
 void FPlusFitter::SaveFitResults(RooFitResult *Result) const {
   std::ofstream Outfile(m_Settings.get("ResultsFile"));
-  Outfile << "status " << Result->status() << "\n";
-  Outfile << "covQual " << Result->covQual() << "\n\n";
-  Outfile << "FPlus         " << m_FPlus.getVal() << "\n";
-  Outfile << "FPlus_err     " << m_FPlus.getError() << "\n";
-  Outfile << "BF_KKpipi     " << m_KKpipi_BF.getVal() << "\n";
-  Outfile << "BF_KKpipi_err " << m_KKpipi_BF.getError() << "\n";
-  Outfile << "Correlation   " << Result->correlation("FPlus", "KKpipi_BF") << "\n";
-  Outfile << "MinLL         " << Result->minNll() << "\n";
+  Outfile << "status               " << Result->status() << "\n";
+  Outfile << "covQual              " << Result->covQual() << "\n\n";
+  Outfile << "FPlus                " << m_FPlus.getVal() << "\n";
+  Outfile << "FPlus_err            " << m_FPlus.getError() << "\n";
+  if(!m_KKpipi_BF_CP.isConstant()) {
+    Outfile << "BF_KKpipi_CP         " << m_KKpipi_BF_CP.getVal() << "\n";
+    Outfile << "BF_KKpipi_CP_err     " << m_KKpipi_BF_CP.getError() << "\n";
+    Outfile << "Correlation_CP       " << Result->correlation("FPlus", "KKpipi_BF_CP") << "\n";
+  }
+  if(!m_KKpipi_BF_KSpipi.isConstant()) {
+    Outfile << "BF_KKpipi_KSpipi     " << m_KKpipi_BF_KSpipi.getVal() << "\n";
+    Outfile << "BF_KKpipi_KSpipi_err " << m_KKpipi_BF_KSpipi.getError() << "\n";
+    Outfile << "Correlation_KSpipi   " << Result->correlation("FPlus", "KKpipi_BF_KSpipi") << "\n";
+  }
+  if(!m_KKpipi_BF_KLpipi.isConstant()) {
+    Outfile << "BF_KKpipi_KLpipi     " << m_KKpipi_BF_KLpipi.getVal() << "\n";
+    Outfile << "BF_KKpipi_KLpipi_err " << m_KKpipi_BF_KLpipi.getError() << "\n";
+    Outfile << "Correlation_KLpipi   " << Result->correlation("FPlus", "KKpipi_BF_KLpipi") << "\n";
+  }
+  Outfile << "MinLL                " << Result->minNll() << "\n";
   Outfile.close();
 }

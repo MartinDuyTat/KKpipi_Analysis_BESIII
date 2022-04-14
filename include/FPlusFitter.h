@@ -55,9 +55,17 @@ class FPlusFitter {
      */
     RooRealVar m_FPlus;
     /**
-     * The KKpipi branching fraction
+     * The KKpipi branching fraction for CP tags
      */
-    RooRealVar m_KKpipi_BF;
+    RooRealVar m_KKpipi_BF_CP;
+    /**
+     * The KKpipi branching fraction for KSpipi tag
+     */
+    RooRealVar m_KKpipi_BF_KSpipi;
+    /**
+     * The KKpipi branching fraction for KLpipi tag
+     */
+    RooRealVar m_KKpipi_BF_KLpipi;
     /**
      * Fit setup with all yields and efficiencies are stored in settings
      */
