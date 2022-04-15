@@ -14,6 +14,8 @@
 #include"RooRealVar.h"
 #include"RooAbsPdf.h"
 #include"RooArgSet.h"
+#include"RooDataSet.h"
+#include"RooMultiVarGaussian.h"
 #include"Settings.h"
 #include"cisiK0pipi.h"
 
@@ -39,6 +41,18 @@ class FPlusFitter {
      */
     RooRealVar* GetFPlusTag(const std::string &TagMode);
   private:
+    /**
+     * Fit setup with all yields and efficiencies are stored in settings
+     */
+    Settings m_Settings;
+    /**
+     * Model predicted value of F+
+     */
+    const double m_FPlus_Model;
+    /**
+     * PDG value of KKpipi branching fraction
+     */
+    const double m_KKpipi_BF_PDG;
     /**
      * Set containing all the double tag yields, normalized by the correponding single tag yields
      */
@@ -68,10 +82,6 @@ class FPlusFitter {
      */
     RooRealVar m_KKpipi_BF_KLpipi;
     /**
-     * Fit setup with all yields and efficiencies are stored in settings
-     */
-    Settings m_Settings;
-    /**
      * Add datapoint containing normalized yield of CP tag to dataset
      * @param TagMode Name of tag mode
      */
@@ -94,6 +104,22 @@ class FPlusFitter {
      */
     void SaveFitResults(RooFitResult *Result) const;
     /**
+     * Perform a single fit to data
+     */
+    void DoSingleFit(RooMultiVarGaussian *Model);
+    /**
+     * Perform a single fit to a toy
+     */
+    void DoSingleToy(RooMultiVarGaussian *Model);
+    /**
+     * Perform many fits to data, potentially smearing stuff between each fit
+     */
+    //void DoManyFits(const RooMultiVarGaussian &Model, const RooDataSet &Data);
+    /**
+     * Perform many fits to toys
+     */
+    void DoManyToys(RooMultiVarGaussian *Model);
+    /**
      * Vector of Gaussian constraint PDFs
      */
     RooArgSet m_GaussianConstraintPDFs;
@@ -101,6 +127,10 @@ class FPlusFitter {
      * Struct storing all the information about ci, si and Ki for KSpipi and KLpipi
      */
     cisiK0pipi m_cisi_K0pipi;
+    /**
+     * Resets the floating parameters to the F+ model value and PDG value of the BF
+     */
+    void ResetParameters();
 };
 
 #endif

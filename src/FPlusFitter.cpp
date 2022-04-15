@@ -8,6 +8,7 @@
 #include"TMatrixT.h"
 #include"TMath.h"
 #include"TFile.h"
+#include"TTree.h"
 #include"RooRealVar.h"
 #include"RooFormulaVar.h"
 #include"RooArgList.h"
@@ -16,15 +17,18 @@
 #include"RooFitResult.h"
 #include"RooDataSet.h"
 #include"RooFitResult.h"
+#include"RooRandom.h"
 #include"Settings.h"
 #include"Unique.h"
 #include"FPlusFitter.h"
 
-FPlusFitter::FPlusFitter(const Settings &settings): m_FPlus("FPlus", "", 0.0, 1.0),
-						    m_KKpipi_BF_CP("KKpipi_BF_CP", "", settings["BranchingFractions"].getD("KKpipi"), 0.000, 0.005),
-						    m_KKpipi_BF_KSpipi("KKpipi_BF_KSpipi", "", settings["BranchingFractions"].getD("KKpipi"), 0.000, 0.005),
-						    m_KKpipi_BF_KLpipi("KKpipi_BF_KLpipi", "", settings["BranchingFractions"].getD("KKpipi"), 0.000, 0.005),
-						    m_Settings(settings) {
+FPlusFitter::FPlusFitter(const Settings &settings): m_Settings(settings),
+						    m_FPlus_Model(m_Settings["FPlus_TagModes"].getD("KKpipi")),
+						    m_KKpipi_BF_PDG(m_Settings["BranchingFractions"].getD("KKpipi")),
+						    m_FPlus("FPlus", "", 0.5, 0.0, 3.0),
+						    m_KKpipi_BF_CP("KKpipi_BF_CP", "", m_KKpipi_BF_PDG, 0.000, 0.005),
+						    m_KKpipi_BF_KSpipi("KKpipi_BF_KSpipi", "", m_KKpipi_BF_PDG, 0.000, 0.005),
+						    m_KKpipi_BF_KLpipi("KKpipi_BF_KLpipi", "", m_KKpipi_BF_PDG, 0.000, 0.005) {
   m_KKpipi_BF_CP.setConstant(true);
   m_KKpipi_BF_KSpipi.setConstant(true);
   m_KKpipi_BF_KLpipi.setConstant(true);
@@ -49,15 +53,76 @@ void FPlusFitter::InitializeAndFit() {
   }
   // Set up multidimensional Gaussian containing predicted yields and normalized yields
   RooMultiVarGaussian Model("Model", "", m_NormalizedYields, m_PredictedYields, CovMatrix);
+  std::string RunMode = m_Settings.get("RunMode");
+  if(RunMode == "SingleFit") {
+    DoSingleFit(&Model);
+  } else if(RunMode == "SingleToy") {
+    DoSingleToy(&Model);
+  } else if(RunMode == "ManyToys") {
+    DoManyToys(&Model);
+  }
+}
+
+void FPlusFitter::DoSingleFit(RooMultiVarGaussian *Model) {
+  std::cout << "Run mode: Single fit\n";
   // Set up dataset
   RooDataSet Data("Data", "", m_NormalizedYields);
   Data.add(m_NormalizedYields);
   Data.Print("V");
-  // Perform fit
-  auto Result = Model.fitTo(Data, RooFit::Save(), RooFit::ExternalConstraints(m_GaussianConstraintPDFs));
+  auto Result = Model->fitTo(Data, RooFit::Save(), RooFit::ExternalConstraints(m_GaussianConstraintPDFs));
   Result->Print("V");
   SaveFitResults(Result);
 }
+
+void FPlusFitter::DoSingleToy(RooMultiVarGaussian *Model) {
+  std::cout << "Run mode: Single toy\n";
+  // Set random seed
+  int Seed = m_Settings.getI("ToySeed");
+  RooRandom::randomGenerator()->SetSeed(Seed);
+  // Generate dataset
+  ResetParameters();
+  RooDataSet *Data = Model->generate(m_NormalizedYields, m_Settings.getI("StatsMultiplier"));
+  Data->Print("V");
+  auto Result = Model->fitTo(*Data, RooFit::Save(), RooFit::ExternalConstraints(m_GaussianConstraintPDFs));
+  Result->Print("V");
+  SaveFitResults(Result);
+}
+
+void FPlusFitter::DoManyToys(RooMultiVarGaussian *Model) {
+  std::cout << "Run mode: Many toys\n";
+  std::string Filename = m_Settings.get("ToyOutputFilename");
+  TFile OutputFile(Filename.c_str(), "RECREATE");
+  TTree Tree("ToyTree", "");
+  int Status, CovQual;
+  double FPlus, FPlus_err, FPlus_pull;
+  Tree.Branch("Status", &Status);
+  Tree.Branch("CovQual", &CovQual);
+  Tree.Branch("FPlus", &FPlus);
+  Tree.Branch("FPlus_err", &FPlus_err);
+  Tree.Branch("FPlus_pull", &FPlus_pull);
+  int Seed = m_Settings.getI("ToySeed");
+  int nToys = m_Settings.getI("NumberToys");
+  for(int i = 0; i < nToys; i++) {
+    std::cout << "Toy number " << i << "\n";
+    // Set random seed
+    RooRandom::randomGenerator()->SetSeed(Seed + i);
+    // Generate dataset
+    ResetParameters();
+    RooDataSet *Data = Model->generate(m_NormalizedYields, m_Settings.getI("StatsMultiplier"));
+    Data->Print("V");
+    auto Result = Model->fitTo(*Data, RooFit::Save(), RooFit::ExternalConstraints(m_GaussianConstraintPDFs));
+    Result->Print("V");
+    Status = Result->status();
+    CovQual = Result->covQual();
+    FPlus = m_FPlus.getVal();
+    FPlus_err = m_FPlus.getError();
+    FPlus_pull = (FPlus - m_FPlus_Model)/FPlus_err;
+    Tree.Fill();
+  }
+  Tree.Write();
+  OutputFile.Close();
+}
+  
 
 RooRealVar* FPlusFitter::GetFPlusTag(const std::string &TagMode) {
   double FPlus_Tag = m_Settings["FPlus_TagModes"].getD(TagMode);
@@ -184,14 +249,16 @@ void FPlusFitter::AddPrediction_KShh(const std::string &TagMode) {
     }
   }
   int Bins = m_Settings[TagMode + "_BinningScheme"].getI("NumberBins");
-  std::string BinningTag = TagMode == "KSpipiPartReco" ? "KSpipi" : TagMode;
+  auto FPlus_Tag = GetFPlusTag(TagMode == "KLpipi" ? "KLpipi" : "KSpipi");
   for(int i = 1; i <= Bins; i++) {
-    std::string Formula;
+    std::string FormulaString;
     if(TagMode.substr(0, 2) == "KS") {
-      Formula = "@1*(@2 + @3 - 2*@4*sqrt(@2*@3)*(2*@0 - 1))";
+      FormulaString = "@1*(@2 + @3 - 2*@4*sqrt(@2*@3)*(2*@0 - 1))/(1 - (2*@5 - 1)*%f)";
     } else {
-      Formula = "@1*(@2 + @3 + 2*@4*sqrt(@2*@3)*(2*@0 - 1))";
+      FormulaString = "@1*(@2 + @3 + 2*@4*sqrt(@2*@3)*(2*@0 - 1))/(1 - (2*@5 - 1)*%f)";
     }
+    double y_CP = m_Settings.getD("y_CP");
+    TString Formula(Form(FormulaString.c_str(), y_CP));
     RooArgList K0hhParameters;
     K0hhParameters.add(m_FPlus);
     if(TagMode == "KLpipi") {
@@ -205,13 +272,17 @@ void FPlusFitter::AddPrediction_KShh(const std::string &TagMode) {
       K0hhParameters.add(m_cisi_K0pipi.m_Ki_KSpipi[2*(i - 1) + 1]); // Kbari
       K0hhParameters.add(m_cisi_K0pipi.m_cisi[i - 1]); // ci
     }
+    K0hhParameters.add(*FPlus_Tag);
     if(m_Settings.getB("GaussianConstrainExternalParameters")) {
       static_cast<RooRealVar*>(K0hhParameters.at(2))->setConstant(false);
       static_cast<RooRealVar*>(K0hhParameters.at(3))->setConstant(false);
       static_cast<RooRealVar*>(K0hhParameters.at(4))->setConstant(false);
+      static_cast<RooRealVar*>(K0hhParameters.at(5))->setConstant(false);
+    } else {
+      static_cast<RooRealVar*>(K0hhParameters.at(5))->setConstant(true);
     }
     std::string YieldName = TagMode + "_Normalized_Yield_Prediction_Bin" + std::to_string(i);
-    auto PredictedYield = Unique::create<RooFormulaVar*>(YieldName.c_str(), Formula.c_str(), K0hhParameters);
+    auto PredictedYield = Unique::create<RooFormulaVar*>(YieldName.c_str(), Formula, K0hhParameters);
     m_PredictedYields.add(*PredictedYield);
   }
 }
@@ -239,4 +310,11 @@ void FPlusFitter::SaveFitResults(RooFitResult *Result) const {
   }
   Outfile << "MinLL                " << Result->minNll() << "\n";
   Outfile.close();
+}
+
+void FPlusFitter::ResetParameters() {
+  m_FPlus.setVal(m_FPlus_Model);
+  m_KKpipi_BF_CP.setVal(m_KKpipi_BF_PDG);
+  m_KKpipi_BF_KSpipi.setVal(m_KKpipi_BF_PDG);
+  m_KKpipi_BF_KLpipi.setVal(m_KKpipi_BF_PDG);
 }
