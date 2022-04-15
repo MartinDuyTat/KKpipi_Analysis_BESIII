@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
   std::cout << "True bin yields counted\n";
   std::cout << "Counting reconstructed and true bin numbers...\n";
   TFile Outfile(settings.get("EfficiencyMatrixFilename").c_str(), "RECREATE");
-  TMatrixT<double> EffMatrix(NumberBins, NumberBins);
+  TMatrixT<double> EffMatrix(NumberBins, NumberBins), EffMatrix_err(NumberBins, NumberBins);
   std::string TreeName = settings.get("TreeName");
   TChain Chain(TreeName.c_str());
   Chain.Add(settings.get("SignalMCFilename").c_str());
@@ -63,10 +63,13 @@ int main(int argc, char *argv[]) {
   std::cout << "Normalizing efficiency matrix...\n";
   for(std::size_t i = 0; i < GeneratedEvents.size(); i++) {
     for(std::size_t j = 0; j < GeneratedEvents.size(); j++) {
-      EffMatrix(i, j) /= GeneratedEvents[j];
+      double p = EffMatrix(i, j)/GeneratedEvents[j];
+      EffMatrix(i, j) = p;
+      EffMatrix_err(i, j) = TMath::Sqrt(p*(1 - p)/GeneratedEvents[j]);
     }
   }
   EffMatrix.Write("EffMatrix");
+  EffMatrix_err.Write("EffMatrix_err");
   std::cout << "Efficiency matrix ready\n";
   std::cout << "Double tag efficiency studies done!\n";
   return 0;

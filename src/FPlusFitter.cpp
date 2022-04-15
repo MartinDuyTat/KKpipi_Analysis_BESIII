@@ -9,6 +9,7 @@
 #include"TMath.h"
 #include"TFile.h"
 #include"TTree.h"
+#include"TRandom.h"
 #include"RooRealVar.h"
 #include"RooFormulaVar.h"
 #include"RooArgList.h"
@@ -122,7 +123,8 @@ void FPlusFitter::DoManyToysOrFits(RooMultiVarGaussian *Model, const std::string
       RooRandom::randomGenerator()->SetSeed(Seed + i);
       Data = *Model->generate(m_NormalizedYields, m_Settings.getI("StatsMultiplier"));
     } else {
-      ResetMeasurements(Seed + i);
+      gRandom->SetSeed(Seed + i);
+      ResetMeasurements();
       Data = RooDataSet("Data", "", m_NormalizedYields);
       Data.add(m_NormalizedYields);
     }
@@ -168,24 +170,14 @@ void FPlusFitter::AddMeasurement_CP(const std::string &TagMode) {
   // Get raw single tag yields and efficiency
   double ST_Yield = m_Settings[TagMode + "_ST_Yield"].getD(TagMode + "_SingleTag_Yield");
   double ST_Yield_err = m_Settings[TagMode + "_ST_Yield"].getD(TagMode + "_SingleTag_Yield_err");
-  double ST_Eff;
-  if(TagMode == "KSomega") {
-    ST_Eff = m_Settings["ST_Efficiency"].getD("KSpipipi0_SingleTagEfficiency");
-  } else {
-    ST_Eff = m_Settings["ST_Efficiency"].getD(TagMode + "_SingleTagEfficiency");
-  }
+  double ST_Eff = GetEfficiency(TagMode, "ST");
   ST_Yield /= ST_Eff;
   ST_Yield_err /= ST_Eff;
   // Get raw double tag yields and efficiency
   std::string DT_Name("DoubleTag_CP_KKpipi_vs_" + TagMode + "_SignalBin0_SignalYield");
   double DT_Yield = m_Settings[TagMode + "_DT_Yield"].getD(DT_Name);
   double DT_Yield_err = m_Settings[TagMode + "_DT_Yield"].getD(DT_Name + "_err");
-  double DT_Eff;
-  if(TagMode == "KSomega") {
-    DT_Eff = m_Settings["DT_Efficiency"].getD("KSpipipi0_DoubleTagEfficiency");
-  } else {
-    DT_Eff = m_Settings["DT_Efficiency"].getD(TagMode + "_DoubleTagEfficiency");
-  }
+  double DT_Eff = GetEfficiency(TagMode, "DT");
   DT_Yield /= DT_Eff;
   DT_Yield_err /= DT_Eff;
   // Create variable with a normalized yield and add to dataset
@@ -220,7 +212,7 @@ void FPlusFitter::AddMeasurement_KShh(const std::string &TagMode) {
   // Get raw single tag yields and efficiency
   double ST_Yield = m_Settings[TagMode + "_ST_Yield"].getD(TagMode + "_SingleTag_Yield");
   double ST_Yield_err = m_Settings[TagMode + "_ST_Yield"].getD(TagMode + "_SingleTag_Yield_err");
-  double ST_Eff = m_Settings["ST_Efficiency"].getD(TagMode + "_SingleTagEfficiency");
+  double ST_Eff = GetEfficiency(TagMode, "ST");
   ST_Yield /= ST_Eff;
   ST_Yield_err /= ST_Eff;
   // Get number of bins
@@ -233,15 +225,11 @@ void FPlusFitter::AddMeasurement_KShh(const std::string &TagMode) {
     DT_Yields(i, 0) = m_Settings[TagMode + "_DT_Yield"].getD(DT_Name);
     DT_Yields_err(i, 0) = m_Settings[TagMode + "_DT_Yield"].getD(DT_Name + "_err");
   }
-  TFile EffMatrixFile(m_Settings.get(TagMode + "_EfficiencyMatrix").c_str(), "READ");
-  TMatrixT<double> *EffMatrix = nullptr;
-  EffMatrixFile.GetObject("EffMatrix", EffMatrix);
-  EffMatrix->Invert();
+  auto EffMatrix = GetEfficiencyMatrix(TagMode);
   TMatrixT<double> DT_Yields_EffCorrected = *EffMatrix*DT_Yields;
   for(int i = 0; i < Bins; i++) {
     DT_Yields_err(i, 0) *= (*EffMatrix)(i, i);
   }
-  EffMatrixFile.Close();
   std::cout << "Adding " << TagMode << " tag mode\n";
   for(int i = 0; i < Bins; i++) {
     std::string YieldName = TagMode + "_Normalized_Yield_Bin" + std::to_string(i + 1);
@@ -343,7 +331,7 @@ void FPlusFitter::ResetParameters() {
   m_KKpipi_BF_KLpipi.setVal(m_KKpipi_BF_PDG);
 }
 
-void FPlusFitter::ResetMeasurements(int) {
+void FPlusFitter::ResetMeasurements() {
   m_NormalizedYields.removeAll();
   m_Uncertainties.clear();
   for(const auto &Tag : m_TagModes) {
@@ -353,4 +341,35 @@ void FPlusFitter::ResetMeasurements(int) {
       AddMeasurement_CP(Tag);
     }
   }
+}
+
+double FPlusFitter::GetEfficiency(std::string TagMode, const std::string &TagType) const {
+  std::string SingleDouble = TagType == "ST" ? "Single" : "Double";
+  if(TagMode == "KSomega") {
+    TagMode = "KSpipipi0";
+  }
+  double Eff = m_Settings[TagType + "_Efficiency"].getD(TagMode + "_" + SingleDouble + "TagEfficiency");
+  if(m_Settings.get("Systematics") == "Efficiency") {
+    double Eff_err = m_Settings[TagType + "_Efficiency"].getD(TagMode + "_" + SingleDouble + "TagEfficiency_err");
+    Eff += gRandom->Gaus(0.0, Eff_err);
+  }
+  return Eff;
+}
+
+TMatrixT<double>* FPlusFitter::GetEfficiencyMatrix(const std::string &TagMode) const {
+  TFile EffMatrixFile(m_Settings.get(TagMode + "_EfficiencyMatrix").c_str(), "READ");
+  TMatrixT<double> *EffMatrix = nullptr;
+  EffMatrixFile.GetObject("EffMatrix", EffMatrix);
+  if(m_Settings.get("Systematics") == "Efficiency") {
+    TMatrixT<double> *EffMatrix_err = nullptr;
+    EffMatrixFile.GetObject("EffMatrix_err", EffMatrix_err);
+    for(int i = 0; i < EffMatrix->GetNrows(); i++) {
+      for(int j = 0; j < EffMatrix->GetNcols(); j++) {
+	(*EffMatrix)(i, j) += gRandom->Gaus(0.0, (*EffMatrix_err)(i, j));
+      }
+    }
+  }
+  EffMatrixFile.Close();
+  EffMatrix->Invert();
+  return EffMatrix;
 }

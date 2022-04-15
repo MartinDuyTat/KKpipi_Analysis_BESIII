@@ -141,11 +141,24 @@ class FPlusFitter {
      * Resets the input measurements
      * Useful for systematics studies because each reset uses a new seed
      */
-    void ResetMeasurements(int Seed);
+    void ResetMeasurements();
     /**
      * List of tag modes included in fit
      */
     std::vector<std::string> m_TagModes;
+    /**
+     * Function for getting the tag efficiency
+     * For systematics studies the efficiencies are smeared
+     * @param TagMode Tag mode
+     * @param TagType "ST" or "DT"
+     */
+    double GetEfficiency(std::string TagMode, const std::string &TagType) const;
+    /**
+     * Function for getting the efficiency matrix
+     * For systematics studies the efficiencies are smeared
+     * @param TagMode Tag mode
+     */
+    TMatrixT<double>* GetEfficiencyMatrix(const std::string &TagMode) const;
 };
 
 #endif
