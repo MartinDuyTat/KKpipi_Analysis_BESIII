@@ -35,6 +35,7 @@ FPlusFitter::FPlusFitter(const Settings &settings): m_Settings(settings),
 }
 
 void FPlusFitter::AddTag(const std::string &TagMode) {
+  m_TagModes.push_back(TagMode);
   if(TagMode == "KSpipi" || TagMode == "KSKK" || TagMode == "KLpipi" || TagMode == "KLKK" || TagMode == "KSpipiPartReco") {
     AddMeasurement_KShh(TagMode);
     AddPrediction_KShh(TagMode);
@@ -59,7 +60,9 @@ void FPlusFitter::InitializeAndFit() {
   } else if(RunMode == "SingleToy") {
     DoSingleToy(&Model);
   } else if(RunMode == "ManyToys") {
-    DoManyToys(&Model);
+    DoManyToysOrFits(&Model, RunMode);
+  } else if(RunMode == "ManyFits") {
+    DoManyToysOrFits(&Model, RunMode);
   }
 }
 
@@ -88,11 +91,17 @@ void FPlusFitter::DoSingleToy(RooMultiVarGaussian *Model) {
   SaveFitResults(Result);
 }
 
-void FPlusFitter::DoManyToys(RooMultiVarGaussian *Model) {
-  std::cout << "Run mode: Many toys\n";
-  std::string Filename = m_Settings.get("ToyOutputFilename");
+void FPlusFitter::DoManyToysOrFits(RooMultiVarGaussian *Model, const std::string RunMode) {
+  if(RunMode == "ManyToys") {
+    std::cout << "Run mode: Many toys\n";
+  } else if(RunMode == "ManyFits") {
+    std::cout << "Run mode: Many fits\n";
+  } else {
+    return;
+  }
+  std::string Filename = m_Settings.get(RunMode + "OutputFilename");
   TFile OutputFile(Filename.c_str(), "RECREATE");
-  TTree Tree("ToyTree", "");
+  TTree Tree("FPlusTree", "");
   int Status, CovQual;
   double FPlus, FPlus_err, FPlus_pull;
   Tree.Branch("Status", &Status);
@@ -100,17 +109,25 @@ void FPlusFitter::DoManyToys(RooMultiVarGaussian *Model) {
   Tree.Branch("FPlus", &FPlus);
   Tree.Branch("FPlus_err", &FPlus_err);
   Tree.Branch("FPlus_pull", &FPlus_pull);
-  int Seed = m_Settings.getI("ToySeed");
-  int nToys = m_Settings.getI("NumberToys");
+  int Seed = m_Settings.getI("Seed");
+  int nToys = m_Settings.getI("NumberRuns");
   for(int i = 0; i < nToys; i++) {
-    std::cout << "Toy number " << i << "\n";
-    // Set random seed
-    RooRandom::randomGenerator()->SetSeed(Seed + i);
-    // Generate dataset
+    std::cout << "Run number " << i << "\n";
     ResetParameters();
-    RooDataSet *Data = Model->generate(m_NormalizedYields, m_Settings.getI("StatsMultiplier"));
-    Data->Print("V");
-    auto Result = Model->fitTo(*Data, RooFit::Save(), RooFit::ExternalConstraints(m_GaussianConstraintPDFs));
+    // Generate or smear dataset
+    RooDataSet Data;
+    RooFitResult *Result = nullptr;
+    if(RunMode == "ManyToys") {
+      // Set random seed
+      RooRandom::randomGenerator()->SetSeed(Seed + i);
+      Data = *Model->generate(m_NormalizedYields, m_Settings.getI("StatsMultiplier"));
+    } else {
+      ResetMeasurements(Seed + i);
+      Data = RooDataSet("Data", "", m_NormalizedYields);
+      Data.add(m_NormalizedYields);
+    }
+    Data.Print("V");
+    Result = Model->fitTo(Data, RooFit::Save(), RooFit::ExternalConstraints(m_GaussianConstraintPDFs));
     Result->Print("V");
     Status = Result->status();
     CovQual = Result->covQual();
@@ -119,6 +136,7 @@ void FPlusFitter::DoManyToys(RooMultiVarGaussian *Model) {
     FPlus_pull = (FPlus - m_FPlus_Model)/FPlus_err;
     Tree.Fill();
   }
+  OutputFile.cd();
   Tree.Write();
   OutputFile.Close();
 }
@@ -171,11 +189,12 @@ void FPlusFitter::AddMeasurement_CP(const std::string &TagMode) {
   DT_Yield /= DT_Eff;
   DT_Yield_err /= DT_Eff;
   // Create variable with a normalized yield and add to dataset
-  auto NormalizedYield = Unique::create<RooRealVar*>((TagMode + "_Normalized_Yield").c_str(), "", DT_Yield/ST_Yield);
-  if(NormalizedYield->getVal() < 0.0) {
-    NormalizedYield->setVal(0.0);
+  std::string YieldName = TagMode + "_Normalized_Yield";
+  m_YieldVars[YieldName] = RooRealVar(YieldName.c_str(), "", DT_Yield/ST_Yield);
+  if(m_YieldVars[YieldName].getVal() < 0.0) {
+    m_YieldVars[YieldName].setVal(0.0);
   }
-  m_NormalizedYields.add(*NormalizedYield);
+  m_NormalizedYields.add(m_YieldVars[YieldName]);
   // Save statistical uncertainty
   m_Uncertainties.push_back(TMath::Sqrt(TMath::Power(DT_Yield_err/DT_Yield, 2)
                                       + TMath::Power(ST_Yield_err/ST_Yield, 2))*DT_Yield/ST_Yield);
@@ -191,7 +210,9 @@ void FPlusFitter::AddPrediction_CP(const std::string &TagMode) {
   auto FPlus_Tag = GetFPlusTag(TagMode);
   double y_CP = m_Settings.getD("y_CP");
   TString Formula(Form("@1*(1 - (2*@2 - 1)*(2*@0 - 1))/(1 - (2*@2 - 1)*%f)", y_CP));
-  auto PredictedYield = Unique::create<RooFormulaVar*>((TagMode + "_Normalized_Yield_Prediction").c_str(), Formula, RooArgList(m_FPlus, m_KKpipi_BF_CP, *FPlus_Tag));
+  std::string YieldName = TagMode + "_Normalized_Yield_Prediction";
+  RooArgList ParameterList(m_FPlus, m_KKpipi_BF_CP, *FPlus_Tag);
+  auto PredictedYield = Unique::create<RooFormulaVar*>(YieldName.c_str(), Formula, ParameterList);
   m_PredictedYields.add(*PredictedYield);
 }
 
@@ -223,14 +244,17 @@ void FPlusFitter::AddMeasurement_KShh(const std::string &TagMode) {
   EffMatrixFile.Close();
   std::cout << "Adding " << TagMode << " tag mode\n";
   for(int i = 0; i < Bins; i++) {
-    auto NormalizedYield = Unique::create<RooRealVar*>((TagMode + "_Normalized_Yield_Bin" + std::to_string(i + 1)).c_str(), "", DT_Yields_EffCorrected(i, 0)/ST_Yield);
-    if(NormalizedYield->getVal() < 0.0) {
-      NormalizedYield->setVal(0.0);
+    std::string YieldName = TagMode + "_Normalized_Yield_Bin" + std::to_string(i + 1);
+    m_YieldVars[YieldName] = RooRealVar(YieldName.c_str(), "", DT_Yields_EffCorrected(i, 0)/ST_Yield);
+    if(m_YieldVars[YieldName].getVal() < 0.0) {
+      m_YieldVars[YieldName].setVal(0.0);
     }
-    m_NormalizedYields.add(*NormalizedYield);
-    m_Uncertainties.push_back(TMath::Sqrt(TMath::Power(DT_Yields_err(i, 0)/DT_Yields_EffCorrected(i, 0), 2)
-                                        + TMath::Power(ST_Yield_err/ST_Yield, 2))*DT_Yields_EffCorrected(i, 0)/ST_Yield);
-    std::cout << "DT/ST ratio in bin " << i + 1 << ": (" << 1000.0*DT_Yields_EffCorrected(i, 0)/ST_Yield << " \u00b1 " << 1000.0*m_Uncertainties.back() << ")e-3\n";
+    m_NormalizedYields.add(m_YieldVars[YieldName]);
+    double Uncertainty2 = TMath::Power(DT_Yields_err(i, 0)/DT_Yields_EffCorrected(i, 0), 2);
+    Uncertainty2 += TMath::Power(ST_Yield_err/ST_Yield, 2);
+    m_Uncertainties.push_back(TMath::Sqrt(Uncertainty2)*DT_Yields_EffCorrected(i, 0)/ST_Yield);
+    std::cout << "DT/ST ratio in bin " << i + 1 << ": (";
+    std::cout << 1000.0*DT_Yields_EffCorrected(i, 0)/ST_Yield << " \u00b1 " << 1000.0*m_Uncertainties.back() << ")e-3\n";
   }
 }
 
@@ -317,4 +341,16 @@ void FPlusFitter::ResetParameters() {
   m_KKpipi_BF_CP.setVal(m_KKpipi_BF_PDG);
   m_KKpipi_BF_KSpipi.setVal(m_KKpipi_BF_PDG);
   m_KKpipi_BF_KLpipi.setVal(m_KKpipi_BF_PDG);
+}
+
+void FPlusFitter::ResetMeasurements(int) {
+  m_NormalizedYields.removeAll();
+  m_Uncertainties.clear();
+  for(const auto &Tag : m_TagModes) {
+    if(Tag == "KSpipi" || Tag == "KSKK" || Tag == "KLpipi" || Tag == "KLKK" || Tag == "KSpipiPartReco") {
+      AddMeasurement_KShh(Tag);
+    } else {
+      AddMeasurement_CP(Tag);
+    }
+  }
 }

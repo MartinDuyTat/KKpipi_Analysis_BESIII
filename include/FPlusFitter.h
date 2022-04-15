@@ -7,6 +7,8 @@
 #define FPLUSFITTER
 
 #include<vector>
+#include<string>
+#include<map>
 #include"RooDataSet.h"
 #include"RooArgSet.h"
 #include"RooArgList.h"
@@ -82,6 +84,10 @@ class FPlusFitter {
      */
     RooRealVar m_KKpipi_BF_KLpipi;
     /**
+     * Map that stores all the yield variables
+     */
+    std::map<std::string, RooRealVar> m_YieldVars;
+    /**
      * Add datapoint containing normalized yield of CP tag to dataset
      * @param TagMode Name of tag mode
      */
@@ -118,7 +124,7 @@ class FPlusFitter {
     /**
      * Perform many fits to toys
      */
-    void DoManyToys(RooMultiVarGaussian *Model);
+    void DoManyToysOrFits(RooMultiVarGaussian *Model, const std::string RunMode);
     /**
      * Vector of Gaussian constraint PDFs
      */
@@ -131,6 +137,15 @@ class FPlusFitter {
      * Resets the floating parameters to the F+ model value and PDG value of the BF
      */
     void ResetParameters();
+    /**
+     * Resets the input measurements
+     * Useful for systematics studies because each reset uses a new seed
+     */
+    void ResetMeasurements(int Seed);
+    /**
+     * List of tag modes included in fit
+     */
+    std::vector<std::string> m_TagModes;
 };
 
 #endif
