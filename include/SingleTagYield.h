@@ -19,6 +19,7 @@
 #include"RooFitResult.h"
 #include"RooAddPdf.h"
 #include"RooDataSet.h"
+#include"RooArgSet.h"
 #include"Settings.h"
 #include"RooShapes/FitShape.h"
 
@@ -84,6 +85,10 @@ class SingleTagYield {
      */
     RooFitResult *m_Result = nullptr;
     /**
+     * Initial parameters before fit
+     */
+    RooArgSet *m_InitialParameters;
+    /**
      * Initialize the signal shape
      */
     void InitializeSignalShape();
@@ -118,6 +123,14 @@ class SingleTagYield {
      * @param Data The dataset we want to apply sPlot on
      */
     void sPlotReweight(RooDataSet &Data);
+    /**
+     * Smear the Argus end point by 0.5 MeV
+     */
+    void SmearArgusEndPoint();
+    /**
+     * Smear the peaking backgrounds by their uncertainties
+     */
+    void SmearPeakingBackgrounds();
 };
 
 #endif

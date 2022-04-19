@@ -93,10 +93,13 @@ void FPlusFitter::DoSingleToy(RooMultiVarGaussian *Model) {
 }
 
 void FPlusFitter::DoManyToysOrFits(RooMultiVarGaussian *Model, const std::string RunMode) {
+  int Seed = m_Settings.getI("Seed");
   if(RunMode == "ManyToys") {
     std::cout << "Run mode: Many toys\n";
+    RooRandom::randomGenerator()->SetSeed(Seed);
   } else if(RunMode == "ManyFits") {
     std::cout << "Run mode: Many fits\n";
+    gRandom->SetSeed(Seed);
   } else {
     return;
   }
@@ -110,7 +113,6 @@ void FPlusFitter::DoManyToysOrFits(RooMultiVarGaussian *Model, const std::string
   Tree.Branch("FPlus", &FPlus);
   Tree.Branch("FPlus_err", &FPlus_err);
   Tree.Branch("FPlus_pull", &FPlus_pull);
-  int Seed = m_Settings.getI("Seed");
   int nToys = m_Settings.getI("NumberRuns");
   for(int i = 0; i < nToys; i++) {
     std::cout << "Run number " << i << "\n";
@@ -119,11 +121,8 @@ void FPlusFitter::DoManyToysOrFits(RooMultiVarGaussian *Model, const std::string
     RooDataSet Data;
     RooFitResult *Result = nullptr;
     if(RunMode == "ManyToys") {
-      // Set random seed
-      RooRandom::randomGenerator()->SetSeed(Seed + i);
       Data = *Model->generate(m_NormalizedYields, m_Settings.getI("StatsMultiplier"));
     } else {
-      gRandom->SetSeed(Seed + i);
       ResetMeasurements();
       Data = RooDataSet("Data", "", m_NormalizedYields);
       Data.add(m_NormalizedYields);

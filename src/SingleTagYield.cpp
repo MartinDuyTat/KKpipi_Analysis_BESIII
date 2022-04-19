@@ -6,6 +6,7 @@
 #include<stdexcept>
 #include<numeric>
 #include<memory>
+#include<vector>
 #include"TTree.h"
 #include"TCanvas.h"
 #include"TPad.h"
@@ -13,6 +14,7 @@
 #include"TLine.h"
 #include"TH1D.h"
 #include"TFile.h"
+#include"TRandom.h"
 #include"RooRealVar.h"
 #include"RooDataSet.h"
 #include"RooDataHist.h"
@@ -122,6 +124,7 @@ void SingleTagYield::InitializePeakingBackgrounds() {
     if(m_Settings["MBC_Shape"].contains(Name + "_yield")) {
       double PeakingYield = m_Settings["MBC_Shape"].getD(Name + "_yield");
       std::cout << "Adding peaking background with yield: " << PeakingYield << "\n";
+      // This is automatically handled in FitShape
     } else {
       double BackgroundToSignalRatio = m_Settings["MBC_Shape"].getD(Name + "_BackgroundToSignalRatio");
       PeakingPDF->UseRelativeYield(m_Parameters["Yield"], BackgroundToSignalRatio);
@@ -156,6 +159,8 @@ void SingleTagYield::FitYield() {
   m_DataTree->Draw("MBC >> h1", MassCutBinned.c_str(), "goff");
   RooDataHist BinnedData("BinnedData", "BinnedData", RooArgList(m_MBC), &h1);
   RooDataSet Data("Data", "Data", m_DataTree, Variables, MassCut.c_str(), "LuminosityWeight");
+  RooArgSet *Parameters = m_FullModel->getParameters(m_MBC);
+  m_InitialParameters = Parameters->snapshot();
   if(m_Settings.get("FitType") != "NoFit") {
     m_Result = m_FullModel->fitTo(BinnedData, Save(), Strategy(2));
     if(m_Settings.get("FitType") == "UnbinnedFit") {
@@ -164,6 +169,29 @@ void SingleTagYield::FitYield() {
     SaveFitParameters();
   }
   PlotSingleTagYield(Data);
+  if(m_Settings.getB("YieldSystematics")) {
+    double SystError;
+    int PeakingBackgrounds = m_Settings["MBC_Shape"].getI(m_Settings.get("Mode") + "_PeakingBackgrounds");
+    if(PeakingBackgrounds > 0) {
+      std::vector<double> FittedYields;
+      gRandom->SetSeed(m_Settings.getI("Seed"));
+      for(int i = 0; i < m_Settings.getI("NumberRuns"); i++) {
+	std::cout << "Starting systematics fit number: " << i << "\n";
+	*Parameters = *m_InitialParameters;
+	SmearPeakingBackgrounds();
+	auto Result = m_FullModel->fitTo(BinnedData, Strategy(2), Save());
+	Result->Print("V");
+	FittedYields.push_back(m_Parameters["Yield"]->getVal());
+      }
+      SystError = TMath::RMS(FittedYields.begin(), FittedYields.end());
+    } else {
+      SystError = 0.0;
+    }
+    std::ofstream OutputFile(m_Settings.get("ResultsFilename"), std::ios_base::app);
+    std::string YieldName = m_Settings.get("Mode") + "_SingleTag_Yield_PeakingBackgrounds";
+    OutputFile << YieldName << "_syst_err " << SystError << "\n";
+    OutputFile.close();
+  }
   if(m_Settings.contains("sPlotReweight") && m_Settings.getB("sPlotReweight")) {
     sPlotReweight(Data);
   }
@@ -228,9 +256,9 @@ void SingleTagYield::SaveFitParameters() const {
     OutputFile << Mode + "_" + Param.first << " " << Param.second->getVal() << "\n";
     OutputFile << Mode + "_" + Param.first << "_err " << Param.second->getError() << "\n";
   }
-  auto Yield = CalculateSingleTagYield();
-  OutputFile << Mode + "_SingleTag_Yield " << Yield.first << "\n";
-  OutputFile << Mode + "_SingleTag_Yield_err " << Yield.second << "\n";
+  auto Yield = m_Parameters.at("Yield");
+  OutputFile << Mode + "_SingleTag_Yield " << Yield->getVal() << "\n";
+  OutputFile << Mode + "_SingleTag_Yield_err " << Yield->getError() << "\n";
   OutputFile.close();
 }
 
@@ -252,4 +280,35 @@ void SingleTagYield::sPlotReweight(RooDataSet &Data) {
   auto Tree = RooStats::GetAsTTree(m_Settings.get("TreeName").c_str(), m_Settings.get("TreeName").c_str(), Data);
   Tree->Write();
   Outfile.Close();
+}
+
+void SingleTagYield::SmearArgusEndPoint() {
+  m_Parameters["End"]->setVal(1.8865 + gRandom->Gaus(0.0, 0.0005));
+}
+
+void SingleTagYield::SmearPeakingBackgrounds() {
+  std::string Mode = m_Settings.get("Mode");
+  int PeakingBackgrounds = m_Settings["MBC_Shape"].getI(Mode + "_PeakingBackgrounds");
+  for(int i = 0; i < PeakingBackgrounds; i++) {
+    std::string Name = Mode + "_PeakingBackground" + std::to_string(i);
+    auto YieldVar = m_PeakingBackgrounds[i]->GetYield();
+    if(m_Settings["MBC_Shape"].contains(Name + "_yield")) {
+      double PeakingYield = m_Settings["MBC_Shape"].getD(Name + "_yield");
+      double PeakingYield_err = m_Settings["MBC_Shape"].getD(Name + "_yield_err");
+      PeakingYield += gRandom->Gaus(0.0, PeakingYield_err);
+      if(PeakingYield <= 0.0) {
+	PeakingYield = 0.0;
+      }
+      static_cast<RooRealVar*>(YieldVar)->setVal(PeakingYield);
+    } else {
+      double BackgroundToSignalRatio = m_Settings["MBC_Shape"].getD(Name + "_BackgroundToSignalRatio");
+      double BackgroundToSignalRatio_err = m_Settings["MBC_Shape"].getD(Name + "_BackgroundToSignalRatio_err");
+      BackgroundToSignalRatio += gRandom->Gaus(0.0, BackgroundToSignalRatio_err);
+      if(BackgroundToSignalRatio <= 0.0) {
+	BackgroundToSignalRatio = 0.0;
+      }
+      auto BkgToSigVar = static_cast<RooFormulaVar*>(YieldVar)->getParameter((Name + "_BackgroundToSignalYieldRatio").c_str());
+      static_cast<RooRealVar*>(BkgToSigVar)->setVal(BackgroundToSignalRatio);
+    }
+  }
 }

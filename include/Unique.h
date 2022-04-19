@@ -2,6 +2,7 @@
 #ifndef Unique_h
 #define Unique_h
 
+#include <iostream>
 #include <string>
 #include <unordered_set>
 
@@ -67,7 +68,7 @@ private:
         static std::unordered_set<std::string> _names;
         auto success = _names.insert(name);
         if (!success.second){
-            /* STD_WARNING("A RooFit object with name '" << name << "' already exists! padding '_0' and trying again (FIX naming)"); */
+            std::cerr << "A RooFit object with name '" << name << "' already exists! padding '_0' and trying again (FIX naming)\n";
             name += "_0";
             return _make_unique(name);
         }

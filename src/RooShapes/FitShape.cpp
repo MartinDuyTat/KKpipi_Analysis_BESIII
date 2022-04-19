@@ -19,6 +19,9 @@ FitShape::FitShape(const std::string &Name, const Settings &settings, RooRealVar
 }
 
 FitShape::~FitShape() {
+  if(m_Yield) {
+    delete m_Yield;
+  }
 }
 
 RooAbsPdf* FitShape::GetPDF() {
@@ -39,5 +42,6 @@ void FitShape::UseRelativeYield(RooRealVar *SignalYield, double BackgroundToSign
   if(!m_Yield) {
     delete m_Yield;
   }
-  m_Yield = Unique::create<RooFormulaVar*>(m_Name + "_yield", Form("%f*@0", BackgroundToSignalYieldRatio), RooArgSet(*SignalYield));
+  auto BkgToSigRatioVar = Unique::create<RooRealVar*>(m_Name + "_BackgroundToSignalYieldRatio", "", BackgroundToSignalYieldRatio);
+  m_Yield = Unique::create<RooFormulaVar*>(m_Name + "_yield", "@0*@1", RooArgSet(*SignalYield, *BkgToSigRatioVar));
 }

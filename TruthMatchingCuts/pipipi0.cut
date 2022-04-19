@@ -1,2 +1,3 @@
 SignalTagHighEPi0PhotonMotherTrueID == 111
 SignalTagLowEPi0PhotonMotherTrueID == 111
+SignalTagIsSameDMotherAll == 1
