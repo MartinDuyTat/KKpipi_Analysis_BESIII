@@ -2,6 +2,8 @@
 
 #include<string>
 #include<stdexcept>
+#include"TTree.h"
+#include"TRandom.h"
 #include"RooRealVar.h"
 #include"RooGaussian.h"
 #include"RooKeysPdf.h"
@@ -11,7 +13,6 @@
 #include"RooFormulaVar.h"
 #include"RooSimultaneous.h"
 #include"RooDataSet.h"
-#include"TTree.h"
 #include"BinnedFitModel.h"
 #include"Settings.h"
 #include"Utilities.h"
@@ -62,21 +63,24 @@ void BinnedFitModel::InitializeYields() {
     m_Yields.insert({CategoryString + "_SignalYield", Unique::create<RooRealVar*>((CategoryString + "_SignalYield").c_str(), "", 10.0, 0.0, 1000.0)});
     for(int i = 0; i < PeakingBackgrounds; i++) {
       std::string Name = Mode + "_PeakingBackground" + std::to_string(i) + "_" + CategoryString;
-      std::string PeakingYieldName = CategoryString + "_PeakingBackground" + std::to_string(i) + "Yield";
       if(!m_Settings["MBC_Shape"].contains(Name + "_Yield")) {
-	double BackgroundSignalRatio = m_Settings["MBC_Shape"].getD(Name + "_BackgroundToSignalRatio");
-	std::cout << "Adding peaking background with background-to-signal ratio: " << BackgroundSignalRatio << "\n";
+	auto BackgroundSignalRatio = Utilities::load_param(m_Settings["MBC_Shape"], Name + "_BackgroundToSignalRatio");
+	std::cout << "Adding peaking background with background-to-signal ratio: " << BackgroundSignalRatio->getVal() << "\n";
 	// Quantum correlation is accounted for with a correction factor
-	if(m_Settings.getB("Inclusive_fit") && m_Settings["MBC_Shape"].contains(Name + "_QuantumCorrelationFactor")) {
-	  double QCFactor = m_Settings["MBC_Shape"].getD(Name + "_QuantumCorrelationFactor");
-	  std::cout << "Quantum correlation correction factor: " << QCFactor << "\n";
-	  BackgroundSignalRatio *= QCFactor;
+	RooRealVar *QCFactor = nullptr;
+	if(m_Settings["MBC_Shape"].contains(Name + "_QuantumCorrelationFactor")) {
+	  QCFactor = Utilities::load_param(m_Settings["MBC_Shape"], Name + "_QuantumCorrelationFactor");
+	  std::cout << "Quantum correlation correction factor: " << QCFactor->getVal() << "\n";
+	} else {
+	  QCFactor = Unique::create<RooRealVar*>((Name + "QuantumCorrelationFactor").c_str(), "", 1.0);
+	  std::cout << "Quantum correlation correction factor: None\n";
 	}
-	RooAbsReal *PeakingYield = Unique::create<RooFormulaVar*>(PeakingYieldName.c_str(), Form("%f*@0", BackgroundSignalRatio), *m_Yields.at(CategoryString + "_SignalYield"));
+	RooArgList PeakingYieldParameters(*m_Yields.at(CategoryString + "_SignalYield"), *BackgroundSignalRatio, *QCFactor);
+	RooAbsReal *PeakingYield = Unique::create<RooFormulaVar*>((Name + "_Yield").c_str(), "@0*@1*@2", PeakingYieldParameters);
 	m_Yields.insert({CategoryString + "_PeakingBackground" + std::to_string(i) + "Yield", PeakingYield});
       } else {
 	double BackgroundYield = m_Settings["MBC_Shape"].getD(Name + "_Yield");
-	RooAbsReal *PeakingYield = Unique::create<RooRealVar*>(PeakingYieldName.c_str(), "", BackgroundYield);
+	RooAbsReal *PeakingYield = Unique::create<RooRealVar*>((Name + "_Yield").c_str(), "", BackgroundYield);
 	std::cout << "Adding peaking background with yield: " << BackgroundYield << "\n";
 	m_Yields.insert({CategoryString + "_PeakingBackground" + std::to_string(i) + "Yield", PeakingYield});
       }
@@ -160,4 +164,44 @@ double BinnedFitModel::GetFractionInSignalRegion() const {
   using namespace RooFit;
   m_SignalMBC->setRange("SignalRange", 1.86, 1.87);
   return m_SignalShapeConv->createIntegral(*m_SignalMBC, NormSet(*m_SignalMBC), Range("SignalRange"))->getVal();
+}
+
+void BinnedFitModel::SmearPeakingBackgrounds() {
+  std::string Mode = m_Settings.get("Mode");
+  int PeakingBackgrounds = m_Settings["MBC_Shape"].getI(Mode + "_PeakingBackgrounds");
+  for(const auto &Category : m_Category.GetCategories()) {
+    for(int i = 0; i < PeakingBackgrounds; i++) {
+      std::string Name = Mode + "_PeakingBackground" + std::to_string(i) + "_" + Category;
+      if(!m_Settings["MBC_Shape"].contains(Name + "_Yield")) {
+	auto YieldVar = static_cast<RooFormulaVar*>(m_Yields[Category + "_PeakingBackground" + std::to_string(i) + "Yield"]);
+	double BackgroundSignalRatio = m_Settings["MBC_Shape"].getD(Name + "_BackgroundToSignalRatio");
+	double BackgroundSignalRatio_err = m_Settings["MBC_Shape"].getD(Name + "_BackgroundToSignalRatio_err");
+	auto BkgSigRatioVar = static_cast<RooRealVar*>(YieldVar->getParameter((Name + "_BackgroundToSignalRatio").c_str()));
+	BackgroundSignalRatio += gRandom->Gaus(0.0, BackgroundSignalRatio_err);
+	if(BackgroundSignalRatio < 0.0) {
+	  BackgroundSignalRatio = 0.0;
+	}
+	BkgSigRatioVar->setVal(BackgroundSignalRatio);
+	if(m_Settings["MBC_Shape"].contains(Name + "_QuantumCorrelationFactor")) {
+	  double QCFactor = m_Settings["MBC_Shape"].getD(Name + "_QuantumCorrelationFactor");
+	  double QCFactor_err = m_Settings["MBC_Shape"].getD(Name + "_QuantumCorrelationFactor_err");
+	  QCFactor += gRandom->Gaus(0.0, QCFactor_err);
+	  if(QCFactor < 0.0) {
+	    QCFactor = 0.0;
+	  }
+	  auto QCFactorVar = static_cast<RooRealVar*>(YieldVar->getParameter((Name + "_QuantumCorrelationFactor").c_str()));
+	  QCFactorVar->setVal(QCFactor);
+	}
+      } else {
+	double BackgroundYield = m_Settings["MBC_Shape"].getD(Name + "_Yield");
+	double BackgroundYield_err = m_Settings["MBC_Shape"].getD(Name + "_Yield_err");
+	BackgroundYield += gRandom->Gaus(0.0, BackgroundYield_err);
+	if(BackgroundYield < 0.0) {
+	  BackgroundYield = 0.0;
+	}
+	auto PeakBkgYieldVar = static_cast<RooRealVar*>(m_Yields[Category + "_PeakingBackground" + std::to_string(i) + "Yield"]);
+	PeakBkgYieldVar->setVal(BackgroundYield);
+      }
+    }
+  }
 }

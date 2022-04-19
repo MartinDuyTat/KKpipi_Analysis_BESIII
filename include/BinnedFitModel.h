@@ -105,6 +105,10 @@ class BinnedFitModel {
      * Map of Gaussian resolution and Argus parameters
      */
     std::map<std::string, RooRealVar*> m_Parameters;
+    /**
+     * Smear the peaking backgrounds to estimate the systematic uncertainties
+     */
+    void SmearPeakingBackgrounds();
 };
 
 #endif

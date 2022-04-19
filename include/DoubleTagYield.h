@@ -58,6 +58,10 @@ class DoubleTagYield {
      * @param FitModel Fit model
      */
     void sPlotReweight(RooDataSet &Data, BinnedFitModel &FitModel);
+    /**
+     * Initial parameters before fit
+     */
+    RooArgSet *m_InitialParameters;
 };
 
 #endif

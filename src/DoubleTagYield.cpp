@@ -11,6 +11,7 @@
 #include"TLine.h"
 #include"TCut.h"
 #include"TFile.h"
+#include"TRandom.h"
 #include"RooRealVar.h"
 #include"RooDataSet.h"
 #include"RooFitResult.h"
@@ -46,29 +47,65 @@ void DoubleTagYield::DoFit() {
   RooDataSet *DataSet = DataLoader.GetDataSet();
   BinnedFitModel FitModel(m_Settings, &m_SignalMBC);
   RooSimultaneous *Model = FitModel.GetPDF();
-  // Perform an initial fit
-  auto Result = Model->fitTo(*DataSet, Save(), NumCPU(4));
-  // Any bins with less than 0.5 combinatorial background events are set constant
   std::vector<std::string> Categories = DataLoader.GetCategoryObject()->GetCategories();
+  // Perform an initial fit
+  RooArgSet *Parameters = Model->getParameters(m_SignalMBC);
+  m_InitialParameters = Parameters->snapshot();
+  int nCPUs = 1;
+  if(Categories.size() > 1) {
+    nCPUs = 4;
+  }
+  auto Result = Model->fitTo(*DataSet, Save(), NumCPU(nCPUs), Strategy(2));
+  // Any bins with less than 0.5 combinatorial background events are set constant
   for(const auto &Category : Categories) {
     RooRealVar *CombinatorialYield = static_cast<RooRealVar*>(FitModel.m_Yields[Category + "_CombinatorialYield"]);
     if(CombinatorialYield->getVal() < 0.5) {
       CombinatorialYield->setConstant();
     }
   }
-  /*for(const auto &Parameter : FitModel.m_Parameters) {
-    if(Parameter.first == "End") {
-      continue;
-    }
-    Parameter.second->setConstant();
-  }*/
   // Perform a second fit if fit is binned
   if(Categories.size() > 1) {
-    Result = Model->fitTo(*DataSet, Save(), NumCPU(4));
+    Result = Model->fitTo(*DataSet, Save(), NumCPU(nCPUs), Strategy(2));
   }
-  Result->Print();
+  Result->Print("V");
   PlotProjections(&DataLoader, &FitModel);
   SaveSignalYields(FitModel, Result, *DataLoader.GetCategoryObject());
+  // Smear peaking backgrounds for systematics studies
+  if(m_Settings.getB("YieldSystematics")) {
+    std::ofstream OutputFile(m_Settings.get("FittedSignalYieldsFile"), std::ios_base::app);
+    OutputFile << "\n* Systematic uncertainties\n\n";
+    std::map<std::string, double> SystError;
+    int PeakingBackgrounds = m_Settings["MBC_Shape"].getI(m_Settings.get("Mode") + "_PeakingBackgrounds");
+    if(PeakingBackgrounds > 0) {
+      std::map<std::string, std::vector<double>> FittedYields;
+      for(const auto &Category : Categories) {
+	FittedYields.insert({Category, std::vector<double>()});
+      }
+      gRandom->SetSeed(m_Settings.getI("Seed"));
+      for(int i = 0; i < m_Settings.getI("NumberRuns"); i++) {
+	std::cout << "Starting systematics fit number: " << i << "\n";
+	*Parameters = *m_InitialParameters;
+	FitModel.SmearPeakingBackgrounds();
+	Result = Model->fitTo(*DataSet, Strategy(2), Save(), NumCPU(nCPUs));
+	Result->Print("V");
+	for(const auto &Category : Categories) {
+	  FittedYields[Category].push_back(FitModel.m_Yields[Category + "_SignalYield"]->getVal());
+	}
+      }
+      for(const auto &Category : Categories) {
+	SystError[Category] = TMath::RMS(FittedYields[Category].begin(), FittedYields[Category].end());
+      }
+    } else {
+      for(const auto &Category : Categories) {
+	SystError[Category] = 0.0;
+      }
+    }
+    for(const auto &Category : Categories) {
+      std::string YieldName = Category + "_SignalYield_PeakingBackgrounds";
+      OutputFile << YieldName << "_syst_err " << SystError[Category] << "\n";
+    }
+    OutputFile.close();
+  }
   if(m_Settings.contains("sPlotReweight") && m_Settings.getB("sPlotReweight")) {
     sPlotReweight(*DataSet, FitModel);
   }
