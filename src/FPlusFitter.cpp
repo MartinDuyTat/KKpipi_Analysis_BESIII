@@ -3,6 +3,8 @@
 #include<iostream>
 #include<string>
 #include<fstream>
+#include<utility>
+#include<stdexcept>
 #include"TString.h"
 #include"TMatrixTSym.h"
 #include"TMatrixT.h"
@@ -165,18 +167,15 @@ RooRealVar* FPlusFitter::GetFPlusTag(const std::string &TagMode) {
   }
 }
 
-void FPlusFitter::AddMeasurement_CP(const std::string &TagMode) {
+void FPlusFitter::AddMeasurement_CP(const std::string &TagMode, bool Smearing) {
   // Get raw single tag yields and efficiency
-  double ST_Yield = m_Settings[TagMode + "_ST_Yield"].getD(TagMode + "_SingleTag_Yield");
-  double ST_Yield_err = m_Settings[TagMode + "_ST_Yield"].getD(TagMode + "_SingleTag_Yield_err");
-  double ST_Eff = GetEfficiency(TagMode, "ST");
+  auto [ST_Yield, ST_Yield_err] = GetTagYield(TagMode, "ST", Smearing);
+  double ST_Eff = GetEfficiency(TagMode, "ST", Smearing);
   ST_Yield /= ST_Eff;
   ST_Yield_err /= ST_Eff;
   // Get raw double tag yields and efficiency
-  std::string DT_Name("DoubleTag_CP_KKpipi_vs_" + TagMode + "_SignalBin0_SignalYield");
-  double DT_Yield = m_Settings[TagMode + "_DT_Yield"].getD(DT_Name);
-  double DT_Yield_err = m_Settings[TagMode + "_DT_Yield"].getD(DT_Name + "_err");
-  double DT_Eff = GetEfficiency(TagMode, "DT");
+  auto [DT_Yield, DT_Yield_err] = GetTagYield(TagMode, "DT", Smearing);
+  double DT_Eff = GetEfficiency(TagMode, "DT", Smearing);
   DT_Yield /= DT_Eff;
   DT_Yield_err /= DT_Eff;
   // Create variable with a normalized yield and add to dataset
@@ -207,11 +206,10 @@ void FPlusFitter::AddPrediction_CP(const std::string &TagMode) {
   m_PredictedYields.add(*PredictedYield);
 }
 
-void FPlusFitter::AddMeasurement_KShh(const std::string &TagMode) {
+void FPlusFitter::AddMeasurement_KShh(const std::string &TagMode, bool Smearing) {
   // Get raw single tag yields and efficiency
-  double ST_Yield = m_Settings[TagMode + "_ST_Yield"].getD(TagMode + "_SingleTag_Yield");
-  double ST_Yield_err = m_Settings[TagMode + "_ST_Yield"].getD(TagMode + "_SingleTag_Yield_err");
-  double ST_Eff = GetEfficiency(TagMode, "ST");
+  auto [ST_Yield, ST_Yield_err] = GetTagYield(TagMode, "ST", Smearing);
+  double ST_Eff = GetEfficiency(TagMode, "ST", Smearing);
   ST_Yield /= ST_Eff;
   ST_Yield_err /= ST_Eff;
   // Get number of bins
@@ -224,7 +222,7 @@ void FPlusFitter::AddMeasurement_KShh(const std::string &TagMode) {
     DT_Yields(i, 0) = m_Settings[TagMode + "_DT_Yield"].getD(DT_Name);
     DT_Yields_err(i, 0) = m_Settings[TagMode + "_DT_Yield"].getD(DT_Name + "_err");
   }
-  auto EffMatrix = GetEfficiencyMatrix(TagMode);
+  auto EffMatrix = GetEfficiencyMatrix(TagMode, Smearing);
   TMatrixT<double> DT_Yields_EffCorrected = *EffMatrix*DT_Yields;
   for(int i = 0; i < Bins; i++) {
     DT_Yields_err(i, 0) *= (*EffMatrix)(i, i);
@@ -335,31 +333,34 @@ void FPlusFitter::ResetMeasurements() {
   m_Uncertainties.clear();
   for(const auto &Tag : m_TagModes) {
     if(Tag == "KSpipi" || Tag == "KSKK" || Tag == "KLpipi" || Tag == "KLKK" || Tag == "KSpipiPartReco") {
-      AddMeasurement_KShh(Tag);
+      AddMeasurement_KShh(Tag, true);
     } else {
-      AddMeasurement_CP(Tag);
+      AddMeasurement_CP(Tag, true);
     }
   }
 }
 
-double FPlusFitter::GetEfficiency(std::string TagMode, const std::string &TagType) const {
+double FPlusFitter::GetEfficiency(std::string TagMode, const std::string &TagType, bool Smearing) const {
   std::string SingleDouble = TagType == "ST" ? "Single" : "Double";
   if(TagMode == "KSomega") {
     TagMode = "KSpipipi0";
   }
   double Eff = m_Settings[TagType + "_Efficiency"].getD(TagMode + "_" + SingleDouble + "TagEfficiency");
-  if(m_Settings.get("Systematics") == "Efficiency") {
-    double Eff_err = m_Settings[TagType + "_Efficiency"].getD(TagMode + "_" + SingleDouble + "TagEfficiency_err");
-    Eff += gRandom->Gaus(0.0, Eff_err);
+  if(Smearing && m_Settings.get("Systematics") == "Efficiency") {
+    // Single tag efficiencies for KL modes cancel in the equation
+    if(!(TagType == "ST" && TagMode.substr(0, 2) == "KL")) {
+      double Eff_err = m_Settings[TagType + "_Efficiency"].getD(TagMode + "_" + SingleDouble + "TagEfficiency_err");
+      Eff += gRandom->Gaus(0.0, Eff_err);
+    }
   }
   return Eff;
 }
 
-TMatrixT<double>* FPlusFitter::GetEfficiencyMatrix(const std::string &TagMode) const {
+TMatrixT<double>* FPlusFitter::GetEfficiencyMatrix(const std::string &TagMode, bool Smearing) const {
   TFile EffMatrixFile(m_Settings.get(TagMode + "_EfficiencyMatrix").c_str(), "READ");
   TMatrixT<double> *EffMatrix = nullptr;
   EffMatrixFile.GetObject("EffMatrix", EffMatrix);
-  if(m_Settings.get("Systematics") == "Efficiency") {
+  if(Smearing && m_Settings.get("Systematics") == "Efficiency") {
     TMatrixT<double> *EffMatrix_err = nullptr;
     EffMatrixFile.GetObject("EffMatrix_err", EffMatrix_err);
     for(int i = 0; i < EffMatrix->GetNrows(); i++) {
@@ -371,4 +372,32 @@ TMatrixT<double>* FPlusFitter::GetEfficiencyMatrix(const std::string &TagMode) c
   EffMatrixFile.Close();
   EffMatrix->Invert();
   return EffMatrix;
+}
+
+std::pair<double, double> FPlusFitter::GetTagYield(const std::string &TagMode, const std::string &TagType, bool Smearing) const {
+  std::string YieldName, SettingsName;
+  if(TagType == "ST") {
+    YieldName = TagMode + "_SingleTag_Yield";
+    SettingsName = TagMode + "_ST_Yield";
+  } else if(TagType == "DT") {
+    YieldName = "DoubleTag_CP_KKpipi_vs_" + TagMode + "_SignalBin0_SignalYield";
+    SettingsName = TagMode + "_DT_Yield";
+  } else {
+    throw std::invalid_argument(TagType + " is not a recognized tag type");
+  }
+  double Yield = m_Settings[SettingsName].getD(YieldName);
+  double Yield_err;
+  if(TagType == "ST" && TagMode.substr(0, 2) == "KL") {
+    Yield_err = 0.0;
+  } else { 
+    Yield_err = m_Settings[SettingsName].getD(YieldName + "_err");
+  }
+  if(Smearing && m_Settings.get("Systematics") == "PeakingBackgrounds") {
+    double YieldSystError = m_Settings[SettingsName].getD(YieldName + "_PeakingBackgrounds_syst_err");
+    Yield += gRandom->Gaus(0.0, YieldSystError);
+  } else if(Smearing && m_Settings.get("Systematics") == "KL_ST_Yield" && TagMode.substr(0, 2) == "KL") {
+    double YieldSystError = m_Settings[SettingsName].getD(YieldName + "_err");
+    Yield += gRandom->Gaus(0.0, YieldSystError);
+  }
+  return std::make_pair(Yield, Yield_err);
 }

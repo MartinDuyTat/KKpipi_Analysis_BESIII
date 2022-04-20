@@ -90,8 +90,9 @@ class FPlusFitter {
     /**
      * Add datapoint containing normalized yield of CP tag to dataset
      * @param TagMode Name of tag mode
+     * @param Smearing Set to true to smear parameters for systmatics studies
      */
-    void AddMeasurement_CP(const std::string &TagMode);
+    void AddMeasurement_CP(const std::string &TagMode, bool Smearing = false);
     /**
      * Add formula for prediction of normalized yield of CP tag
      * @param TagMode Name of tag mode
@@ -99,10 +100,13 @@ class FPlusFitter {
     void AddPrediction_CP(const std::string &TagMode);
     /**
      * Add datapoint containing binned, normalized yield of Kshh tag to dataset
+     * @param TagMode Name of tag mode
+     * @param Smearing Set to true to smear parameters for systmatics studies
      */
-    void AddMeasurement_KShh(const std::string &TagMode);
+    void AddMeasurement_KShh(const std::string &TagMode, bool Smearing = false);
     /**
      * Add formula for prediction of normalized yield of KShh tag
+     * @param TagMode Name of tag mode
      */
     void AddPrediction_KShh(const std::string &TagMode);
     /**
@@ -151,14 +155,24 @@ class FPlusFitter {
      * For systematics studies the efficiencies are smeared
      * @param TagMode Tag mode
      * @param TagType "ST" or "DT"
+     * @param Smearing Set to true to smear parameters for systmatics studies
      */
-    double GetEfficiency(std::string TagMode, const std::string &TagType) const;
+    double GetEfficiency(std::string TagMode, const std::string &TagType, bool Smearing) const;
     /**
      * Function for getting the efficiency matrix
      * For systematics studies the efficiencies are smeared
      * @param TagMode Tag mode
+     * @param Smearing Set to true to smear parameters for systmatics studies
      */
-    TMatrixT<double>* GetEfficiencyMatrix(const std::string &TagMode) const;
+    TMatrixT<double>* GetEfficiencyMatrix(const std::string &TagMode, bool Smearing) const;
+    /**
+     * Function for getting the tag yield
+     * For systematics studies the yields are smeared by the peaking background systematics
+     * @param TagMode Tag mode
+     * @param TagType "ST" or "DT"
+     * @param Smearing Set to true to smear parameters for systmatics studies
+     */
+    std::pair<double, double> GetTagYield(const std::string &TagMode, const std::string &TagType, bool Smearing) const;
 };
 
 #endif
