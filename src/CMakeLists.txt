@@ -3,6 +3,7 @@ add_library(KKpipiStrongPhase
 	    BinnedDataLoader.cpp
 	    BinnedFitModel.cpp
 	    Category.cpp
+	    CholeskySmearing.cpp
 	    cisiK0pipi.cpp
 	    CutsFromFile.cpp
 	    DeltaECut.cpp

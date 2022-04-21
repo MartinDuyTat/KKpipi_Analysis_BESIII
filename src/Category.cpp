@@ -178,3 +178,13 @@ int Category::GetSignalBinNumber(const std::string &category) const {
 int Category::GetTagBinNumber(const std::string &category) const {
   return GetBinNumber(category, "Tag");
 }
+
+int Category::GetCategoryIndex(const std::string &category) const {
+  auto Categories = GetCategories();
+  auto iter = std::find(Categories.begin(), Categories.end(), category);
+  if(iter == Categories.end()) {
+    return -1;
+  } else {
+    return iter - Categories.begin();
+  }
+}

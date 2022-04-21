@@ -4,6 +4,7 @@
 #include<stdexcept>
 #include"TTree.h"
 #include"TRandom.h"
+#include"TFile.h"
 #include"RooRealVar.h"
 #include"RooGaussian.h"
 #include"RooKeysPdf.h"
@@ -166,26 +167,67 @@ double BinnedFitModel::GetFractionInSignalRegion() const {
   return m_SignalShapeConv->createIntegral(*m_SignalMBC, NormSet(*m_SignalMBC), Range("SignalRange"))->getVal();
 }
 
-void BinnedFitModel::SmearPeakingBackgrounds() {
+void BinnedFitModel::PrepareSmearing() {
   std::string Mode = m_Settings.get("Mode");
   int PeakingBackgrounds = m_Settings["MBC_Shape"].getI(Mode + "_PeakingBackgrounds");
-  for(const auto &Category : m_Category.GetCategories()) {
-    for(int i = 0; i < PeakingBackgrounds; i++) {
+  for(int i = 0; i < PeakingBackgrounds; i++) {
+    std::string Name(Mode + "_PeakingBackground" + std::to_string(i));
+    if(m_Settings["MBC_Shape"].contains(Name + "_Correlated") && m_Settings["MBC_Shape"].getB(Name + "_Correlated")) {
+      std::cout << Mode << " peaking background " << i << ": Will use Cholesky decomposition\n";
+      TFile BkgSigRatioFile((Name + "_BackgroundToSignalRatio_CovMatrix.root").c_str(), "READ");
+      TMatrixT<double> *BkgSigRatioCovMatrix = nullptr;
+      BkgSigRatioFile.GetObject("CovMatrix", BkgSigRatioCovMatrix);
+      m_CholeskyDecompositions.insert({Name + "_BackgroundToSignalRatio", CholeskySmearing(*BkgSigRatioCovMatrix)});
+      TFile QCFactorFile((Name + "_QuantumCorrelationFactor_CovMatrix.root").c_str(), "READ");
+      TMatrixT<double> *QCFactorCovMatrix = nullptr;
+      QCFactorFile.GetObject("CovMatrix", QCFactorCovMatrix);
+      m_CholeskyDecompositions.insert({Name + "_QuantumCorrelationFactor", CholeskySmearing(*QCFactorCovMatrix)});
+    }
+  }
+}
+
+void BinnedFitModel::SmearPeakingBackgrounds() {
+  // First smear the correlated peaking backgrounds, if any
+  for(auto &CholeskyDecomposition : m_CholeskyDecompositions) {
+    CholeskyDecomposition.second.Smear();
+  }
+  std::string Mode = m_Settings.get("Mode");
+  int PeakingBackgrounds = m_Settings["MBC_Shape"].getI(Mode + "_PeakingBackgrounds");
+  // Loop over all peaking backgrounds
+  for(int i = 0; i < PeakingBackgrounds; i++) {
+    std::string BackgroundName(Mode + "_PeakingBackground" + std::to_string(i));
+    // Check if this background has correlated backgrounds
+    bool Correlated = m_CholeskyDecompositions.find(BackgroundName + "_BackgroundToSignalRatio") != m_CholeskyDecompositions.end();
+    // Loop over all bins
+    for(const auto &Category : m_Category.GetCategories()) {
       std::string Name = Mode + "_PeakingBackground" + std::to_string(i) + "_" + Category;
       if(!m_Settings["MBC_Shape"].contains(Name + "_Yield")) {
+	// If peaking background is expressed as a background-to-signal ratio with quantum correlation correction
 	auto YieldVar = static_cast<RooFormulaVar*>(m_Yields[Category + "_PeakingBackground" + std::to_string(i) + "Yield"]);
 	double BackgroundSignalRatio = m_Settings["MBC_Shape"].getD(Name + "_BackgroundToSignalRatio");
-	double BackgroundSignalRatio_err = m_Settings["MBC_Shape"].getD(Name + "_BackgroundToSignalRatio_err");
-	auto BkgSigRatioVar = static_cast<RooRealVar*>(YieldVar->getParameter((Name + "_BackgroundToSignalRatio").c_str()));
-	BackgroundSignalRatio += gRandom->Gaus(0.0, BackgroundSignalRatio_err);
+	if(Correlated) {
+	  // If peaking background is correlated, get smearing from Cholesky decomposition
+	  BackgroundSignalRatio += m_CholeskyDecompositions.at(BackgroundName + "_BackgroundToSignalRatio").GetSmearing(m_Category.GetCategoryIndex(Category));
+	} else {
+	  // Else just generate smearing
+	  double BackgroundSignalRatio_err = m_Settings["MBC_Shape"].getD(Name + "_BackgroundToSignalRatio_err");
+	  BackgroundSignalRatio += gRandom->Gaus(0.0, BackgroundSignalRatio_err);
+	}
 	if(BackgroundSignalRatio < 0.0) {
 	  BackgroundSignalRatio = 0.0;
 	}
+	// Update RooFit variable with smeared yield
+	auto BkgSigRatioVar = static_cast<RooRealVar*>(YieldVar->getParameter((Name + "_BackgroundToSignalRatio").c_str()));
 	BkgSigRatioVar->setVal(BackgroundSignalRatio);
+	// Repeat the same with the quantum correlation factors
 	if(m_Settings["MBC_Shape"].contains(Name + "_QuantumCorrelationFactor")) {
 	  double QCFactor = m_Settings["MBC_Shape"].getD(Name + "_QuantumCorrelationFactor");
-	  double QCFactor_err = m_Settings["MBC_Shape"].getD(Name + "_QuantumCorrelationFactor_err");
-	  QCFactor += gRandom->Gaus(0.0, QCFactor_err);
+	  if(Correlated) {
+	    QCFactor += m_CholeskyDecompositions.at(BackgroundName + "_QuantumCorrelationFactor").GetSmearing(m_Category.GetCategoryIndex(Category));
+	  } else {
+	    double QCFactor_err = m_Settings["MBC_Shape"].getD(Name + "_QuantumCorrelationFactor_err");
+	    QCFactor += gRandom->Gaus(0.0, QCFactor_err);
+	  }
 	  if(QCFactor < 0.0) {
 	    QCFactor = 0.0;
 	  }
@@ -193,6 +235,7 @@ void BinnedFitModel::SmearPeakingBackgrounds() {
 	  QCFactorVar->setVal(QCFactor);
 	}
       } else {
+	// If a peaking background yield is given
 	double BackgroundYield = m_Settings["MBC_Shape"].getD(Name + "_Yield");
 	double BackgroundYield_err = m_Settings["MBC_Shape"].getD(Name + "_Yield_err");
 	BackgroundYield += gRandom->Gaus(0.0, BackgroundYield_err);

@@ -48,6 +48,10 @@ class Category {
      * Get the tag bin number from the unique string that describes the category
      */
     int GetTagBinNumber(const std::string &category) const;
+    /**
+     * Get the index number of a category (in case we need to use the [] operator on the vector)
+     */
+    int GetCategoryIndex(const std::string &category) const;
   private:
     /**
      * Tag mode

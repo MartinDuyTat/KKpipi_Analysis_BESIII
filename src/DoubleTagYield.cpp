@@ -26,6 +26,7 @@
 #include"BinnedDataLoader.h"
 #include"BinnedFitModel.h"
 #include"Category.h"
+#include"Utilities.h"
 
 DoubleTagYield::DoubleTagYield(const Settings &settings, TTree *Tree): m_SignalMBC("SignalMBC", "", 1.83, 1.8865),
 								       m_Settings(settings), m_Tree(Tree) {
@@ -75,6 +76,7 @@ void DoubleTagYield::DoFit() {
     std::ofstream OutputFile(m_Settings.get("FittedSignalYieldsFile"), std::ios_base::app);
     OutputFile << "\n* Systematic uncertainties\n\n";
     std::map<std::string, double> SystError;
+    TMatrixT<double> SystCovMatrix(Categories.size(), Categories.size());
     int PeakingBackgrounds = m_Settings["MBC_Shape"].getI(m_Settings.get("Mode") + "_PeakingBackgrounds");
     if(PeakingBackgrounds > 0) {
       std::map<std::string, std::vector<double>> FittedYields;
@@ -82,6 +84,7 @@ void DoubleTagYield::DoFit() {
 	FittedYields.insert({Category, std::vector<double>()});
       }
       gRandom->SetSeed(m_Settings.getI("Seed"));
+      FitModel.PrepareSmearing();
       for(int i = 0; i < m_Settings.getI("NumberRuns"); i++) {
 	std::cout << "Starting systematics fit number: " << i << "\n";
 	*Parameters = *m_InitialParameters;
@@ -95,6 +98,15 @@ void DoubleTagYield::DoFit() {
       for(const auto &Category : Categories) {
 	SystError[Category] = TMath::RMS(FittedYields[Category].begin(), FittedYields[Category].end());
       }
+      auto CategoryObj = DataLoader.GetCategoryObject();
+      for(const auto &Category_x : Categories) {
+	for(const auto &Category_y : Categories) {
+	  double Covariance = Utilities::Covariance(FittedYields[Category_x], FittedYields[Category_y]);
+	  int index_x = CategoryObj->GetCategoryIndex(Category_x);
+	  int index_y = CategoryObj->GetCategoryIndex(Category_y);
+	  SystCovMatrix(index_x, index_y) = Covariance;
+	}
+      }
     } else {
       for(const auto &Category : Categories) {
 	SystError[Category] = 0.0;
@@ -105,6 +117,12 @@ void DoubleTagYield::DoFit() {
       OutputFile << YieldName << "_syst_err " << SystError[Category] << "\n";
     }
     OutputFile.close();
+    if(Categories.size() > 1) {
+      TFile SystCovMatrixFile("PeakingBackground_CovMatrix.root", "RECREATE");
+      SystCovMatrixFile.cd();
+      SystCovMatrix.Write("CovMatrix");
+      SystCovMatrixFile.Close();
+    }
   }
   if(m_Settings.contains("sPlotReweight") && m_Settings.getB("sPlotReweight")) {
     sPlotReweight(*DataSet, FitModel);

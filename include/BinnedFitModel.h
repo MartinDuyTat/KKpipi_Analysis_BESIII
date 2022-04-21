@@ -16,6 +16,7 @@
 #include"RooAbsPdf.h"
 #include"Settings.h"
 #include"Category.h"
+#include"CholeskySmearing.h"
 #include"RooShapes/FitShape.h"
 
 class DoubleTagYield;
@@ -109,6 +110,14 @@ class BinnedFitModel {
      * Smear the peaking backgrounds to estimate the systematic uncertainties
      */
     void SmearPeakingBackgrounds();
+    /**
+     * Map of the Cholesky smearing objects
+     */
+    std::map<std::string, CholeskySmearing> m_CholeskyDecompositions;
+    /**
+     * Helper function that sets up all the Cholesky decompositions for smearing of correlated peaking backgrounds
+     */
+    void PrepareSmearing();
 };
 
 #endif

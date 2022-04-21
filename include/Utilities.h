@@ -6,6 +6,7 @@
 #include<string>
 #include<vector>
 #include<memory>
+#include<numeric>
 #include"TChain.h"
 #include"TTree.h"
 #include"TCut.h"
@@ -85,6 +86,17 @@ namespace Utilities {
    * Determine the tag type, which can be "Flavour", "CP", "SCMB"
    */
   std::string GetTagType(const std::string &Mode);
+  /**
+   * Calculate covariance of two vectors
+   */
+  template<typename T>
+  T Covariance(const std::vector<T> &x, const std::vector<T> &y) {
+    T Mean_x = TMath::Mean(x.begin(), x.end());
+    T Mean_y = TMath::Mean(y.begin(), y.end());
+    T Total2 = std::inner_product(x.begin(), x.end(), y.begin(), static_cast<T>(0),
+				  std::plus<>(), [=](T a, T b) { return (a - Mean_x)*(b - Mean_y); });
+    return Total2/static_cast<T>(x.size() - 1);
+  }
 }
 
 #endif
