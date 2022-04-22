@@ -24,6 +24,7 @@
 #include"Settings.h"
 #include"Unique.h"
 #include"FPlusFitter.h"
+#include"CholeskySmearing.h"
 
 FPlusFitter::FPlusFitter(const Settings &settings): m_Settings(settings),
 						    m_FPlus_Model(m_Settings["FPlus_TagModes"].getD("KKpipi")),
@@ -214,19 +215,7 @@ void FPlusFitter::AddMeasurement_KShh(const std::string &TagMode, bool Smearing)
   ST_Yield_err /= ST_Eff;
   // Get number of bins
   int Bins = m_Settings[TagMode + "_BinningScheme"].getI("NumberBins");
-  // Get double tag yield in each bin and correct for bin migration
-  TMatrixT<double> DT_Yields(Bins, 1);
-  TMatrixT<double> DT_Yields_err(Bins, 1);
-  for(int i = 0; i < Bins; i++) {
-    std::string DT_Name("DoubleTag_SCMB_KKpipi_vs_" + TagMode + "_SignalBin0_TagBin" + std::to_string(i + 1) + "_SignalYield");
-    DT_Yields(i, 0) = m_Settings[TagMode + "_DT_Yield"].getD(DT_Name);
-    DT_Yields_err(i, 0) = m_Settings[TagMode + "_DT_Yield"].getD(DT_Name + "_err");
-  }
-  auto EffMatrix = GetEfficiencyMatrix(TagMode, Smearing);
-  TMatrixT<double> DT_Yields_EffCorrected = *EffMatrix*DT_Yields;
-  for(int i = 0; i < Bins; i++) {
-    DT_Yields_err(i, 0) *= (*EffMatrix)(i, i);
-  }
+  auto [DT_Yields_EffCorrected, DT_Yields_err] = GetBinnedTagYield(TagMode, Smearing);
   std::cout << "Adding " << TagMode << " tag mode\n";
   for(int i = 0; i < Bins; i++) {
     std::string YieldName = TagMode + "_Normalized_Yield_Bin" + std::to_string(i + 1);
@@ -400,4 +389,37 @@ std::pair<double, double> FPlusFitter::GetTagYield(const std::string &TagMode, c
     Yield += gRandom->Gaus(0.0, YieldSystError);
   }
   return std::make_pair(Yield, Yield_err);
+}
+
+std::pair<TMatrixT<double>, TMatrixT<double>> FPlusFitter::GetBinnedTagYield(const std::string &TagMode, bool Smearing) {
+  int Bins = m_Settings[TagMode + "_BinningScheme"].getI("NumberBins");
+  // Get double tag yield in each bin and correct for bin migration
+  TMatrixT<double> DT_Yields(Bins, 1);
+  TMatrixT<double> DT_Yields_err(Bins, 1);
+  for(int i = 0; i < Bins; i++) {
+    std::string DT_Name("DoubleTag_SCMB_KKpipi_vs_" + TagMode + "_SignalBin0_TagBin" + std::to_string(i + 1) + "_SignalYield");
+    DT_Yields(i, 0) = m_Settings[TagMode + "_DT_Yield"].getD(DT_Name);
+    DT_Yields_err(i, 0) = m_Settings[TagMode + "_DT_Yield"].getD(DT_Name + "_err");
+  }
+  if(Smearing && m_Settings.get("Systematics") == "PeakingBackgrounds") {
+    SmearBinnedTagYield(TagMode, DT_Yields);
+  }
+  auto EffMatrix = GetEfficiencyMatrix(TagMode, Smearing);
+  TMatrixT<double> DT_Yields_EffCorrected = *EffMatrix*DT_Yields;
+  for(int i = 0; i < Bins; i++) {
+    DT_Yields_err(i, 0) *= (*EffMatrix)(i, i);
+  }
+  return std::make_pair(DT_Yields_EffCorrected, DT_Yields_err);
+}
+
+void FPlusFitter::SmearBinnedTagYield(const std::string &TagMode, TMatrixT<double> &DT_Yields) {
+  if(m_CholeskySmearings.find(TagMode) == m_CholeskySmearings.end()) {
+    std::string CovMatrixFilename = m_Settings.get(TagMode + "_PeakingBackground_CovMatrix");
+    TFile CovMatrixFile(CovMatrixFilename.c_str(), "READ");
+    TMatrixT<double> *CovMatrix = nullptr;
+    CovMatrixFile.GetObject("CovMatrix", CovMatrix);
+    m_CholeskySmearings.insert({TagMode, CholeskySmearing(*CovMatrix)});
+  }
+  m_CholeskySmearings.at(TagMode).Smear();
+  DT_Yields += m_CholeskySmearings.at(TagMode).GetSmearings();
 }

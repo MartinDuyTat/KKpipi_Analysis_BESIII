@@ -20,6 +20,7 @@
 #include"RooMultiVarGaussian.h"
 #include"Settings.h"
 #include"cisiK0pipi.h"
+#include"CholeskySmearing.h"
 
 class FPlusFitter {
   public:
@@ -173,6 +174,23 @@ class FPlusFitter {
      * @param Smearing Set to true to smear parameters for systmatics studies
      */
     std::pair<double, double> GetTagYield(const std::string &TagMode, const std::string &TagType, bool Smearing) const;
+    /**
+     * Function for getting the binned tag yields of K0pipi
+     * For systematics studies the yields are smeared by the peaking background systematics, with correlations accounted for
+     * @param TagMode Tag mode
+     * @param Smearing Set to true to smear parameters for systmatics studies
+     */
+    std::pair<TMatrixT<double>, TMatrixT<double>> GetBinnedTagYield(const std::string &TagMode, bool Smearing);
+    /**
+     * Map of Cholesky smearing objects
+     */
+    std::map<std::string, CholeskySmearing> m_CholeskySmearings;
+    /**
+     * Helper function for smearing binned yields for systematics studies, accounting for correlations
+     * @param TagMode Tag mode
+     * @param DT_Yields The binned yields before smearing (return by reference)
+     */
+    void SmearBinnedTagYield(const std::string &TagMode, TMatrixT<double> &DT_Yields);
 };
 
 #endif

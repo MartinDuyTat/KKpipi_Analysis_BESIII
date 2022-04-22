@@ -24,6 +24,10 @@ double CholeskySmearing::GetSmearing(int i) const {
   return m_Smearings(i, 0);
 }
 
+TMatrixT<double> CholeskySmearing::GetSmearings() const {
+  return m_Smearings;
+}
+
 TMatrixT<double> CholeskySmearing::GetCholeskyDecomposition(const TMatrixT<double> &CovMatrix) const {
   TDecompChol CholeskyDecomposition(CovMatrix);
   bool Success = CholeskyDecomposition.Decompose();

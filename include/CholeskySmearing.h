@@ -26,6 +26,10 @@ class CholeskySmearing {
      * @param i Index labelling the parameter
      */
     double GetSmearing(int i) const;
+    /**
+     * Get the whole vector of smeared parameters
+     */
+    TMatrixT<double> GetSmearings() const;
   private:
     /**
      * The Cholesky decomposition of the covariance matrix
