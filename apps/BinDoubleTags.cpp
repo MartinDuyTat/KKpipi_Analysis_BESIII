@@ -28,6 +28,8 @@ int main(int argc, char *argv[]) {
   std::string SignalBin_Name = settings.get("SignalBin_variable");
   std::string TagBin_Name = settings.get("TagBin_variable");
   int SignalBin, TagBin, SignalBin_true, TagBin_true;
+  std::vector<std::string> DalitzVariables{"s01", "s03", "s12", "s23", "s012"};
+  std::map<std::string, double> DalitzCoordinates;
   TFile OutputFile(OutputFilename.c_str(), "RECREATE");
   TTree *OutputTree = InputChain.CloneTree(0);
   if(settings.getB("Bin_reconstructed")) {
@@ -38,20 +40,27 @@ int main(int argc, char *argv[]) {
     OutputTree->Branch((SignalBin_Name + "_true").c_str(), &SignalBin_true);
     OutputTree->Branch((TagBin_Name + "_true").c_str(), &TagBin_true);
   }
+  for(const auto &DalitzVariable : DalitzVariables) {
+    DalitzCoordinates.insert({DalitzVariable, 0.0});
+    OutputTree->Branch(DalitzVariable.c_str(), &DalitzCoordinates[DalitzVariable]);
+  }
   int EventsOutsidePhaseSpace = 0;
   int EventsOutsidePhaseSpace_true = 0;
   int NumberExceptions = 0;
   std::cout << "Ready to bin phase space\n";
-  for(int i = 0; i < InputChain.GetEntries(); i++) {
+  int Entries = InputChain.GetEntries();
+  for(int i = 0; i < Entries; i++) {
     InputChain.GetEntry(i);
     if(settings.getB("Bin_reconstructed")) {
       std::pair<int, int> Bin = PhaseSpace->Bin();
-      if(Bin.first != 0) {
-	SignalBin = Bin.first;
-	TagBin = Bin.second;
-      } else {
+      SignalBin = Bin.first;
+      TagBin = Bin.second;
+      if(Bin.first == 0) {
 	EventsOutsidePhaseSpace++;
-	continue;
+	if(!(settings.contains("IncludeEventsOutsidePhaseSpace") && 
+	     settings.getB("IncludeEventsOutsidePhaseSpace"))) {
+	  continue;
+	}
       }
     }
     if(settings.getB("Bin_truth")) {
@@ -62,13 +71,19 @@ int main(int argc, char *argv[]) {
 	NumberExceptions++;
 	  continue;
       }
-      if(Bin.first != 0) {
-	SignalBin_true = Bin.first;
-	TagBin_true = Bin.second;
-      } else {
-	EventsOutsidePhaseSpace++;
-	continue;
+      SignalBin_true = Bin.first;
+      TagBin_true = Bin.second;
+      if(Bin.first == 0) {
+	EventsOutsidePhaseSpace_true++;
+	if(!(settings.contains("IncludeEventsOutsidePhaseSpace") && 
+	     settings.getB("IncludeEventsOutsidePhaseSpace"))) {
+	  continue;
+	}
       }
+    }
+    auto TrueDalitzCoordinates = PhaseSpace->GetDalitzCoordinates();
+    for(const auto &DalitzVariable : DalitzVariables) {
+      DalitzCoordinates[DalitzVariable] = TrueDalitzCoordinates[DalitzVariable];
     }
     OutputTree->Fill();
   }

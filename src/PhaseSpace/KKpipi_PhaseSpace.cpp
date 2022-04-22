@@ -3,6 +3,8 @@
 #include<algorithm>
 #include<stdexcept>
 #include<iostream>
+#include<map>
+#include<string>
 #include"TTree.h"
 #include"TFile.h"
 #include"TLorentzVector.h"
@@ -182,4 +184,18 @@ std::vector<double> KKpipi_PhaseSpace::GetMomentumResolution() const {
     }
   }
   return Resolution;
+}
+
+std::map<std::string, double> KKpipi_PhaseSpace::GetDalitzCoordinates() const {
+  TLorentzVector KPlus(m_TrueMomenta.data() + 0);
+  TLorentzVector KMinus(m_TrueMomenta.data() + 4);
+  TLorentzVector PiPlus(m_TrueMomenta.data() + 8);
+  TLorentzVector PiMinus(m_TrueMomenta.data() + 12);
+  std::map<std::string, double> DalitzCoordinates;
+  DalitzCoordinates.insert({"s01", (KPlus + KMinus).M2()});
+  DalitzCoordinates.insert({"s03", (KPlus + PiMinus).M2()});
+  DalitzCoordinates.insert({"s12", (KMinus + PiPlus).M2()});
+  DalitzCoordinates.insert({"s23", (PiPlus + PiMinus).M2()});
+  DalitzCoordinates.insert({"s012", (KPlus + KMinus + PiPlus).M2()});
+  return DalitzCoordinates;
 }

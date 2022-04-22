@@ -13,5 +13,6 @@ std::pair<int, int> KKpipi_vs_CP_PhaseSpace::Bin() const {
 }
 
 std::pair<int, int> KKpipi_vs_CP_PhaseSpace::TrueBin() {
+  FindDIndex();
   return std::make_pair(TMath::Abs(TrueKKpipiBin()), 0);
 }

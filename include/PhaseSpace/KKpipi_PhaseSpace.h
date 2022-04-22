@@ -10,6 +10,8 @@
 
 #include<vector>
 #include<utility>
+#include<map>
+#include<string>
 #include"TTree.h"
 #include"TH2F.h"
 #include"AmplitudePhaseSpace.h"
@@ -39,6 +41,10 @@ class KKpipi_PhaseSpace {
      * One must call TrueBin() first before calling this function!
      */
     std::vector<double> GetMomentumResolution() const;
+    /**
+     * Get the true Dalitz coordinates
+     */
+    std::map<std::string, double> GetDalitzCoordinates() const;
   protected:
     /**
      * Get the phase space bin of the \f$D^0\to KK\pi\pi\f$ decay (but obviously we know nothing about the flavour yet)
