@@ -110,34 +110,48 @@ void FPlusFitter::DoManyToysOrFits(RooMultiVarGaussian *Model, const std::string
   TFile OutputFile(Filename.c_str(), "RECREATE");
   TTree Tree("FPlusTree", "");
   int Status, CovQual;
-  double FPlus, FPlus_err, FPlus_pull;
+  double FPlus, FPlus_err, FPlus_pull, Norm_CP, Norm_KSpipi, Norm_KLpipi, Norm_CP_pull, Norm_KSpipi_pull, Norm_KLpipi_pull;
   Tree.Branch("Status", &Status);
   Tree.Branch("CovQual", &CovQual);
   Tree.Branch("FPlus", &FPlus);
   Tree.Branch("FPlus_err", &FPlus_err);
   Tree.Branch("FPlus_pull", &FPlus_pull);
+  Tree.Branch("KKpipi_BF_CP", &Norm_CP);
+  Tree.Branch("KKpipi_BF_KSpipi", &Norm_KSpipi);
+  Tree.Branch("KKpipi_BF_KLpipi", &Norm_KLpipi);
+  Tree.Branch("KKpipi_BF_CP_pull", &Norm_CP_pull);
+  Tree.Branch("KKpipi_BF_KSpipi_pull", &Norm_KSpipi_pull);
+  Tree.Branch("KKpipi_BF_KLpipi_pull", &Norm_KLpipi_pull);
   int nToys = m_Settings.getI("NumberRuns");
   for(int i = 0; i < nToys; i++) {
     std::cout << "Run number " << i << "\n";
     ResetParameters();
     // Generate or smear dataset
-    RooDataSet Data;
+    //RooDataSet Data;
     RooFitResult *Result = nullptr;
     if(RunMode == "ManyToys") {
-      Data = *Model->generate(m_NormalizedYields, m_Settings.getI("StatsMultiplier"));
+      RooDataSet *Data = Model->generate(m_NormalizedYields, m_Settings.getI("StatsMultiplier"));
+      Result = Model->fitTo(*Data, RooFit::Save(), RooFit::ExternalConstraints(m_GaussianConstraintPDFs));
+      Data->Print("V");
     } else {
       ResetMeasurements();
-      Data = RooDataSet("Data", "", m_NormalizedYields);
+      RooDataSet Data("Data", "", m_NormalizedYields);
       Data.add(m_NormalizedYields);
+      Result = Model->fitTo(Data, RooFit::Save(), RooFit::ExternalConstraints(m_GaussianConstraintPDFs));
+      Data.Print("V");
     }
-    Data.Print("V");
-    Result = Model->fitTo(Data, RooFit::Save(), RooFit::ExternalConstraints(m_GaussianConstraintPDFs));
     Result->Print("V");
     Status = Result->status();
     CovQual = Result->covQual();
     FPlus = m_FPlus.getVal();
     FPlus_err = m_FPlus.getError();
     FPlus_pull = (FPlus - m_FPlus_Model)/FPlus_err;
+    Norm_CP = m_KKpipi_BF_CP.getVal();
+    Norm_KSpipi = m_KKpipi_BF_KSpipi.getVal();
+    Norm_KLpipi = m_KKpipi_BF_KLpipi.getVal();
+    Norm_CP_pull = (Norm_CP - m_KKpipi_BF_PDG)/m_KKpipi_BF_CP.getError();
+    Norm_KSpipi_pull = (Norm_KSpipi - m_KKpipi_BF_PDG)/m_KKpipi_BF_KSpipi.getError();
+    Norm_KLpipi_pull = (Norm_KLpipi - m_KKpipi_BF_PDG)/m_KKpipi_BF_KLpipi.getError();
     Tree.Fill();
   }
   OutputFile.cd();

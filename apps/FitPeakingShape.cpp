@@ -168,9 +168,14 @@ int main(int argc, char *argv[]) {
     RooArgList floating_param = Result->floatParsFinal();
     for(int i = 0; i < floating_param.getSize(); i++) {
       RooRealVar *param = static_cast<RooRealVar*>(floating_param.at(i));
-      std::cout << param->GetName() << " " << param->getVal() << "\n";
+      std::string ParameterName(param->GetName());
+      std::cout << ParameterName << " " << param->getVal() << "\n";
+      if(ParameterName.substr(ParameterName.length() - 4, ParameterName.length()) == "Nsig") {
+	std::cout << ParameterName + "_err " << param->getError() << "\n";
+      }
     }
     std::cout << Mode << "_PeakingBackground" << n << "_Yield " << Yields[n] << "\n";
+    std::cout << Mode << "_PeakingBackground" << n << "_Yield_err " << TMath::Sqrt(Yields[n]) << "\n";
     std::cout << "\n";
     n++;
   }
