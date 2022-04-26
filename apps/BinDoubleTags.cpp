@@ -39,10 +39,10 @@ int main(int argc, char *argv[]) {
   if(settings.getB("Bin_truth")) {
     OutputTree->Branch((SignalBin_Name + "_true").c_str(), &SignalBin_true);
     OutputTree->Branch((TagBin_Name + "_true").c_str(), &TagBin_true);
-  }
-  for(const auto &DalitzVariable : DalitzVariables) {
-    DalitzCoordinates.insert({DalitzVariable, 0.0});
-    OutputTree->Branch(DalitzVariable.c_str(), &DalitzCoordinates[DalitzVariable]);
+    for(const auto &DalitzVariable : DalitzVariables) {
+      DalitzCoordinates.insert({DalitzVariable, 0.0});
+      OutputTree->Branch(DalitzVariable.c_str(), &DalitzCoordinates[DalitzVariable]);
+    }
   }
   int EventsOutsidePhaseSpace = 0;
   int EventsOutsidePhaseSpace_true = 0;
@@ -80,10 +80,10 @@ int main(int argc, char *argv[]) {
 	  continue;
 	}
       }
-    }
-    auto TrueDalitzCoordinates = PhaseSpace->GetDalitzCoordinates();
-    for(const auto &DalitzVariable : DalitzVariables) {
-      DalitzCoordinates[DalitzVariable] = TrueDalitzCoordinates[DalitzVariable];
+      auto TrueDalitzCoordinates = PhaseSpace->GetDalitzCoordinates();
+      for(const auto &DalitzVariable : DalitzVariables) {
+	DalitzCoordinates[DalitzVariable] = TrueDalitzCoordinates[DalitzVariable];
+      }
     }
     OutputTree->Fill();
   }

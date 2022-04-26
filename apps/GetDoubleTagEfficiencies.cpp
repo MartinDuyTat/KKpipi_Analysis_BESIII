@@ -27,13 +27,13 @@ int main(int argc, char *argv[]) {
   std::cout << "Getting the number of events generated in each bin...\n";
   TChain TruthChain("TruthTuple");
   TruthChain.Add(settings.get("TruthTupleFilename").c_str());
-  std::vector<int> GeneratedEvents;
+  std::vector<double> GeneratedEvents;
   for(const auto &Bin : BinCombinations) {
     TCut BinCut((settings.get("TagBin_variable") + "_true == " + std::to_string(Bin.second)).c_str());
     if(!(settings.contains("Inclusive_fit") && settings.getB("Inclusive_fit"))) {
       BinCut = BinCut && TCut((settings.get("SignalBin_variable") + "_true == " + std::to_string(Bin.first)).c_str());
     }
-    int Events = TruthChain.GetEntries(BinCut);
+    double Events = Utilities::SumWeights(&TruthChain, "ModelWeight", std::string(BinCut.GetTitle()));
     GeneratedEvents.push_back(Events);
   }
   std::cout << "True bin yields counted\n";
@@ -43,6 +43,8 @@ int main(int argc, char *argv[]) {
   std::string TreeName = settings.get("TreeName");
   TChain Chain(TreeName.c_str());
   Chain.Add(settings.get("SignalMCFilename").c_str());
+  double ModelWeight;
+  Chain.SetBranchAddress("ModelWeight", &ModelWeight);
   int SignalBin, SignalBin_true, TagBin, TagBin_true;
   if(settings.contains("Inclusive_fit") && settings.getB("Inclusive_fit")) {
     SignalBin = 0;
@@ -57,7 +59,7 @@ int main(int argc, char *argv[]) {
     Chain.GetEntry(i);
     auto RecBin_index = std::distance(BinCombinations.begin(), std::find(BinCombinations.begin(), BinCombinations.end(), std::make_pair(SignalBin, TagBin)));
     auto TrueBin_index = std::distance(BinCombinations.begin(), std::find(BinCombinations.begin(), BinCombinations.end(), std::make_pair(SignalBin_true, TagBin_true)));
-    EffMatrix(RecBin_index, TrueBin_index)++;
+    EffMatrix(RecBin_index, TrueBin_index) += ModelWeight;
   }
   std::cout << "Efficiency matrix constructed!\n";
   std::cout << "Normalizing efficiency matrix...\n";

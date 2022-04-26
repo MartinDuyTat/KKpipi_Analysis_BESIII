@@ -6,6 +6,8 @@
 #include<regex>
 #include<stdexcept>
 #include"TChain.h"
+#include"TTree.h"
+#include"TEntryList.h"
 #include"RooRealVar.h"
 #include"Utilities.h"
 #include"InitialCuts.h"
@@ -195,6 +197,20 @@ namespace Utilities {
 	throw std::invalid_argument(Mode + " tag mode is unknown");
       }
     }
+  }
+
+  double SumWeights(TTree *Tree, const std::string &WeightName, const std::string &Cut) {
+    TTree *ClonedTree = Tree->CloneTree();
+    ClonedTree->Draw(">> elist", Cut.c_str(), "entrylist");
+    TEntryList *elist = (TEntryList*)gDirectory->Get("elist");
+    ClonedTree->SetEntryList(elist);
+    double Total = 0.0, Weight;
+    ClonedTree->SetBranchAddress(WeightName.c_str(), &Weight);
+    for(Long64_t i = 0; i < elist->GetN(); i++) {
+      ClonedTree->GetEntry(ClonedTree->GetEntryNumber(i));
+      Total += Weight;
+    }
+    return Total;
   }
 
 }

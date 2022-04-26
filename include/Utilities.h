@@ -97,6 +97,12 @@ namespace Utilities {
 				  std::plus<>(), [=](T a, T b) { return (a - Mean_x)*(b - Mean_y); });
     return Total2/static_cast<T>(x.size() - 1);
   }
+  /**
+   * Sum the weights of all events that pass the cut
+   * Tree The tree with events
+   * Cut The cut applied
+   */
+  double SumWeights(TTree *Tree, const std::string &WeightName, const std::string &Cut = "");
 }
 
 #endif

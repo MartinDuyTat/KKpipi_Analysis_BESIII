@@ -1,2 +1,2 @@
 TagMissingMass2 > 0.12 && TagMissingMass2 < 0.38
-SignalMBC > 1.85 && SignalMBC < 1.88
+SignalMBC > 1.855 && SignalMBC < 1.875
