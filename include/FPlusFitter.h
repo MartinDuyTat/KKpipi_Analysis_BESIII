@@ -191,6 +191,10 @@ class FPlusFitter {
      * @param DT_Yields The binned yields before smearing (return by reference)
      */
     void SmearBinnedTagYield(const std::string &TagMode, TMatrixT<double> &DT_Yields);
+    /**
+     * Set this flag to true to run fits with Minos
+     */
+    bool m_RunMinos;
 };
 
 #endif

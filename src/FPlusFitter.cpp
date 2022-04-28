@@ -32,7 +32,8 @@ FPlusFitter::FPlusFitter(const Settings &settings): m_Settings(settings),
 						    m_FPlus("FPlus", "", 0.5, 0.0, 3.0),
 						    m_KKpipi_BF_CP("KKpipi_BF_CP", "", m_KKpipi_BF_PDG, 0.000, 0.005),
 						    m_KKpipi_BF_KSpipi("KKpipi_BF_KSpipi", "", m_KKpipi_BF_PDG, 0.000, 0.005),
-						    m_KKpipi_BF_KLpipi("KKpipi_BF_KLpipi", "", m_KKpipi_BF_PDG, 0.000, 0.005) {
+						    m_KKpipi_BF_KLpipi("KKpipi_BF_KLpipi", "", m_KKpipi_BF_PDG, 0.000, 0.005),
+                                                    m_RunMinos(m_Settings.getB("RunMinos")) {
   m_KKpipi_BF_CP.setConstant(true);
   m_KKpipi_BF_KSpipi.setConstant(true);
   m_KKpipi_BF_KLpipi.setConstant(true);
@@ -76,7 +77,7 @@ void FPlusFitter::DoSingleFit(RooMultiVarGaussian *Model) {
   RooDataSet Data("Data", "", m_NormalizedYields);
   Data.add(m_NormalizedYields);
   Data.Print("V");
-  auto Result = Model->fitTo(Data, RooFit::Save(), RooFit::ExternalConstraints(m_GaussianConstraintPDFs));
+  auto Result = Model->fitTo(Data, RooFit::Save(), RooFit::ExternalConstraints(m_GaussianConstraintPDFs), RooFit::Minos(m_RunMinos));
   Result->Print("V");
   SaveFitResults(Result);
 }
@@ -90,7 +91,7 @@ void FPlusFitter::DoSingleToy(RooMultiVarGaussian *Model) {
   ResetParameters();
   RooDataSet *Data = Model->generate(m_NormalizedYields, m_Settings.getI("StatsMultiplier"));
   Data->Print("V");
-  auto Result = Model->fitTo(*Data, RooFit::Save(), RooFit::ExternalConstraints(m_GaussianConstraintPDFs));
+  auto Result = Model->fitTo(*Data, RooFit::Save(), RooFit::ExternalConstraints(m_GaussianConstraintPDFs), RooFit::Minos(m_RunMinos));
   Result->Print("V");
   SaveFitResults(Result);
 }
@@ -127,17 +128,16 @@ void FPlusFitter::DoManyToysOrFits(RooMultiVarGaussian *Model, const std::string
     std::cout << "Run number " << i << "\n";
     ResetParameters();
     // Generate or smear dataset
-    //RooDataSet Data;
     RooFitResult *Result = nullptr;
     if(RunMode == "ManyToys") {
       RooDataSet *Data = Model->generate(m_NormalizedYields, m_Settings.getI("StatsMultiplier"));
-      Result = Model->fitTo(*Data, RooFit::Save(), RooFit::ExternalConstraints(m_GaussianConstraintPDFs));
+      Result = Model->fitTo(*Data, RooFit::Save(), RooFit::ExternalConstraints(m_GaussianConstraintPDFs), RooFit::Minos(m_RunMinos));
       Data->Print("V");
     } else {
       ResetMeasurements();
       RooDataSet Data("Data", "", m_NormalizedYields);
       Data.add(m_NormalizedYields);
-      Result = Model->fitTo(Data, RooFit::Save(), RooFit::ExternalConstraints(m_GaussianConstraintPDFs));
+      Result = Model->fitTo(Data, RooFit::Save(), RooFit::ExternalConstraints(m_GaussianConstraintPDFs), RooFit::Minos(m_RunMinos));
       Data.Print("V");
     }
     Result->Print("V");
@@ -190,7 +190,12 @@ void FPlusFitter::AddMeasurement_CP(const std::string &TagMode, bool Smearing) {
   ST_Yield_err /= ST_Eff;
   // Get raw double tag yields and efficiency
   auto [DT_Yield, DT_Yield_err] = GetTagYield(TagMode, "DT", Smearing);
-  double DT_Eff = GetEfficiency(TagMode, "DT", Smearing);
+  double DT_Eff;
+  if(m_Settings.get("Systematics") == "EfficiencyFactorisation") {
+    DT_Eff = GetEfficiency("KKpipi", "ST", Smearing)*GetEfficiency(TagMode, "ST", Smearing);
+  } else {
+    DT_Eff = GetEfficiency(TagMode, "DT", Smearing);
+  }
   DT_Yield /= DT_Eff;
   DT_Yield_err /= DT_Eff;
   // Create variable with a normalized yield and add to dataset
@@ -395,7 +400,7 @@ std::pair<double, double> FPlusFitter::GetTagYield(const std::string &TagMode, c
   } else { 
     Yield_err = m_Settings[SettingsName].getD(YieldName + "_err");
   }
-  if(Smearing && m_Settings.get("Systematics") == "PeakingBackgrounds") {
+  if(Smearing && m_Settings.get("Systematics") == "PeakingBackgrounds" && TagMode.substr(0, 2) != "KL") {
     double YieldSystError = m_Settings[SettingsName].getD(YieldName + "_PeakingBackgrounds_syst_err");
     Yield += gRandom->Gaus(0.0, YieldSystError);
   } else if(Smearing && m_Settings.get("Systematics") == "KL_ST_Yield" && TagMode.substr(0, 2) == "KL") {
