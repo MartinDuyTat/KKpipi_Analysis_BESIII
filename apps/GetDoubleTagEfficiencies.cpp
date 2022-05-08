@@ -19,6 +19,7 @@
 int main(int argc, char *argv[]) {
   std::cout << "Calculating double tag efficiency matrix from signal MC\n";
   Settings settings = Utilities::parse_args(argc, argv);
+  const bool ReweightMC = settings.getB("ReweightMC");
   std::cout << "Setting up all bin combinations...\n";
   Category category(settings);
   auto BinCombinations = category.GetBinCombinations();
@@ -33,7 +34,8 @@ int main(int argc, char *argv[]) {
     if(!(settings.contains("Inclusive_fit") && settings.getB("Inclusive_fit"))) {
       BinCut = BinCut && TCut((settings.get("SignalBin_variable") + "_true == " + std::to_string(Bin.first)).c_str());
     }
-    double Events = Utilities::SumWeights(&TruthChain, "ModelWeight", std::string(BinCut.GetTitle()));
+    const double Events = ReweightMC ? Utilities::SumWeights(&TruthChain, "ModelWeight", std::string(BinCut.GetTitle()))
+                                     : TruthChain.GetEntries(BinCut.GetTitle());
     GeneratedEvents.push_back(Events);
   }
   std::cout << "True bin yields counted\n";
@@ -59,7 +61,7 @@ int main(int argc, char *argv[]) {
     Chain.GetEntry(i);
     auto RecBin_index = std::distance(BinCombinations.begin(), std::find(BinCombinations.begin(), BinCombinations.end(), std::make_pair(SignalBin, TagBin)));
     auto TrueBin_index = std::distance(BinCombinations.begin(), std::find(BinCombinations.begin(), BinCombinations.end(), std::make_pair(SignalBin_true, TagBin_true)));
-    EffMatrix(RecBin_index, TrueBin_index) += ModelWeight;
+    EffMatrix(RecBin_index, TrueBin_index) += ReweightMC ? ModelWeight : 1.0;
   }
   std::cout << "Efficiency matrix constructed!\n";
   std::cout << "Normalizing efficiency matrix...\n";
