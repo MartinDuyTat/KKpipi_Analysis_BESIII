@@ -191,6 +191,10 @@ std::map<std::string, double> KKpipi_PhaseSpace::GetDalitzCoordinates() const {
   TLorentzVector KMinus(m_TrueMomenta.data() + 4);
   TLorentzVector PiPlus(m_TrueMomenta.data() + 8);
   TLorentzVector PiMinus(m_TrueMomenta.data() + 12);
+  if(m_TrueKinematics.ParticleIDs[m_TrueKinematics.SignalD_index] == -421) {
+    std::swap(KPlus, KMinus);
+    std::swap(PiPlus, PiMinus);
+  }
   std::map<std::string, double> DalitzCoordinates;
   DalitzCoordinates.insert({"s01", (KPlus + KMinus).M2()});
   DalitzCoordinates.insert({"s03", (KPlus + PiMinus).M2()});
