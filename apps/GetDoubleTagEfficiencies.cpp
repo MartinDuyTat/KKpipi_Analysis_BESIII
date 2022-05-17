@@ -20,6 +20,17 @@ int main(int argc, char *argv[]) {
   std::cout << "Calculating double tag efficiency matrix from signal MC\n";
   Settings settings = Utilities::parse_args(argc, argv);
   const bool ReweightMC = settings.getB("ReweightMC");
+  const bool QCMCReweighting = settings.getB("QCMCReweighting");
+  std::map<int, double> CPEvenFractions;
+  if(QCMCReweighting) {
+    const std::string Tag = settings.get("BinningSchemeTagMode");
+    for(int i = 1; i <= 8; i++) {
+      const std::string Name = Tag + "_c" + std::to_string(i);
+      const double ci = settings[Tag + "_BinningScheme"]["cisi"].getD(Name);
+      const double FPlus = 0.5*(1 + ci*(Tag == "KLpipi" ? -1.0 : 1.0));
+      CPEvenFractions.insert({i, FPlus});
+    }
+  }
   std::cout << "Setting up all bin combinations...\n";
   Category category(settings);
   auto BinCombinations = category.GetBinCombinations();
@@ -34,9 +45,17 @@ int main(int argc, char *argv[]) {
     if(!(settings.contains("Inclusive_fit") && settings.getB("Inclusive_fit"))) {
       BinCut = BinCut && TCut((settings.get("SignalBin_variable") + "_true == " + std::to_string(Bin.first)).c_str());
     }
-    const double Events = ReweightMC ? Utilities::SumWeights(&TruthChain, "ModelWeight", std::string(BinCut.GetTitle()))
-                                     : TruthChain.GetEntries(BinCut.GetTitle());
-    GeneratedEvents.push_back(Events);
+    if(ReweightMC && QCMCReweighting) {
+      const double Events_CPEven = Utilities::SumWeights(&TruthChain, "ModelWeight_CPEven", std::string(BinCut.GetTitle()));
+      const double Events_CPOdd = Utilities::SumWeights(&TruthChain, "ModelWeight_CPOdd", std::string(BinCut.GetTitle()));
+      GeneratedEvents.push_back(Events_CPEven*(1.0 - CPEvenFractions[Bin.second]) + Events_CPOdd*CPEvenFractions[Bin.second]);
+    } else if(ReweightMC) {
+      const double Events = Utilities::SumWeights(&TruthChain, "ModelWeight", std::string(BinCut.GetTitle()));
+      GeneratedEvents.push_back(Events);
+    } else {
+      const double Events = TruthChain.GetEntries(BinCut.GetTitle());
+      GeneratedEvents.push_back(Events);
+    }
   }
   std::cout << "True bin yields counted\n";
   std::cout << "Counting reconstructed and true bin numbers...\n";
@@ -45,8 +64,10 @@ int main(int argc, char *argv[]) {
   std::string TreeName = settings.get("TreeName");
   TChain Chain(TreeName.c_str());
   Chain.Add(settings.get("SignalMCFilename").c_str());
-  double ModelWeight;
+  double ModelWeight, ModelWeight_CPEven, ModelWeight_CPOdd;
   Chain.SetBranchAddress("ModelWeight", &ModelWeight);
+  Chain.SetBranchAddress("ModelWeight_CPEven", &ModelWeight_CPEven);
+  Chain.SetBranchAddress("ModelWeight_CPOdd", &ModelWeight_CPOdd);
   int SignalBin, SignalBin_true, TagBin, TagBin_true;
   if(settings.contains("Inclusive_fit") && settings.getB("Inclusive_fit")) {
     SignalBin = 0;
@@ -61,7 +82,13 @@ int main(int argc, char *argv[]) {
     Chain.GetEntry(i);
     auto RecBin_index = std::distance(BinCombinations.begin(), std::find(BinCombinations.begin(), BinCombinations.end(), std::make_pair(SignalBin, TagBin)));
     auto TrueBin_index = std::distance(BinCombinations.begin(), std::find(BinCombinations.begin(), BinCombinations.end(), std::make_pair(SignalBin_true, TagBin_true)));
-    EffMatrix(RecBin_index, TrueBin_index) += ReweightMC ? ModelWeight : 1.0;
+    if(ReweightMC && QCMCReweighting) {
+      EffMatrix(RecBin_index, TrueBin_index) += ModelWeight_CPEven*(1.0 - CPEvenFractions[TagBin_true]) + ModelWeight_CPOdd*CPEvenFractions[TagBin_true];
+    } else if(ReweightMC) {
+      EffMatrix(RecBin_index, TrueBin_index) += ModelWeight;
+    } else {
+      EffMatrix(RecBin_index, TrueBin_index) += 1.0;
+    }
   }
   std::cout << "Efficiency matrix constructed!\n";
   std::cout << "Normalizing efficiency matrix...\n";
