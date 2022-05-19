@@ -28,28 +28,29 @@ DeltaEFit::DeltaEFit(TTree *Tree, const Settings &settings):
   m_Tree->SetBranchStatus("*", 0);
   m_Tree->SetBranchStatus("DeltaE" , 1);
   m_Tree->SetBranchStatus("LuminosityWeight", 1);
+  m_Tree = m_Tree->CloneTree();
 }
 
 void DeltaEFit::FitDeltaE() {
   using namespace RooFit;
   DeltaEFitModel FitModel(m_Settings, &m_DeltaE);
-  TH1D h1("h1", "h1", 1000, 0.08, 0.08);
+  TH1D h1("h1", "h1", 1000, m_Settings.getD("DeltaE_Low_Range"), m_Settings.getD("DeltaE_High_Range"));
   m_Tree->Draw("DeltaE >> h1", "LuminosityWeight", "goff");
-  RooDataHist BinnedData("BinnedData", "BinnedData", RooArgList(m_DeltaE), &h1);
-  RooDataSet UnbinnedData("UnbinnedData", "UnbinnedData", m_Tree, RooArgList(m_DeltaE, m_LuminosityWeight), "", "LuminosityWeight");
+  static RooDataHist BinnedData("BinnedData", "BinnedData", RooArgList(m_DeltaE), &h1);
+  static RooDataSet UnbinnedData("UnbinnedData", "UnbinnedData", m_Tree, RooArgList(m_DeltaE, m_LuminosityWeight), "", "LuminosityWeight");
   RooFitResult *Results;
   auto Model = FitModel.GetModel();
   if(m_Settings.get("FitType") != "NoFit") {
-    Results = Model->fitTo(BinnedData, Save(), Strategy(2));
+    Results = Model->fitTo(BinnedData, Save(), Strategy(2), AsymptoticError(true));
     if(m_Settings.get("FitType") == "UnbinnedFit") {
-      Results = Model->fitTo(UnbinnedData, Save(), Strategy(2), NumCPU(4));
+      Results = Model->fitTo(UnbinnedData, Save(), Strategy(2), NumCPU(4), AsymptoticError(true));
     }
     SaveParameters(Results);
   }
-  SavePlot(UnbinnedData, Model);
+  SavePlot(UnbinnedData, FitModel);
 }
 
-void DeltaEFit::SavePlot(const RooDataSet &UnbinnedData, RooAbsPdf *Model) const {
+void DeltaEFit::SavePlot(const RooDataSet &UnbinnedData, const DeltaEFitModel &FitModel) const {
   using namespace RooFit;
   TCanvas c1("c1", "c1", 1600, 1200);
   TPad Pad1("Pad1", "Pad1", 0.0, 0.25, 1.0, 1.0);
@@ -66,10 +67,11 @@ void DeltaEFit::SavePlot(const RooDataSet &UnbinnedData, RooAbsPdf *Model) const
   RooPlot *Frame = m_DeltaE.frame();
   Frame->SetTitle((m_Settings.get("Mode") + std::string(" Single Tag #Delta E fit;#Delta E (GeV);Events")).c_str());
   UnbinnedData.plotOn(Frame, Binning(400));
+  auto Model = FitModel.GetModel();
   Model->plotOn(Frame, LineColor(kBlue), Normalization(1.0, RooAbsReal::Relative));
   RooHist *Pull = Frame->pullHist();
-  Model->plotOn(Frame, Components((m_Settings.get("Mode") + "_SingleTag_Combinatorial_" + m_Settings["Combinatorial"].get("CombinatorialShape")).c_str()), LineColor(kBlue), LineStyle(kDashed));
-  Model->plotOn(Frame, Components((m_Settings.get("Mode") + "_SingleTag_Signal_DoubleGaussian").c_str()), LineColor(kRed));
+  Model->plotOn(Frame, Components(*FitModel.GetModelComponent(1)), LineColor(kBlue), LineStyle(kDashed));
+  Model->plotOn(Frame, Components(*FitModel.GetModelComponent(0)), LineColor(kRed));
   TLine *Line_Low = new TLine(m_DeltaE_Low, 0.0, m_DeltaE_Low, Frame->GetMaximum()*0.2);
   TLine *Line_High = new TLine(m_DeltaE_High, 0.0, m_DeltaE_High, Frame->GetMaximum()*0.2);
   Line_Low->SetLineWidth(2);
@@ -82,7 +84,7 @@ void DeltaEFit::SavePlot(const RooDataSet &UnbinnedData, RooAbsPdf *Model) const
   Pad2.cd();
   RooPlot *PullFrame = m_DeltaE.frame();
   PullFrame->addObject(Pull, "P E1");
-  TLine *Line = new TLine(-0.08, 0.0, 0.08, 0.0);
+  TLine *Line = new TLine(m_Settings.getD("DeltaE_Low_Range"), 0.0, m_Settings.getD("DeltaE_High_Range"), 0.0);
   PullFrame->addObject(Line);
   PullFrame->SetMinimum(-5);
   PullFrame->SetMaximum(5);
@@ -102,24 +104,28 @@ void DeltaEFit::SaveParameters(RooFitResult *Results) {
   OutputFile << "status " << Results->status() << "\n";
   OutputFile << "covQual " << Results->covQual() << "\n";
   RooArgList floating_param = Results->floatParsFinal();
-  double mu1 = 0.0, mu2 = 0.0, sigma1 = 0.0, sigma2 = 0.0, frac = 0.0;
+  double mu_f = 0.0, mu = 0.0, sigma_f = 0.0, sigma = 0.0, frac = 0.0;
   for(int i = 0; i < floating_param.getSize(); i++) {
     RooRealVar *param = static_cast<RooRealVar*>(floating_param.at(i));
     std::string Name(param->GetName());
     OutputFile << Name << " " << param->getVal() << "\n";
     OutputFile << Name << "_err " << param->getError() << "\n";
-    if(Name.find("mu1") != std::string::npos) {
-      mu1 = param->getVal();
-    } else if(Name.find("mu2") != std::string::npos) {
-      mu2 = param->getVal();
-    } else if(Name.find("sigma1") != std::string::npos) {
-      sigma1 = param->getVal();
-    } else if(Name.find("sigma2") != std::string::npos) {
-      sigma2 = param->getVal();
+    if(Name.find("mu_f") != std::string::npos) {
+      mu_f = param->getVal();
+    } else if(Name.find("mu") != std::string::npos) {
+      mu = param->getVal();
+    } else if(Name.find("sigma_f") != std::string::npos) {
+      sigma_f = param->getVal();
+    } else if(Name.find("sigma") != std::string::npos) {
+      sigma = param->getVal();
     } else if(Name.find("frac") != std::string::npos) {
       frac = param->getVal();
     }
   }
+  double mu1 = mu;
+  double mu2 = mu*mu_f;
+  double sigma1 = sigma;
+  double sigma2 = sigma*sigma_f;
   double Mean = mu1*frac + mu2*(1 - frac);
   double Sigma = TMath::Sqrt(sigma1*sigma1*frac + sigma2*sigma2*(1 - frac) + (mu1 - mu2)*(mu1 - mu2)*frac*(1 - frac));
   m_DeltaE_Low = Mean - 3.0*Sigma;
@@ -127,4 +133,8 @@ void DeltaEFit::SaveParameters(RooFitResult *Results) {
   OutputFile << m_Settings.get("Mode") << "_DeltaE_LowerCut " << m_DeltaE_Low << "\n";
   OutputFile << m_Settings.get("Mode") << "_DeltaE_UpperCut " << m_DeltaE_High << "\n";
   OutputFile.close();
+}
+
+void DeltaEFit::ReloadSettings(const Settings &settings) {
+  m_Settings = settings;
 }

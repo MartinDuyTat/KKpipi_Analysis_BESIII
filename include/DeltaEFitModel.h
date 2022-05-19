@@ -29,6 +29,10 @@ class DeltaEFitModel {
      * Get the full \f$\Delta E\f$ fit model
      */
     RooAbsPdf* GetModel() const;
+    /**
+     * Get the PDF component
+     */
+    RooAbsPdf* GetModelComponent(int i) const;
   private:
     /**
      * Vector of all PDF components

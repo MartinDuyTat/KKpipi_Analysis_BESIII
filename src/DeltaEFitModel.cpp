@@ -9,7 +9,7 @@
 #include"Unique.h"
 #include"Utilities.h"
 #include"RooShapes/FitShape.h"
-#include"RooShapes/DoubleGaussian_Shape.h"
+#include"RooShapes/DoubleGaussianRatio_Shape.h"
 #include"RooShapes/DoublePolynomial_Shape.h"
 #include"RooShapes/Chebychev_Shape.h"
 
@@ -30,9 +30,13 @@ RooAbsPdf* DeltaEFitModel::GetModel() const {
   return m_FullModel;
 }
 
+RooAbsPdf* DeltaEFitModel::GetModelComponent(int i) const {
+  return m_ModelComponents[i]->GetPDF();
+}
+
 void DeltaEFitModel::InitializeSignal() {
   std::string Name = m_Settings.get("Mode") + "_SingleTag_Signal";
-  m_ModelComponents.push_back(new DoubleGaussian_Shape(Name, m_Settings["Signal"], m_x));
+  m_ModelComponents.push_back(new DoubleGaussianRatio_Shape(Name, m_Settings["Signal"], m_x));
   m_ModelPDFs.add(*m_ModelComponents.back()->GetPDF());
 }
 

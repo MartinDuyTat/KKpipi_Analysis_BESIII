@@ -30,6 +30,7 @@ add_library(KKpipiStrongPhase
 	    RooShapes/CrystalBall_Shape.cpp
 	    RooShapes/DoubleCrystalBall_Shape.cpp 
 	    RooShapes/DoubleGaussian_Shape.cpp 
+	    RooShapes/DoubleGaussianRatio_Shape.cpp 
 	    RooShapes/DoublePolynomial_Shape.cpp
 	    RooShapes/FitShape.cpp)
 

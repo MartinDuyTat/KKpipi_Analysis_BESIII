@@ -33,14 +33,18 @@ class DeltaEFit {
     /**
      * Save the plot
      * @param UnbinnedData The dataset
-     * @param Model The fit model after fit
+     * @param FitModel The fit model after fit
      */
-    void SavePlot(const RooDataSet &UnbinnedData, RooAbsPdf *Model) const;
+    void SavePlot(const RooDataSet &UnbinnedData, const DeltaEFitModel &FitModel) const;
     /**
      * Function for saving the fitted parameters to a text file
      * @param Results The fit results
      */
     void SaveParameters(RooFitResult *Results);
+    /**
+     * Reload settings
+     */
+    void ReloadSettings(const Settings &settings);
   private:
     /**
      * TTree containing the data we want to fit
