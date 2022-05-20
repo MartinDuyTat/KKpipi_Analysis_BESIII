@@ -272,10 +272,15 @@ void SingleTagYield::sPlotReweight(RooDataSet &Data) {
   for(auto Parameter : *FloatingParameters) {
     static_cast<RooRealVar*>(Parameter)->setConstant(true);
   }
+  RooArgList sPlotYields;
   for(auto YieldParameter : m_ModelYields) {
-    static_cast<RooRealVar*>(YieldParameter)->setConstant(false);
+    auto YieldParameter_Var = dynamic_cast<RooRealVar*>(YieldParameter);
+    if(YieldParameter_Var) {
+      YieldParameter_Var->setConstant(false);
+      sPlotYields.add(*YieldParameter_Var);
+    }
   }
-  RooStats::SPlot("sData", "", Data, m_FullModel, m_ModelYields);
+  RooStats::SPlot("sData", "", Data, m_FullModel, sPlotYields);
   TFile Outfile(m_Settings.get("sPlotFilename").c_str(), "RECREATE");
   auto Tree = RooStats::GetAsTTree(m_Settings.get("TreeName").c_str(), m_Settings.get("TreeName").c_str(), Data);
   Tree->Write();
