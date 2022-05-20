@@ -56,7 +56,7 @@ void DoubleTagYield::DoFit() {
   if(Categories.size() > 1) {
     nCPUs = 4;
   }
-  auto Result = Model->fitTo(*DataSet, Save(), NumCPU(nCPUs), Strategy(2));
+  auto Result = Model->fitTo(*DataSet, Save(), NumCPU(nCPUs), Strategy(2), Minos(true), Minimizer("Minuit2","migrad"));
   // Any bins with less than 0.5 combinatorial background events are set constant
   for(const auto &Category : Categories) {
     RooRealVar *CombinatorialYield = static_cast<RooRealVar*>(FitModel.m_Yields[Category + "_CombinatorialYield"]);
@@ -66,7 +66,7 @@ void DoubleTagYield::DoFit() {
   }
   // Perform a second fit if fit is binned
   if(Categories.size() > 1) {
-    Result = Model->fitTo(*DataSet, Save(), NumCPU(nCPUs), Strategy(2));
+    Result = Model->fitTo(*DataSet, Save(), NumCPU(nCPUs), Strategy(2), Minos(true), Minimizer("Minuit2","migrad"));
   }
   Result->Print("V");
   PlotProjections(&DataLoader, &FitModel);
@@ -217,8 +217,11 @@ void DoubleTagYield::SaveSignalYields(const BinnedFitModel &FitModel, RooFitResu
     if(m_Settings.getB("FullyReconstructed")) {
       Sideband += GetSidebandYield(category.GetSignalBinNumber(cat), category.GetTagBinNumber(cat));
     }
-    Outfile << Name << "          " << std::setw(8) << std::right << FitModel.m_Yields.at(Name)->getVal() - Sideband << "\n";
-    Outfile << Name << "_err      " << std::setw(8) << std::right << static_cast<RooRealVar*>(FitModel.m_Yields.at(Name))->getError() << "\n";
+    auto YieldVariable = static_cast<RooRealVar*>(FitModel.m_Yields.at(Name));
+    Outfile << Name << "          " << std::setw(8) << std::right << YieldVariable->getVal() - Sideband << "\n";
+    Outfile << Name << "_err      " << std::setw(8) << std::right << YieldVariable->getError() << "\n";
+    Outfile << Name << "_low_err  " << std::setw(8) << std::right << YieldVariable->getErrorLo() << "\n";
+    Outfile << Name << "_high_err " << std::setw(8) << std::right << YieldVariable->getErrorHi() << "\n";
     if(m_Settings.getB("FullyReconstructed")) {
       Outfile << Name << "_sideband " << std::setw(8) << std::right << Sideband << "\n";
     }

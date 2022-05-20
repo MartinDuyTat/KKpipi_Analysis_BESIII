@@ -101,7 +101,7 @@ void BinnedFitModel::InitializeSignalShape() {
   SignalMCChain.SetBranchStatus(m_Settings.get("FitVariable").c_str(), 1);
   TTree *ClonedMCChain = nullptr;
   if(m_Settings.getI("Events_in_MC") < 0 || m_Settings.getI("Events_in_MC") > SignalMCChain.GetEntries()) {
-    ClonedMCChain = &SignalMCChain;
+    ClonedMCChain = SignalMCChain.CloneTree();
   } else {
     ClonedMCChain = SignalMCChain.CloneTree(m_Settings.getI("Events_in_MC"));
   }

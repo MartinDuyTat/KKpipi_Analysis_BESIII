@@ -147,10 +147,19 @@ int main(int argc, char *argv[]) {
        settings["MBC_Shape"][Name + "_FitSettings"].getB(Name + "_ArgusBackground")) {
       Model->plotOn(Frame, LineColor(kBlue), LineStyle(kDashed), Components((Name + "_" + PDFShape).c_str()));
     }
+    std::string Mode = settings.get("Mode");
+    std::string xAxisLabel;
+    if(Mode.substr(0, 2) == "KL" || Mode == "KSpipiPartReco") {
+      xAxisLabel = "m_{miss}^{2} (GeV^{2})";
+    } else if(Mode == "KeNu") {
+      xAxisLabel = "U_{miss} (GeV)";
+    } else {
+      xAxisLabel = "m_{BC} (GeV)";
+    }
     if(TagType == "ST") {
-      Frame->SetTitle((TagMode + " peaking background in " + RecTagMode + " single tag;m_{BC} (GeV);Events").c_str());
+      Frame->SetTitle((TagMode + " peaking background in " + RecTagMode + " single tag;" + xAxisLabel + ";Events").c_str());
     } else if(TagType == "DT") {
-      Frame->SetTitle((SignalMode  + " vs "  + TagMode + " peaking background in " + RecSignalMode + " vs " + RecTagMode + " double tag;m_{BC} (GeV);Events").c_str());
+      Frame->SetTitle((SignalMode  + " vs "  + TagMode + " peaking background in " + RecSignalMode + " vs " + RecTagMode + " double tag;" + xAxisLabel + ";Events").c_str());
     }
     Frame->Draw();
     c.SaveAs(settings["MBC_Shape"].get(Name + "_PlotFilename").c_str());
