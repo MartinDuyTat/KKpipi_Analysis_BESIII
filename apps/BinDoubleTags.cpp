@@ -29,12 +29,16 @@ int main(int argc, char *argv[]) {
   std::string TagBin_Name = settings.get("TagBin_variable");
   int SignalBin, TagBin, SignalBin_true, TagBin_true;
   std::vector<std::string> DalitzVariables{"s01", "s03", "s12", "s23", "s012"};
-  std::map<std::string, double> DalitzCoordinates;
+  std::map<std::string, double> DalitzCoordinates, RecDalitzCoordinates;
   TFile OutputFile(OutputFilename.c_str(), "RECREATE");
   TTree *OutputTree = InputChain.CloneTree(0);
   if(settings.getB("Bin_reconstructed")) {
     OutputTree->Branch(SignalBin_Name.c_str(), &SignalBin);
     OutputTree->Branch(TagBin_Name.c_str(), &TagBin);
+    for(const auto &DalitzVariable : DalitzVariables) {
+      RecDalitzCoordinates.insert({DalitzVariable, 0.0});
+      OutputTree->Branch(("Rec" + DalitzVariable).c_str(), &RecDalitzCoordinates[DalitzVariable]);
+    }
   }
   if(settings.getB("Bin_truth")) {
     OutputTree->Branch((SignalBin_Name + "_true").c_str(), &SignalBin_true);
@@ -61,6 +65,10 @@ int main(int argc, char *argv[]) {
 	     settings.getB("IncludeEventsOutsidePhaseSpace"))) {
 	  continue;
 	}
+      }
+      auto RecoDalitzCoordinates = PhaseSpace->GetRecDalitzCoordinates();
+      for(const auto &DalitzVariable : DalitzVariables) {
+	RecDalitzCoordinates[DalitzVariable] = RecoDalitzCoordinates[DalitzVariable];
       }
     }
     if(settings.getB("Bin_truth")) {

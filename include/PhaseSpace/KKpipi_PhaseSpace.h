@@ -45,6 +45,10 @@ class KKpipi_PhaseSpace {
      * Get the true Dalitz coordinates
      */
     std::map<std::string, double> GetDalitzCoordinates() const;
+    /**
+     * Get the reconstructed Dalitz coordinates (without Kalman fit)
+     */
+    std::map<std::string, double> GetRecDalitzCoordinates() const;
   protected:
     /**
      * Get the phase space bin of the \f$D^0\to KK\pi\pi\f$ decay (but obviously we know nothing about the flavour yet)
