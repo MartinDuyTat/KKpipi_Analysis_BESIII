@@ -85,16 +85,23 @@ void DoubleTagYield::DoFit() {
       }
       gRandom->SetSeed(m_Settings.getI("Seed"));
       FitModel.PrepareSmearing();
+      int SuccessfulFits = 0;
       for(int i = 0; i < m_Settings.getI("NumberRuns"); i++) {
 	std::cout << "Starting systematics fit number: " << i << "\n";
 	*Parameters = *m_InitialParameters;
 	FitModel.SmearPeakingBackgrounds();
 	Result = Model->fitTo(*DataSet, Strategy(2), Save(), NumCPU(nCPUs));
 	Result->Print("V");
+	if(Result->status() == 0 && Result->covQual() == 3) {
+	  SuccessfulFits++;
+	} else {
+	  continue;
+	}
 	for(const auto &Category : Categories) {
 	  FittedYields[Category].push_back(FitModel.m_Yields[Category + "_SignalYield"]->getVal());
 	}
       }
+      std::cout << "Number of successfull fits: " << SuccessfulFits << "\n";
       for(const auto &Category : Categories) {
 	SystError[Category] = TMath::RMS(FittedYields[Category].begin(), FittedYields[Category].end());
       }

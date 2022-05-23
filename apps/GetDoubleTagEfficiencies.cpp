@@ -64,10 +64,14 @@ int main(int argc, char *argv[]) {
   std::string TreeName = settings.get("TreeName");
   TChain Chain(TreeName.c_str());
   Chain.Add(settings.get("SignalMCFilename").c_str());
-  double ModelWeight, ModelWeight_CPEven, ModelWeight_CPOdd;
+  double ModelWeight, ModelWeight_CPEven, ModelWeight_CPOdd, DataMCWeight;
   Chain.SetBranchAddress("ModelWeight", &ModelWeight);
   Chain.SetBranchAddress("ModelWeight_CPEven", &ModelWeight_CPEven);
   Chain.SetBranchAddress("ModelWeight_CPOdd", &ModelWeight_CPOdd);
+  bool DataMCMismatchWeight = settings.getB("DataMCMismatchWeight");
+  if(DataMCMismatchWeight) {
+    Chain.SetBranchAddress("DataMCMismatchWeight", &DataMCWeight);
+  }
   int SignalBin, SignalBin_true, TagBin, TagBin_true;
   if(settings.contains("Inclusive_fit") && settings.getB("Inclusive_fit")) {
     SignalBin = 0;
@@ -80,6 +84,11 @@ int main(int argc, char *argv[]) {
   Chain.SetBranchAddress((settings.get("TagBin_variable") + "_true").c_str(), &TagBin_true);
   for(int i = 0; i < Chain.GetEntries(); i++) {
     Chain.GetEntry(i);
+    if(DataMCMismatchWeight) {
+      ModelWeight *= DataMCWeight;
+      ModelWeight_CPEven *= DataMCWeight;
+      ModelWeight_CPOdd *= DataMCWeight;
+    }
     auto RecBin_index = std::distance(BinCombinations.begin(), std::find(BinCombinations.begin(), BinCombinations.end(), std::make_pair(SignalBin, TagBin)));
     auto TrueBin_index = std::distance(BinCombinations.begin(), std::find(BinCombinations.begin(), BinCombinations.end(), std::make_pair(SignalBin_true, TagBin_true)));
     if(ReweightMC && QCMCReweighting) {
