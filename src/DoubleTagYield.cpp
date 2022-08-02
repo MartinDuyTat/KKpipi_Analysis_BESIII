@@ -12,6 +12,7 @@
 #include"TCut.h"
 #include"TFile.h"
 #include"TRandom.h"
+#include"TLatex.h"
 #include"RooRealVar.h"
 #include"RooDataSet.h"
 #include"RooFitResult.h"
@@ -27,6 +28,7 @@
 #include"BinnedFitModel.h"
 #include"Category.h"
 #include"Utilities.h"
+#include"Bes3plotstyle.h"
 
 DoubleTagYield::DoubleTagYield(const Settings &settings, TTree *Tree): m_SignalMBC("SignalMBC", "", 1.83, 1.8865),
 								       m_Settings(settings), m_Tree(Tree) {
@@ -138,6 +140,8 @@ void DoubleTagYield::DoFit() {
 
 void DoubleTagYield::PlotProjections(BinnedDataLoader *DataLoader, BinnedFitModel *FitModel) {
   using namespace RooFit;
+  SetStyle();
+  SetPrelimStyle();
   auto Model = FitModel->GetPDF();
   Category *category = DataLoader->GetCategoryObject();
   RooCategory *CategoryVariable = category->GetCategoryVariable();
@@ -145,52 +149,88 @@ void DoubleTagYield::PlotProjections(BinnedDataLoader *DataLoader, BinnedFitMode
   for(const auto &Category : category->GetCategories()) {
     int SignalBin = category->GetSignalBinNumber(Category);
     int TagBin = category->GetTagBinNumber(Category);
-    TCanvas c1((Category + "_c1").c_str(), "", 1600, 1200);
+    TCanvas c1((Category + "_c1").c_str(), "", 1600, 1600);
     TPad Pad1((Category + "_Pad1").c_str(), "", 0.0, 0.25, 1.0, 1.0);
     TPad Pad2((Category + "_Pad2").c_str(), "", 0.0, 0.0, 1.0, 0.25);
     Pad1.Draw();
     Pad2.Draw();
-    Pad1.SetBottomMargin(0.1);
+    /*Pad1.SetBottomMargin(0.1);
     Pad1.SetTopMargin(0.1);
     Pad1.SetBorderMode(0);
     Pad2.SetBorderMode(0);
     Pad2.SetBottomMargin(0.1);
-    Pad2.SetTopMargin(0.05);
+    Pad2.SetTopMargin(0.05);*/
     Pad1.cd();
     RooPlot *Frame = m_SignalMBC.frame();
+    FormatAxis(Frame->GetXaxis());
+    FormatAxis(Frame->GetYaxis());
+    if(m_Settings.contains("No_x_axis_tick_label") && m_Settings.getB("No_x_axis_tick_label")) {
+      Frame->GetXaxis()->SetLabelSize(0);
+      std::cout << "Removing tick labels\n";
+    }
     std::string TagMode = m_Settings.get("Mode");
-    std::string Title = TagMode + " Double Tag M_{BC}";
+    TLatex Text;
+    Text.SetTextFont(42);
+    Text.SetTextColor(kBlack);
+    Text.SetNDC(true);
+    std::string LabelText = Utilities::GetTagNameLaTeX(TagMode);
+    std::string Title;// = "Double tag fit of ";
+    //Title += Utilities::GetTagNameLaTeX("KKpipi");
+    //Title += " vs ";
+    //Title += Utilities::GetTagNameLaTeX(TagMode);
     if(SignalBin != 0) {
-      Title += ", KK#pi#pi bin " + std::to_string(SignalBin);
-    } else {
-      Title += ", inclusive KK#pi#pi phase space";
+      //Title += ", KK#pi#pi bin " + std::to_string(SignalBin);
+      LabelText += ", bin " + std::to_string(SignalBin);
+    /*} else {
+      Title += ", inclusive KK#pi#pi phase space";*/
     }
-    if(TagMode == "KSpipi" || TagMode == "KSKK" || TagMode == "KKpipi") {
-      Title += ", tag bin " + std::to_string(TagBin);
+    if(TagMode == "KSpipi" || TagMode == "KSpipiPartReco" || TagMode == "KLpipi" || TagMode == "KSKK" || TagMode == "KLKK" || TagMode == "KKpipi") {
+      //Title += ", tag bin " + std::to_string(TagBin);
+      LabelText = "#splitline{" + LabelText;
+      LabelText += "}{Bin " + std::to_string(TagBin) + "}";
     }
-    if(TagMode.substr(0, 2) == "KL") {
-      Title += "; M_{miss}^{2} (GeV^{2}); Events";
+    if(TagMode.substr(0, 2) == "KL" || (TagMode.length() > 8 && TagMode.substr(TagMode.length() - 8, TagMode.length()) == "PartReco")) {
+      Title += ";M_{miss}^{2} (GeV^{2}/c^{4}); Events / ";
     } else if(TagMode == "KeNu") {
-      Title += "; U_{miss} (GeV); Events";
+      Title += ";U_{miss} (GeV/c^{2}); Events / ";
     } else {
-      Title += "; M_{BC} (GeV); Events";
+      Title += ";M_{BC} (GeV/c^{2}); Events / ";
+    }
+    Text.SetText(0.2, 0.8, LabelText.c_str());
+    if(TagMode.substr(0, 2) == "KL" || (TagMode.length() > 8 && TagMode.substr(TagMode.length() - 8, TagMode.length()) == "PartReco")) {
+      std::stringstream ss;
+      ss << std::fixed << std::setprecision(3) << (m_SignalMBC.getMax() - m_SignalMBC.getMin())/m_Settings.getI("Bins_in_plots");
+      Title += ss.str();
+      Title += " GeV^{2}/c^{4}";
+    } else {
+      std::stringstream ss;
+      ss << std::fixed << std::setprecision(1) << 1000.0*(m_SignalMBC.getMax() - m_SignalMBC.getMin())/m_Settings.getI("Bins_in_plots");
+      Title += ss.str();
+      Title += " MeV/c^{2}";
     }
     Frame->SetTitle(Title.c_str());
-    DataSet->plotOn(Frame, Binning(m_Settings.getI("Bins_in_plots")), Cut((std::string(CategoryVariable->GetName()) + "==" + std::string(CategoryVariable->GetName()) + "::" + Category).c_str()));
-    Model->plotOn(Frame, LineColor(kBlue), Slice(*CategoryVariable, Category.c_str()), ProjWData(*CategoryVariable, *DataSet));
+    RooPlot *Data_RooPlot = DataSet->plotOn(Frame, Binning(m_Settings.getI("Bins_in_plots")), Cut((std::string(CategoryVariable->GetName()) + "==" + std::string(CategoryVariable->GetName()) + "::" + Category).c_str()));
+    FormatData(Data_RooPlot->getHist());
+    if(TagMode == "KSpipiPartReco") {      
+      Frame->SetNdivisions(-405);
+    }
+    Model->plotOn(Frame, LineColor(kRed), LineWidth(3), Slice(*CategoryVariable, Category.c_str()), ProjWData(*CategoryVariable, *DataSet));
     RooHist *Pull = Frame->pullHist();
-    Model->plotOn(Frame, LineColor(kBlue), Components("Combinatorial*"), LineStyle(kDashed), Slice(*CategoryVariable, Category.c_str()), ProjWData(*CategoryVariable, *DataSet));
     if(FitModel->m_PeakingBackgroundShapes.size() > 0) {
-      std::string PeakingList = "";
+      std::string PeakingList = "Combinatorial*,";
       for(auto iter = FitModel->m_PeakingBackgroundShapes.begin(); iter != FitModel->m_PeakingBackgroundShapes.end(); iter++) {
 	if(iter != FitModel->m_PeakingBackgroundShapes.begin()) {
 	  PeakingList += std::string(",");
 	}
 	PeakingList += iter->second->GetPDF()->GetName();
       }
-      Model->plotOn(Frame, LineColor(kMagenta), Slice(*CategoryVariable, Category.c_str()), ProjWData(*CategoryVariable, *DataSet), Components(PeakingList.c_str()));
+      Model->plotOn(Frame, FillStyle(1001), LineColor(kGreen + 2), FillColor(kGreen + 2), LineWidth(3), DrawOption("F"), Slice(*CategoryVariable, Category.c_str()), ProjWData(*CategoryVariable, *DataSet), Components(PeakingList.c_str()));
     }
+    Model->plotOn(Frame, FillStyle(1001), LineColor(kAzure - 2), FillColor(kAzure - 2), LineWidth(3), DrawOption("F"), Components("Combinatorial*"), LineStyle(kDashed), Slice(*CategoryVariable, Category.c_str()), ProjWData(*CategoryVariable, *DataSet));
+    DataSet->plotOn(Frame, Binning(m_Settings.getI("Bins_in_plots")), Cut((std::string(CategoryVariable->GetName()) + "==" + std::string(CategoryVariable->GetName()) + "::" + Category).c_str()));
     Frame->Draw();
+    WriteBes3();
+    Text.Draw("SAME");
     Pad2.cd();
     RooPlot *PullFrame = m_SignalMBC.frame();
     PullFrame->addObject(Pull);
@@ -199,12 +239,14 @@ void DoubleTagYield::PlotProjections(BinnedDataLoader *DataLoader, BinnedFitMode
     PullFrame->SetMinimum(-5);
     PullFrame->SetMaximum(5);
     PullFrame->SetTitle(";;");
-    PullFrame->GetXaxis()->SetLabelFont(0);
+    /*PullFrame->GetXaxis()->SetLabelFont(0);
     PullFrame->GetXaxis()->SetLabelSize(0);
     PullFrame->GetYaxis()->SetLabelFont(62);
-    PullFrame->GetYaxis()->SetLabelSize(0.1);
+    PullFrame->GetYaxis()->SetLabelSize(0.1);*/
     PullFrame->Draw();
     std::string PlotFilename = m_Settings.get("MBCPlotFilenamePrefix") + "_" + Category + ".png";
+    Pad1.SetFrameLineWidth(3);
+    c1.Draw();
     c1.SaveAs(PlotFilename.c_str());
   }
 }

@@ -9,6 +9,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 find_package(ROOT 6.22 CONFIG REQUIRED)
 
+find_package(OpenMP REQUIRED)
+
 set(KKPIPI_BINNED_FIT_PATH /data/lhcb/users/tat/KKpipi_Binned_Fit)
 
 find_library(KKPIPI_BINNED_FIT_LIB KKpipiBinnedFit PATHS ${KKPIPI_BINNED_FIT_PATH}/build/src)

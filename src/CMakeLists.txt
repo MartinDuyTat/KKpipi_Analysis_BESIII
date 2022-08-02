@@ -1,5 +1,6 @@
 add_library(KKpipiStrongPhase
 	    ApplyCuts.cpp
+	    Bes3plotstyle.cpp
 	    BinnedDataLoader.cpp
 	    BinnedFitModel.cpp
 	    Category.cpp
@@ -35,5 +36,9 @@ add_library(KKpipiStrongPhase
 	    RooShapes/FitShape.cpp)
 
 target_include_directories(KKpipiStrongPhase PUBLIC ../include)
+
+target_link_libraries(KKpipiStrongPhase PUBLIC -ldl)
+
+target_link_libraries(KKpipiStrongPhase PUBLIC OpenMP::OpenMP_CXX)
 
 target_link_libraries(KKpipiStrongPhase PUBLIC ROOT::Physics ROOT::Tree ROOT::RooFit ROOT::Gpad)

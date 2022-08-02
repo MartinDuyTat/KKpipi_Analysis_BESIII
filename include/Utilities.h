@@ -103,6 +103,10 @@ namespace Utilities {
    * Cut The cut applied
    */
   double SumWeights(TTree *Tree, const std::string &WeightName, const std::string &Cut = "");
+  /**
+   * Get the correct ROOT LaTeX name for the tag mode
+   */
+  std::string GetTagNameLaTeX(const std::string &Tag);
 }
 
 #endif

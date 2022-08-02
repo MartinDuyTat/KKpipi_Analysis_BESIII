@@ -213,4 +213,36 @@ namespace Utilities {
     return Total;
   }
 
+  std::string GetTagNameLaTeX(const std::string &Tag) {
+    if(Tag == "KKpipi") {
+      return "K^{+}K^{#minus}#pi^{+}#pi^{#minus}";
+    } else if(Tag == "KK") {
+      return "K^{+}K^{#minus}";
+    } else if(Tag == "pipi") {
+      return "#pi^{+}#pi^{#minus}";
+    } else if(Tag == "pipipi0") {
+      return "#pi^{+}#pi^{#minus}#pi^{0}";
+    } else if(Tag == "KSpi0pi0") {
+      return "K_{S}^{0}#pi^{0}#pi^{0}";
+    } else if(Tag == "KLpi0") {
+      return "K_{L}^{0}#pi^{0}";
+    } else if(Tag == "KSpi0") {
+      return "K_{S}^{0}#pi^{0}";
+    } else if(Tag == "KSeta") {
+      return "K_{S}^{0}#eta";
+    } else if(Tag == "KSetaPrimepipieta") {
+      return "K_{S}^{0}#eta'(#pi^{+}#pi^{#minus}#eta)";
+    } else if(Tag == "KSetaPrimerhogamma") {
+      return "K_{S}^{0}#eta'(#pi^{+}#pi^{-}#gamma)";
+    } else if(Tag == "KSpipipi0") {
+      return "K_{S}^{0}#omega";
+    } else if(Tag == "KSpipi" || Tag == "KSpipiPartReco") {
+      return "K_{S}^{0}#pi^{+}#pi^{#minus}";
+    } else if(Tag == "KLpipi") {
+      return "K_{L}^{0}#pi^{+}#pi^{#minus}";
+    } else {
+      throw std::invalid_argument("Unknown tag: " + Tag);
+    }
+  }
+
 }

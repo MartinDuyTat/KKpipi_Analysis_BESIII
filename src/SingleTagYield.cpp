@@ -15,6 +15,7 @@
 #include"TH1D.h"
 #include"TFile.h"
 #include"TRandom.h"
+#include"TLatex.h"
 #include"RooRealVar.h"
 #include"RooDataSet.h"
 #include"RooDataHist.h"
@@ -34,6 +35,7 @@
 #include"Settings.h"
 #include"Unique.h"
 #include"Utilities.h"
+#include"Bes3plotstyle.h"
 #include"RooShapes/FitShape.h"
 #include"RooShapes/DoubleGaussian_Shape.h"
 #include"RooShapes/DoubleCrystalBall_Shape.h"
@@ -199,35 +201,52 @@ void SingleTagYield::FitYield() {
 
 void SingleTagYield::PlotSingleTagYield(const RooDataSet &Data) const {
   using namespace RooFit;
-  TCanvas c1("c1", "c1", 1600, 1200);
+  SetStyle();
+  SetPrelimStyle();
+  TCanvas c1("c1", "c1", 1600, 1600);
   TPad Pad1("Pad1", "Pad1", 0.0, 0.25, 1.0, 1.0);
   TPad Pad2("Pad2", "Pad2", 0.0, 0.0, 1.0, 0.25);
   Pad1.Draw();
   Pad2.Draw();
-  Pad1.SetBottomMargin(0.1);
+  /*Pad1.SetBottomMargin(0.1);
   Pad1.SetTopMargin(0.1);
   Pad1.SetBorderMode(0);
   Pad2.SetBorderMode(0);
   Pad2.SetBottomMargin(0.1);
-  Pad2.SetTopMargin(0.05);
+  Pad2.SetTopMargin(0.05);*/
   Pad1.cd();
   RooPlot *Frame = m_MBC.frame();
+  FormatAxis(Frame->GetXaxis());
+  FormatAxis(Frame->GetYaxis());
+  if(m_Settings.contains("No_x_axis_tick_label") && m_Settings.getB("No_x_axis_tick_label")) {
+    Frame->GetXaxis()->SetLabelSize(0);
+    std::cout << "Removing tick labels\n";
+  }
   std::string TagMode = m_Settings.get("Mode");
-  Frame->SetTitle((TagMode + std::string(" Single Tag M_{BC}; M_{BC} (GeV); Events")).c_str());
-  Data.plotOn(Frame, Binning(200));
+  TLatex Text;
+  Text.SetTextFont(42);
+  Text.SetTextColor(kBlack);
+  Text.SetNDC(true);
+  Text.SetText(0.2, 0.8, Utilities::GetTagNameLaTeX(TagMode).c_str());
+  Frame->SetTitle((TagMode + std::string(" Single Tag M_{BC}; M_{BC} (GeV); Events / 0.3 MeV/c^{2}")).c_str());
+  RooPlot *Data_RooPlot = Data.plotOn(Frame, Binning(200));
+  FormatData(Data_RooPlot->getHist());
   double TotalEvents = std::accumulate(m_ModelYields.begin(), m_ModelYields.end(), 0.0, [] (double a, const auto &b) { return a + static_cast<RooRealVar*>(b)->getVal(); });
-  m_FullModel->plotOn(Frame, LineColor(kBlue), Normalization(TotalEvents, RooAbsReal::NumEvent));
+  m_FullModel->plotOn(Frame, LineColor(kRed), LineWidth(3), Normalization(TotalEvents, RooAbsReal::NumEvent));
   RooHist *Pull = Frame->pullHist();
-  m_FullModel->plotOn(Frame, LineColor(kBlue), Components("Argus"), LineStyle(kDashed), Normalization(TotalEvents, RooAbsReal::NumEvent));
-  m_FullModel->plotOn(Frame, LineColor(kRed), Components("SignalShapeConv"), Normalization(TotalEvents, RooAbsReal::NumEvent));
+  //m_FullModel->plotOn(Frame, LineColor(kRed), Components("SignalShapeConv"), Normalization(TotalEvents, RooAbsReal::NumEvent));
   if(m_PeakingBackgrounds.size() > 0) {
-    std::string PeakingList = m_PeakingBackgrounds[0]->GetPDF()->GetName();
-    for(unsigned int i = 1; i < m_PeakingBackgrounds.size(); i++) {
+    std::string PeakingList("Argus");
+    for(unsigned int i = 0; i < m_PeakingBackgrounds.size(); i++) {
       PeakingList += std::string(",") + m_PeakingBackgrounds[i]->GetPDF()->GetName();
     }
-    m_FullModel->plotOn(Frame, LineColor(kMagenta), Components(PeakingList.c_str()));
+    m_FullModel->plotOn(Frame, FillStyle(1001), LineColor(kGreen + 2), FillColor(kGreen + 2), LineWidth(3), DrawOption("F"), Components(PeakingList.c_str()));
   }
+  m_FullModel->plotOn(Frame, FillStyle(1001), LineColor(kAzure - 2), FillColor(kAzure - 2), LineWidth(3), DrawOption("F"), Components("Argus"), Normalization(TotalEvents, RooAbsReal::NumEvent));
+  Data.plotOn(Frame, Binning(200));
   Frame->Draw();
+  WriteBes3();
+  Text.Draw("SAME");
   Pad2.cd();
   RooPlot *PullFrame = m_MBC.frame();
   PullFrame->addObject(Pull);
@@ -243,6 +262,8 @@ void SingleTagYield::PlotSingleTagYield(const RooDataSet &Data) const {
   PullFrame->Draw();
   c1.cd();
   std::string PlotFilename = m_Settings.get("MBCPlotFilename");
+  Pad1.SetFrameLineWidth(3);
+  c1.Draw();
   c1.SaveAs(PlotFilename.c_str());
 }
 
