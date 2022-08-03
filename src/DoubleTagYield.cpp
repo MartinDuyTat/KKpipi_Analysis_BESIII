@@ -171,6 +171,7 @@ void DoubleTagYield::PlotProjections(BinnedDataLoader *DataLoader, BinnedFitMode
     std::string TagMode = m_Settings.get("Mode");
     TLatex Text;
     Text.SetTextFont(42);
+    Text.SetTextSize(0.09);
     Text.SetTextColor(kBlack);
     Text.SetNDC(true);
     std::string LabelText = Utilities::GetTagNameLaTeX(TagMode);
@@ -190,26 +191,26 @@ void DoubleTagYield::PlotProjections(BinnedDataLoader *DataLoader, BinnedFitMode
       LabelText += "}{Bin " + std::to_string(TagBin) + "}";
     }
     if(TagMode.substr(0, 2) == "KL" || (TagMode.length() > 8 && TagMode.substr(TagMode.length() - 8, TagMode.length()) == "PartReco")) {
-      Title += ";M_{miss}^{2} (GeV^{2}/c^{4}); Events / ";
+      Title += ";M_{ miss}^{ 2} (GeV^{2}/#it{c}^{4}); Events / ";
     } else if(TagMode == "KeNu") {
-      Title += ";U_{miss} (GeV/c^{2}); Events / ";
+      Title += ";U_{ miss} (GeV/#it{c}^{2}); Events / ";
     } else {
-      Title += ";M_{BC} (GeV/c^{2}); Events / ";
+      Title += ";M_{ BC} (GeV/#it{c}^{2}); Events / ";
     }
     Text.SetText(0.2, 0.8, LabelText.c_str());
     if(TagMode.substr(0, 2) == "KL" || (TagMode.length() > 8 && TagMode.substr(TagMode.length() - 8, TagMode.length()) == "PartReco")) {
       std::stringstream ss;
       ss << std::fixed << std::setprecision(3) << (m_SignalMBC.getMax() - m_SignalMBC.getMin())/m_Settings.getI("Bins_in_plots");
       Title += ss.str();
-      Title += " GeV^{2}/c^{4}";
+      Title += " GeV^{2}/#it{c}^{4}";
     } else {
       std::stringstream ss;
       ss << std::fixed << std::setprecision(1) << 1000.0*(m_SignalMBC.getMax() - m_SignalMBC.getMin())/m_Settings.getI("Bins_in_plots");
       Title += ss.str();
-      Title += " MeV/c^{2}";
+      Title += " MeV/#it{c}^{2}";
     }
     Frame->SetTitle(Title.c_str());
-    RooPlot *Data_RooPlot = DataSet->plotOn(Frame, Binning(m_Settings.getI("Bins_in_plots")), Cut((std::string(CategoryVariable->GetName()) + "==" + std::string(CategoryVariable->GetName()) + "::" + Category).c_str()));
+    RooPlot *Data_RooPlot = DataSet->plotOn(Frame, Binning(m_Settings.getI("Bins_in_plots")), MarkerSize(3), LineWidth(3), Cut((std::string(CategoryVariable->GetName()) + "==" + std::string(CategoryVariable->GetName()) + "::" + Category).c_str()));
     FormatData(Data_RooPlot->getHist());
     if(TagMode == "KSpipiPartReco") {      
       Frame->SetNdivisions(-405);
@@ -226,10 +227,10 @@ void DoubleTagYield::PlotProjections(BinnedDataLoader *DataLoader, BinnedFitMode
       }
       Model->plotOn(Frame, FillStyle(1001), LineColor(kGreen + 2), FillColor(kGreen + 2), LineWidth(3), DrawOption("F"), Slice(*CategoryVariable, Category.c_str()), ProjWData(*CategoryVariable, *DataSet), Components(PeakingList.c_str()));
     }
-    Model->plotOn(Frame, FillStyle(1001), LineColor(kAzure - 2), FillColor(kAzure - 2), LineWidth(3), DrawOption("F"), Components("Combinatorial*"), LineStyle(kDashed), Slice(*CategoryVariable, Category.c_str()), ProjWData(*CategoryVariable, *DataSet));
-    DataSet->plotOn(Frame, Binning(m_Settings.getI("Bins_in_plots")), Cut((std::string(CategoryVariable->GetName()) + "==" + std::string(CategoryVariable->GetName()) + "::" + Category).c_str()));
+    Model->plotOn(Frame, FillStyle(1001), LineColor(kAzure + 6), FillColor(kAzure + 6), LineWidth(3), DrawOption("F"), Components("Combinatorial*"), LineStyle(kDashed), Slice(*CategoryVariable, Category.c_str()), ProjWData(*CategoryVariable, *DataSet));
+    DataSet->plotOn(Frame, Binning(m_Settings.getI("Bins_in_plots")), MarkerSize(3), LineWidth(3), Cut((std::string(CategoryVariable->GetName()) + "==" + std::string(CategoryVariable->GetName()) + "::" + Category).c_str()));
     Frame->Draw();
-    WriteBes3();
+    //WriteBes3();
     Text.Draw("SAME");
     Pad2.cd();
     RooPlot *PullFrame = m_SignalMBC.frame();

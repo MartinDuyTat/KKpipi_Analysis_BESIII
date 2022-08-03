@@ -16,6 +16,7 @@
 #include"TFile.h"
 #include"TRandom.h"
 #include"TLatex.h"
+#include"TStyle.h"
 #include"RooRealVar.h"
 #include"RooDataSet.h"
 #include"RooDataHist.h"
@@ -218,6 +219,7 @@ void SingleTagYield::PlotSingleTagYield(const RooDataSet &Data) const {
   RooPlot *Frame = m_MBC.frame();
   FormatAxis(Frame->GetXaxis());
   FormatAxis(Frame->GetYaxis());
+  Frame->GetYaxis()->SetTitleOffset(1.32);
   if(m_Settings.contains("No_x_axis_tick_label") && m_Settings.getB("No_x_axis_tick_label")) {
     Frame->GetXaxis()->SetLabelSize(0);
     std::cout << "Removing tick labels\n";
@@ -225,10 +227,11 @@ void SingleTagYield::PlotSingleTagYield(const RooDataSet &Data) const {
   std::string TagMode = m_Settings.get("Mode");
   TLatex Text;
   Text.SetTextFont(42);
+  Text.SetTextSize(0.09);
   Text.SetTextColor(kBlack);
   Text.SetNDC(true);
   Text.SetText(0.2, 0.8, Utilities::GetTagNameLaTeX(TagMode).c_str());
-  Frame->SetTitle((TagMode + std::string(" Single Tag M_{BC}; M_{BC} (GeV); Events / 0.3 MeV/c^{2}")).c_str());
+  Frame->SetTitle((TagMode + std::string(" Single Tag M_{ BC}; M_{ BC} (GeV/#it{c}^{2}); Events / 0.3 MeV/#it{c}^{2}")).c_str());
   RooPlot *Data_RooPlot = Data.plotOn(Frame, Binning(200));
   FormatData(Data_RooPlot->getHist());
   double TotalEvents = std::accumulate(m_ModelYields.begin(), m_ModelYields.end(), 0.0, [] (double a, const auto &b) { return a + static_cast<RooRealVar*>(b)->getVal(); });
@@ -242,10 +245,10 @@ void SingleTagYield::PlotSingleTagYield(const RooDataSet &Data) const {
     }
     m_FullModel->plotOn(Frame, FillStyle(1001), LineColor(kGreen + 2), FillColor(kGreen + 2), LineWidth(3), DrawOption("F"), Components(PeakingList.c_str()));
   }
-  m_FullModel->plotOn(Frame, FillStyle(1001), LineColor(kAzure - 2), FillColor(kAzure - 2), LineWidth(3), DrawOption("F"), Components("Argus"), Normalization(TotalEvents, RooAbsReal::NumEvent));
+  m_FullModel->plotOn(Frame, FillStyle(1001), LineColor(kAzure + 6), FillColor(kAzure + 6), LineWidth(3), DrawOption("F"), Components("Argus"), Normalization(TotalEvents, RooAbsReal::NumEvent));
   Data.plotOn(Frame, Binning(200));
   Frame->Draw();
-  WriteBes3();
+  //WriteBes3();
   Text.Draw("SAME");
   Pad2.cd();
   RooPlot *PullFrame = m_MBC.frame();

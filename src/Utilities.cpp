@@ -233,7 +233,7 @@ namespace Utilities {
     } else if(Tag == "KSetaPrimepipieta") {
       return "K_{S}^{0}#eta'(#pi^{+}#pi^{#minus}#eta)";
     } else if(Tag == "KSetaPrimerhogamma") {
-      return "K_{S}^{0}#eta'(#pi^{+}#pi^{-}#gamma)";
+      return "K_{S}^{0}#eta'(#rho^{0}#gamma)";
     } else if(Tag == "KSpipipi0") {
       return "K_{S}^{0}#omega";
     } else if(Tag == "KSpipi" || Tag == "KSpipiPartReco") {
