@@ -211,8 +211,16 @@ void DoubleTagYield::PlotProjections(BinnedDataLoader *DataLoader, BinnedFitMode
     }
     Frame->SetTitle(Title.c_str());
     RooPlot *Data_RooPlot = DataSet->plotOn(Frame, Binning(m_Settings.getI("Bins_in_plots")), MarkerSize(3), LineWidth(3), Cut((std::string(CategoryVariable->GetName()) + "==" + std::string(CategoryVariable->GetName()) + "::" + Category).c_str()));
-    FormatData(Data_RooPlot->getHist());
-    if(TagMode == "KSpipiPartReco") {      
+    auto Data_RooHist = Data_RooPlot->getHist();
+    // Against my wishes, I had to remove data points of empty bins
+    for(int i = 0; i < Data_RooHist->GetN(); i++) {
+      if(Data_RooHist->GetPointY(i) == 0.0) {
+	Data_RooHist->SetPointY(i, -1000.0);
+      }
+    }
+    FormatData(Data_RooHist);
+    Data_RooHist->SetMinimum(0.0);
+    if(TagMode == "KSpipiPartReco") {
       Frame->SetNdivisions(-405);
     }
     Model->plotOn(Frame, LineColor(kRed), LineWidth(3), Slice(*CategoryVariable, Category.c_str()), ProjWData(*CategoryVariable, *DataSet));
@@ -228,7 +236,14 @@ void DoubleTagYield::PlotProjections(BinnedDataLoader *DataLoader, BinnedFitMode
       Model->plotOn(Frame, FillStyle(1001), LineColor(kGreen + 2), FillColor(kGreen + 2), LineWidth(3), DrawOption("F"), Slice(*CategoryVariable, Category.c_str()), ProjWData(*CategoryVariable, *DataSet), Components(PeakingList.c_str()));
     }
     Model->plotOn(Frame, FillStyle(1001), LineColor(kAzure + 6), FillColor(kAzure + 6), LineWidth(3), DrawOption("F"), Components("Combinatorial*"), LineStyle(kDashed), Slice(*CategoryVariable, Category.c_str()), ProjWData(*CategoryVariable, *DataSet));
-    DataSet->plotOn(Frame, Binning(m_Settings.getI("Bins_in_plots")), MarkerSize(3), LineWidth(3), Cut((std::string(CategoryVariable->GetName()) + "==" + std::string(CategoryVariable->GetName()) + "::" + Category).c_str()));
+    Data_RooPlot = DataSet->plotOn(Frame, Binning(m_Settings.getI("Bins_in_plots")), MarkerSize(3), LineWidth(3), Cut((std::string(CategoryVariable->GetName()) + "==" + std::string(CategoryVariable->GetName()) + "::" + Category).c_str()));
+    Data_RooHist = Data_RooPlot->getHist();
+    // Against my wishes, I had to remove data points of empty bins
+    for(int i = 0; i < Data_RooHist->GetN(); i++) {
+      if(Data_RooHist->GetPointY(i) == 0.0) {
+	Data_RooHist->SetPointY(i, -1000.0);
+      }
+    }
     Frame->Draw();
     //WriteBes3();
     Text.Draw("SAME");
