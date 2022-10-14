@@ -4,6 +4,7 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 add_executable(AnalyzeTopoAna AnalyzeTopoAna.cpp)
 add_executable(BinDoubleTags BinDoubleTags.cpp)
 add_executable(BinMigrationStudy BinMigrationStudy.cpp)
+add_executable(Fitcisi Fitcisi.cpp)
 add_executable(CorrectFlavourTagYields CorrectFlavourTagYields.cpp)
 add_executable(FitDeltaE FitDeltaE.cpp)
 add_executable(FitDoubleTagMBC FitDoubleTagMBC.cpp)
@@ -28,6 +29,10 @@ target_link_libraries(BinDoubleTags PUBLIC ROOT::Physics ROOT::RIO ROOT::Tree)
 target_link_libraries(BinMigrationStudy PUBLIC KKpipiStrongPhase)
 target_link_libraries(BinMigrationStudy PUBLIC ${KKPIPI_BINNED_FIT_LIB} -ldl)
 target_link_libraries(BinMigrationStudy PUBLIC ROOT::Physics ROOT::RIO ROOT::Tree)
+
+target_link_libraries(Fitcisi PUBLIC KKpipiStrongPhase)
+target_link_libraries(Fitcisi PUBLIC ${KKPIPI_BINNED_FIT_LIB} -ldl)
+target_link_libraries(Fitcisi PUBLIC ROOT::Physics ROOT::RIO ROOT::Tree ROOT::Physics ROOT::Minuit2)
 
 target_link_libraries(CorrectFlavourTagYields PUBLIC KKpipiStrongPhase)
 target_link_libraries(CorrectFlavourTagYields PUBLIC ${KKPIPI_BINNED_FIT_LIB} -ldl)
@@ -82,6 +87,7 @@ install(TARGETS AnalyzeTopoAna
 		BinDoubleTags
 		BinMigrationStudy
 		CorrectFlavourTagYields
+		Fitcisi
 		FitDeltaE
 		FitDoubleTagMBC
 		FitFPlus

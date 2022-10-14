@@ -100,7 +100,7 @@ std::vector<std::pair<int, int>> Category::GetBinCombinations() const {
     // We need at least 8 bins on the signal KKpipi side
     std::iota(SignalBins.begin(), SignalBins.end(), 1);
     // If tag mode is not KKpipi, we also need the conjugate bins
-    if(m_TagMode != "KKpipi") {
+    if(m_TagMode != "KKpipi" && m_Type != "CP") {
       // Double the number of bins
       SignalBins.resize(2*m_SignalBins);
       // Fill with negative bins

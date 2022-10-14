@@ -291,6 +291,21 @@ void DoubleTagYield::SaveSignalYields(const BinnedFitModel &FitModel, RooFitResu
       Outfile << Name << "_sideband " << std::setw(8) << std::right << Sideband << "\n";
     }
   }
+  std::size_t Size = category.GetCategories().size();
+  if(Size > 0) {
+    TFile File("RawYieldsCorrelationMatrix.root", "RECREATE");
+    TMatrixTSym<double> CorrelationMatrix(Size);
+    const auto categories = category.GetCategories();
+    for(std::size_t i = 0; i < Size; i++) {
+      const std::string Name_i = categories[i] + "_SignalYield";
+      for(std::size_t j = 0; j < Size; j++) {
+	const std::string Name_j = categories[j] + "_SignalYield";
+	CorrelationMatrix(i, j) = Result->correlation(Name_i.c_str(), Name_j.c_str());
+      }
+    }
+    CorrelationMatrix.Write("CorrelationMatrix");
+    File.Close();
+  }
   Outfile.close();
 }
 

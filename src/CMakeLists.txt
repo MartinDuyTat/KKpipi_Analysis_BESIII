@@ -2,10 +2,15 @@ add_library(KKpipiStrongPhase
 	    ApplyCuts.cpp
 	    Bes3plotstyle.cpp
 	    BinnedDataLoader.cpp
+	    BinnedCPTagYieldPrediction.cpp
+	    BinnedDTData.cpp
+	    BinnedDTYieldPrediction.cpp
 	    BinnedFitModel.cpp
 	    Category.cpp
 	    CholeskySmearing.cpp
+	    cisiFitter.cpp
 	    cisiK0pipi.cpp
+	    cisiLikelihood.cpp
 	    CutsFromFile.cpp
 	    DeltaECut.cpp
 	    DeltaEFit.cpp
@@ -27,6 +32,8 @@ add_library(KKpipiStrongPhase
 	    PhaseSpace/KKpipi_vs_CP_PhaseSpace.cpp
 	    PhaseSpace/KKpipi_vs_Flavour_PhaseSpace.cpp
 	    PhaseSpace/KKpipi_vs_K0hh_PhaseSpace.cpp
+	    RawBinnedCPTagYields.cpp
+	    RawBinnedDTYields.cpp
 	    RooShapes/Chebychev_Shape.cpp
 	    RooShapes/CrystalBall_Shape.cpp
 	    RooShapes/DoubleCrystalBall_Shape.cpp 

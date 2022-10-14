@@ -216,6 +216,12 @@ namespace Utilities {
   std::string GetTagNameLaTeX(const std::string &Tag) {
     if(Tag == "KKpipi") {
       return "K^{+}K^{#minus}#pi^{+}#pi^{#minus}";
+    } else if(Tag == "Kpi") {
+      return "K^{#minus}#pi^{+}";
+    } else if(Tag == "Kpipi0") {
+      return "K^{#minus}#pi^{+}#pi^{0}";
+    } else if(Tag == "Kpipipi") {
+      return "K^{#minus}#pi^{+}#pi^{#minus}#pi^{+}";
     } else if(Tag == "KK") {
       return "K^{+}K^{#minus}";
     } else if(Tag == "pipi") {
