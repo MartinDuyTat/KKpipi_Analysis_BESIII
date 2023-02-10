@@ -8,6 +8,7 @@
 #include<iomanip>
 #include"TMatrixT.h"
 #include"TMath.h"
+#include"TRandom.h"
 #include"BinnedDTData.h"
 #include"RawBinnedDTYields.h"
 #include"RawBinnedCPTagYields.h"
@@ -22,10 +23,20 @@ BinnedDTData::BinnedDTData(const std::string &Tag,
   m_DTPredictions(GetDTPredictions(Tag, Ki, Kbari, settings)) {
 }
 
-double BinnedDTData::GetLogLikelihood(const std::vector<double> &ci,
+double BinnedDTData::GetLogLikelihood(double BF_KKpipi,
+				      const std::vector<double> &ci,
 				      const std::vector<double> &si) const {
-  const auto PredictedYields = m_DTPredictions->GetPredictedBinYields(ci, si);
   const auto MeasuredYields = m_DTYields->GetDoubleTagYields();
+  return GetLogLikelihood(BF_KKpipi, ci, si, MeasuredYields);
+}
+
+double BinnedDTData::GetLogLikelihood(
+  double BF_KKpipi,
+  const std::vector<double> &ci,
+  const std::vector<double> &si,
+  const std::vector<AsymmetricUncertainty> &MeasuredYields) const {
+  const auto PredictedYields =
+    m_DTPredictions->GetPredictedBinYields(BF_KKpipi, ci, si);
   const auto CorrelationMatrix = m_DTYields->GetCorrelationMatrix();
   auto CovMatrix = CreateCovarianceMatrix(PredictedYields,
 					  MeasuredYields,
@@ -43,9 +54,32 @@ double BinnedDTData::GetLogLikelihood(const std::vector<double> &ci,
   return LogLikelihood;
 }
 
-void BinnedDTData::PrintComparison(const std::vector<double> &ci,
+void BinnedDTData::GenerateToyYields(double BF_KKpipi,
+				     const std::vector<double> &ci,
+				     const std::vector<double> &si) const {
+  while(true) {
+    const auto ToyYields = m_DTYields->GetToyYields();
+    const double LogLikelihood = GetLogLikelihood(BF_KKpipi, ci, si, ToyYields);
+    const double Probability = TMath::Exp(-0.5*LogLikelihood);
+    const double RandomNumber = gRandom->Uniform(0, 1);
+    if(Probability > RandomNumber) {
+      m_ToyDTYields = ToyYields;
+      break;
+    }
+  }
+}
+
+double BinnedDTData::GetToyLogLikelihood(double BF_KKpipi,
+					 const std::vector<double> &ci,
+					 const std::vector<double> &si) const {
+  return GetLogLikelihood(BF_KKpipi, ci, si, m_ToyDTYields);
+}
+
+void BinnedDTData::PrintComparison(double BF_KKpipi,
+				   const std::vector<double> &ci,
 				   const std::vector<double> &si) const {
-  const auto PredictedYields = m_DTPredictions->GetPredictedBinYields(ci, si);
+  const auto PredictedYields =
+    m_DTPredictions->GetPredictedBinYields(BF_KKpipi, ci, si);
   const auto MeasuredYields = m_DTYields->GetDoubleTagYields();
   std::cout << "Fitted and predicted yield comparison:\n";
   std::cout << std::left << std::setw(10) << "Fitted";

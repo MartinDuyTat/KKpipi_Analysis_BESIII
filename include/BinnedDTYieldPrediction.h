@@ -28,7 +28,9 @@ class BinnedDTYieldPrediction {
    * Function that returns the predicted bin yield
    */
   virtual std::vector<double> GetPredictedBinYields(
-    const std::vector<double> &ci, const std::vector<double> &si) const = 0;
+    double BF_KKpipi,
+    const std::vector<double> &ci,
+    const std::vector<double> &si) const = 0;
  protected:
   /**
    * The single tag yield of this tag, after efficiency correction

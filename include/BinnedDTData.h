@@ -38,17 +38,51 @@ class BinnedDTData {
   BinnedDTData(BinnedDTData &&binnedDTData) = default;
   /**
    * Calculate the log likelihood from this tag
+   * @param BF_KKpipi The KKpipi branching fraction
    * @param ci The ci parameters
    * @param si The si parameters
    */
-  double GetLogLikelihood(const std::vector<double> &ci,
+  double GetLogLikelihood(double BF_KKpipi,
+			  const std::vector<double> &ci,
 			  const std::vector<double> &si) const;
   /**
-   * Function that prints a comparison between predicted and measured yields
+   * Calculate the log likelihood from this tag, using alternative yields
+   * @param BF_KKpipi The KKpipi branching fraction
+   * @param ci The ci parameters
+   * @param si The si parameters
+   * @param MeasuredYields The measured yields
+   */
+  double GetLogLikelihood(
+    double BF_KKpipi,
+    const std::vector<double> &ci,
+    const std::vector<double> &si,
+    const std::vector<AsymmetricUncertainty> &MeasuredYields) const;
+  /**
+   * Generate toy yields using hit and miss method
+   * @param BF_KKpipi The KKpipi branching fraction
+   * @param ci The ci parameters used in toy generation
+   * @param si The si parameters used in toy generation
+   */
+  void GenerateToyYields(double BF_KKpipi,
+			 const std::vector<double> &ci,
+			 const std::vector<double> &si) const;
+  /**
+   * Calculate the log likelihood from this tag using the generated toy yields
+   * @param BF_KKpipi The KKpipi branching fraction
    * @param ci The ci parameters
    * @param si The si parameters
    */
-  void PrintComparison(const std::vector<double> &ci,
+  double GetToyLogLikelihood(double BF_KKpipi,
+			     const std::vector<double> &ci,
+			     const std::vector<double> &si) const;
+  /**
+   * Function that prints a comparison between predicted and measured yields
+   * @param BF_KKpipi The KKpipi branching fraction
+   * @param ci The ci parameters
+   * @param si The si parameters
+   */
+  void PrintComparison(double BF_KKpipi,
+		       const std::vector<double> &ci,
 		       const std::vector<double> &si) const;
  private:
   /**
@@ -59,6 +93,10 @@ class BinnedDTData {
    * The object that predicts double tag yields
    */
   std::unique_ptr<const BinnedDTYieldPrediction> m_DTPredictions;
+  /**
+   * The generated toy double tag yields
+   */
+  mutable std::vector<AsymmetricUncertainty> m_ToyDTYields;
   /**
    * Helper function that calculates the standard deviation from asymmetric uncertainties
    */

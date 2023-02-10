@@ -9,6 +9,7 @@
 
 #include<vector>
 #include<unordered_map>
+#include<memory>
 #include"TMatrixTSym.h"
 
 struct AsymmetricUncertainty {
@@ -53,6 +54,10 @@ class RawBinnedDTYields {
    * Get the correlation matrix
    */
   const TMatrixTSym<double>& GetCorrelationMatrix() const;
+  /**
+   * Generate toy yields with a uniform distribution in a 5 sigma window
+   */
+  std::vector<AsymmetricUncertainty> GetToyYields() const;
  private:
   /**
    * The binned double tag yields with asymmetric uncertainties

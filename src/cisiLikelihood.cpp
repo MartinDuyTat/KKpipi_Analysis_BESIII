@@ -17,10 +17,29 @@ cisiLikelihood::cisiLikelihood(const Settings &settings):
   m_Kbari(GetKi(settings).second) {
 }
 
-double cisiLikelihood::CalculateLogLikelihood(const std::vector<double> &ci,
+double cisiLikelihood::CalculateLogLikelihood(double BF_KKpipi,
+					      const std::vector<double> &ci,
 					      const std::vector<double> &si) const {
   auto LikelihoodAdder = [&] (double a, const BinnedDTData &b) {
-    return a + b.GetLogLikelihood(ci, si);
+    return a + b.GetLogLikelihood(BF_KKpipi, ci, si);
+  };
+  return std::accumulate(m_TagData.begin(), m_TagData.end(), 0.0, LikelihoodAdder);
+}
+
+void cisiLikelihood::GenerateToy(double BF_KKpipi,
+				 const std::vector<double> &ci,
+				 const std::vector<double> &si) const {
+  for(const auto &TagData : m_TagData) {
+    TagData.GenerateToyYields(BF_KKpipi, ci, si);
+  }
+}
+
+double cisiLikelihood::CalculateToyLogLikelihood(
+  double BF_KKpipi,
+  const std::vector<double> &ci,
+  const std::vector<double> &si) const {
+  auto LikelihoodAdder = [&] (double a, const BinnedDTData &b) {
+    return a + b.GetToyLogLikelihood(BF_KKpipi, ci, si);
   };
   return std::accumulate(m_TagData.begin(), m_TagData.end(), 0.0, LikelihoodAdder);
 }
@@ -38,11 +57,12 @@ std::vector<BinnedDTData> cisiLikelihood::SetupTags(const Settings &settings) co
   return TagData;
 }
 
-void cisiLikelihood::PrintComparison(const std::vector<double> &ci,
+void cisiLikelihood::PrintComparison(double BF_KKpipi,
+				     const std::vector<double> &ci,
 				     const std::vector<double> &si) const {
   std::for_each(m_TagData.begin(),
 		m_TagData.end(),
-		[&] (const auto &a) { a.PrintComparison(ci, si); });
+		[&] (const auto &a) { a.PrintComparison(BF_KKpipi, ci, si); });
 }
 			     
 
@@ -56,5 +76,11 @@ cisiLikelihood::GetKi(const Settings &settings) const {
     Ki.push_back(settings["FractionalYields"].getD(KiName));
     Kbari.push_back(settings["FractionalYields"].getD(KbariName));
   }
+  const double Sum = std::accumulate(Ki.begin(), Ki.end(), 0.0)
+                   + std::accumulate(Kbari.begin(), Kbari.end(), 0.0);
+  std::transform(Ki.begin(), Ki.end(), Ki.begin(),
+		 [=] (double a) {return a/Sum;});
+  std::transform(Kbari.begin(), Kbari.end(), Kbari.begin(),
+		 [=] (double a) {return a/Sum;});
   return std::make_pair(Ki, Kbari);
 }

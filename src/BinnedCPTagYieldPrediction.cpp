@@ -15,7 +15,9 @@ BinnedCPTagYieldPrediction::BinnedCPTagYieldPrediction(const std::string &Tag,
 }
 
 std::vector<double> BinnedCPTagYieldPrediction::GetPredictedBinYields(
-  const std::vector<double> &ci, const std::vector<double>&) const {
+  double BF_KKpipi,
+  const std::vector<double> &ci,
+  const std::vector<double>&) const {
   const std::size_t Size = m_Ki.size();
   TMatrixT<double> BinYields(Size, 1);
   for(std::size_t Bin = 1; Bin <= Size; Bin++) {
@@ -25,7 +27,7 @@ std::vector<double> BinnedCPTagYieldPrediction::GetPredictedBinYields(
     const double SqrtKK = TMath::Sqrt(m_Ki[i]*m_Kbari[i]);
     const double Interference = -2.0*SqrtKK*(2.0*m_FPlus - 1.0)*ci[i];
     const double UnnormalisedYield = D0Yield + Dbar0Yield + Interference;
-    const double NormalisedYield = m_SingleTagYield*UnnormalisedYield;
+    const double NormalisedYield = m_SingleTagYield*UnnormalisedYield*BF_KKpipi;
     BinYields(i, 0) = NormalisedYield;
   }
   const auto EffMatrix = (1.0 - m_FPlus)*m_EfficiencyMatrix_CPEven

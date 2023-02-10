@@ -16,8 +16,15 @@ int main(int argc, char *argv[]) {
   std::vector<std::string> TagModes =
     Utilities::ConvertStringToVector(settings.get("TagModes"));
   cisiFitter Fitter(settings);
-  std::cout << "Fitting ci and si...\n";
-  Fitter.Minimise();
-  std::cout << "ci and si have been measured!\n";
+  const std::string RunMode(settings.get("RunMode"));
+  if(RunMode == "SingleFit") {
+    std::cout << "Fitting ci and si...\n";
+    Fitter.Minimise();
+    std::cout << "ci and si have been measured!\n";
+  } else if(RunMode == "ManyToys") {
+    std::cout << "Running ci and si toys...\n";
+    Fitter.RunToys();
+    std::cout << "Toy studies of ci and si are ready!\n";
+  }
   return 0;
 }

@@ -7,6 +7,7 @@
 #define CISIFITTER
 
 #include<vector>
+#include"Minuit2/Minuit2Minimizer.h"
 #include"Settings.h"
 #include"cisiLikelihood.h"
 
@@ -25,6 +26,10 @@ class cisiFitter {
    * Do the minimisation
    */
   void Minimise() const;
+  /**
+   * Run toy studies and save results to a TTree
+   */
+  void RunToys() const;
  private:
   /**
    * The ci and si likelihood
@@ -34,6 +39,14 @@ class cisiFitter {
    * Number of bins in the binning scheme
    */
   const int m_NumberBins;
+  /**
+   * The settings
+   */
+  Settings m_Settings;
+  /**
+   * Helper function to set up minimiser
+   */
+  void SetupMinimiser(ROOT::Minuit2::Minuit2Minimizer &Minimiser) const;
 };
 
 #endif

@@ -23,17 +23,39 @@ class cisiLikelihood {
   cisiLikelihood(const cisiLikelihood &Likelihood) = delete;
   /**
    * Function that returns the likelihood based on ci and si values
+   * @param BF_KKpipi The KKpipi branching fraction
    * @param ci The cosine of the strong phases
    * @param si The sine of the strong phases
    */
-  double CalculateLogLikelihood(const std::vector<double> &ci,
+  double CalculateLogLikelihood(double BF_KKpipi,
+				const std::vector<double> &ci,
 				const std::vector<double> &si) const;
   /**
+   * Generate toy datasets for all tags
+   * @param BF_KKpipi The KKpipi branching fraction
+   * @param ci The cosine of the strong phases used to generate toy
+   * @param si The sine of the strong phases used to generate toy
+   */
+  void GenerateToy(double BF_KKpipi,
+		   const std::vector<double> &ci,
+		   const std::vector<double> &si) const;
+  /**
+   * Function that returns the likelihood based on ci and si values with toy data
+   * @param BF_KKpipi The KKpipi branching fraction
+   * @param ci The cosine of the strong phases
+   * @param si The sine of the strong phases
+   */
+  double CalculateToyLogLikelihood(double BF_KKpipi,
+				   const std::vector<double> &ci,
+				   const std::vector<double> &si) const;
+  /**
    * Function that prints a comparison between predicted and measured yields
+   * @param BF_KKpipi The KKpipi branching fraction
    * @param ci The ci parameters
    * @param si The si parameters
    */
-  void PrintComparison(const std::vector<double> &ci,
+  void PrintComparison(double BF_KKpipi,
+		       const std::vector<double> &ci,
 		       const std::vector<double> &si) const;
  private:
   /**

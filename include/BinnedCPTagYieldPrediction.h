@@ -33,7 +33,9 @@ class BinnedCPTagYieldPrediction: public BinnedDTYieldPrediction {
    * Function that returns the predicted bin yield
    */
   virtual std::vector<double> GetPredictedBinYields(
-    const std::vector<double> &ci, const std::vector<double> &si) const override;
+    double BF_KKpipi,
+    const std::vector<double> &ci,
+    const std::vector<double> &si) const override;
  private:
   /**
    * The CP-even fraction of the tag
