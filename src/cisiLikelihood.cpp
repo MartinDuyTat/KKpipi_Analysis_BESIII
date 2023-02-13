@@ -28,9 +28,10 @@ double cisiLikelihood::CalculateLogLikelihood(double BF_KKpipi,
 
 void cisiLikelihood::GenerateToy(double BF_KKpipi,
 				 const std::vector<double> &ci,
-				 const std::vector<double> &si) const {
+				 const std::vector<double> &si,
+				 std::size_t StatsMultiplier) const {
   for(const auto &TagData : m_TagData) {
-    TagData.GenerateToyYields(BF_KKpipi, ci, si);
+    TagData.GenerateToyYields(BF_KKpipi, ci, si, StatsMultiplier);
   }
 }
 

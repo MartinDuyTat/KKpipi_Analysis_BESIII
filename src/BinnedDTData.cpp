@@ -58,15 +58,18 @@ double BinnedDTData::GetLogLikelihood(
 
 void BinnedDTData::GenerateToyYields(double BF_KKpipi,
 				     const std::vector<double> &ci,
-				     const std::vector<double> &si) const {
-  while(true) {
+				     const std::vector<double> &si,
+				     std::size_t StatsMultiplier) const {
+  m_ToyDTYields.clear();
+  std::size_t Counter = 0;
+  while(Counter < StatsMultiplier) {
     const auto ToyYields = m_DTYields->GetToyYields();
     const double LogLikelihood = GetLogLikelihood(BF_KKpipi, ci, si, ToyYields);
     const double Probability = TMath::Exp(-0.5*LogLikelihood);
     const double RandomNumber = gRandom->Uniform(0, 1);
     if(Probability > RandomNumber) {
-      m_ToyDTYields = ToyYields;
-      break;
+      m_ToyDTYields.push_back(ToyYields);
+      Counter++;
     }
   }
 }
@@ -74,7 +77,11 @@ void BinnedDTData::GenerateToyYields(double BF_KKpipi,
 double BinnedDTData::GetToyLogLikelihood(double BF_KKpipi,
 					 const std::vector<double> &ci,
 					 const std::vector<double> &si) const {
-  return GetLogLikelihood(BF_KKpipi, ci, si, m_ToyDTYields);
+  double LL = 0.0;
+  for(const auto ToyDTYield : m_ToyDTYields) {
+    LL += GetLogLikelihood(BF_KKpipi, ci, si, ToyDTYield);
+  }
+  return LL;
 }
 
 void BinnedDTData::PrintComparison(double BF_KKpipi,

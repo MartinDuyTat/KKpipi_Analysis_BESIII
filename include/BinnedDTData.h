@@ -62,10 +62,12 @@ class BinnedDTData {
    * @param BF_KKpipi The KKpipi branching fraction
    * @param ci The ci parameters used in toy generation
    * @param si The si parameters used in toy generation
+   * @param StatsMultiplier The statistics multiplier
    */
   void GenerateToyYields(double BF_KKpipi,
 			 const std::vector<double> &ci,
-			 const std::vector<double> &si) const;
+			 const std::vector<double> &si,
+			 std::size_t StatsMultiplier) const;
   /**
    * Calculate the log likelihood from this tag using the generated toy yields
    * @param BF_KKpipi The KKpipi branching fraction
@@ -96,7 +98,7 @@ class BinnedDTData {
   /**
    * The generated toy double tag yields
    */
-  mutable std::vector<AsymmetricUncertainty> m_ToyDTYields;
+  mutable std::vector<std::vector<AsymmetricUncertainty>> m_ToyDTYields;
   /**
    * Helper function that calculates the standard deviation from asymmetric uncertainties
    */

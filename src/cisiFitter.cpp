@@ -46,15 +46,18 @@ void cisiFitter::RunToys() const {
   gRandom->SetSeed(42);
   const double Generator_BF_KKpipi = 0.00247;
   double BF_KKpipi_value, BF_KKpipi_err, BF_KKpipi_pull;
+  int Status, CovStatus;
   const std::vector<double> Generator_ci{0.50205, 0.588241}, Generator_si{-0.41232, 0.394319};
   std::vector<double> ci_value(m_NumberBins), si_value(m_NumberBins);
   std::vector<double> ci_err(m_NumberBins), si_err(m_NumberBins);
   std::vector<double> ci_pull(m_NumberBins), si_pull(m_NumberBins);
   TFile File(m_Settings.get("ManyToysOutputFilename").c_str(), "RECREATE");
   TTree Tree("cisiTree", "");
+  Tree.Branch("Status", &Status);
+  Tree.Branch("CovStatus", &CovStatus);
   Tree.Branch("BF_KKpipi_value", &BF_KKpipi_value);
   Tree.Branch("BF_KKpipi_err", &BF_KKpipi_err);
-  Tree.Branch("BF_KKpipi_upll", &BF_KKpipi_pull);
+  Tree.Branch("BF_KKpipi_pull", &BF_KKpipi_pull);
   for(int i = 0; i < m_NumberBins; i++) {
     Tree.Branch(("c" + std::to_string(i + 1) + "_value").c_str(), &ci_value[i]);
     Tree.Branch(("s" + std::to_string(i + 1) + "_value").c_str(), &si_value[i]);
@@ -76,12 +79,18 @@ void cisiFitter::RunToys() const {
     return m_cisiLikelihood.CalculateToyLogLikelihood(BF_KKpipi, ci, si);
   };
   std::size_t NumberToys = m_Settings.getI("NumberToys");
+  std::size_t StatsMultiplier = m_Settings.getI("StatsMultiplier");
   for(std::size_t i = 0; i < NumberToys; i++) {
-    cisiLikelihoodRef.GenerateToy(Generator_BF_KKpipi, Generator_ci, Generator_si);
+    cisiLikelihoodRef.GenerateToy(Generator_BF_KKpipi,
+				  Generator_ci,
+				  Generator_si,
+				  StatsMultiplier);
     ROOT::Math::Functor fcn(LikelihoodFunction, 2*m_NumberBins + 1);
     Minimiser.SetFunction(fcn);
     SetupMinimiser(Minimiser);
     Minimiser.Minimize();
+    Status = Minimiser.Status();
+    CovStatus = Minimiser.CovMatrixStatus();
     const double *X = Minimiser.X();
     const double *E = Minimiser.Errors();
     BF_KKpipi_value = X[0];
@@ -92,8 +101,13 @@ void cisiFitter::RunToys() const {
       si_value[i] = X[i + m_NumberBins + 1];
       ci_err[i] = E[i + 1];
       si_err[i] = E[i + m_NumberBins + 1];
-      ci_pull[i] = (ci_value[i] - Generator_ci[i])/ci_err[i];
-      si_pull[i] = (si_value[i] - Generator_si[i])/si_err[i];
+      double ErrorLow, ErrorHigh;
+      Minimiser.GetMinosError(i + 1, ErrorLow, ErrorHigh, 0);
+      ci_pull[i] = ci_value[i] - Generator_ci[i];
+      ci_pull[i] /= ci_pull[i] <= 0.0 ? ErrorHigh : -ErrorLow;
+      si_pull[i] = si_value[i] - Generator_si[i];
+      Minimiser.GetMinosError(i + 1 + m_NumberBins, ErrorLow, ErrorHigh, 0);
+      si_pull[i] /= si_pull[i] <= 0.0 ? ErrorHigh : -ErrorLow;
     }
     Tree.Fill();
   }

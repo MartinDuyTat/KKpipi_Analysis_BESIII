@@ -35,10 +35,12 @@ class cisiLikelihood {
    * @param BF_KKpipi The KKpipi branching fraction
    * @param ci The cosine of the strong phases used to generate toy
    * @param si The sine of the strong phases used to generate toy
+   * @param StatsMultiplier The statistics multiplier
    */
   void GenerateToy(double BF_KKpipi,
 		   const std::vector<double> &ci,
-		   const std::vector<double> &si) const;
+		   const std::vector<double> &si,
+		   std::size_t StatsMultiplier = 1) const;
   /**
    * Function that returns the likelihood based on ci and si values with toy data
    * @param BF_KKpipi The KKpipi branching fraction
