@@ -222,17 +222,17 @@ namespace Utilities {
       return "K^{#minus}#pi^{+}#pi^{0}";
     } else if(Tag == "Kpipipi") {
       return "K^{#minus}#pi^{+}#pi^{#minus}#pi^{+}";
-    } else if(Tag == "KK") {
+    } else if(Tag == "KK" || Tag == "KKPartReco") {
       return "K^{+}K^{#minus}";
     } else if(Tag == "pipi") {
       return "#pi^{+}#pi^{#minus}";
-    } else if(Tag == "pipipi0") {
+    } else if(Tag == "pipipi0" || Tag == "pipipi0PartReco") {
       return "#pi^{+}#pi^{#minus}#pi^{0}";
     } else if(Tag == "KSpi0pi0") {
       return "K_{S}^{0}#pi^{0}#pi^{0}";
     } else if(Tag == "KLpi0") {
       return "K_{L}^{0}#pi^{0}";
-    } else if(Tag == "KSpi0") {
+    } else if(Tag == "KSpi0" || Tag == "KSpi0PartReco") {
       return "K_{S}^{0}#pi^{0}";
     } else if(Tag == "KSeta") {
       return "K_{S}^{0}#eta";

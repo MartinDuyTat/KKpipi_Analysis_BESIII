@@ -133,9 +133,14 @@ class BinnedDTData {
   /**
    * List of the CP tags used in the analysis
    */
-  static constexpr std::array<std::string_view, 10> m_CPTags{{
-    "KK", "pipi", "pipipi0", "KSpi0pi0", "KLpi0",
-    "KSpi0", "KSeta", "KSetaPrimepipieta", "KSetaPrimerhogamma", "KSomega"}};
+  static constexpr std::array<std::string_view, 12> m_CPTags{{
+    "KK", "KKPartReco", "pipi", "pipipi0", "KSpi0pi0", "KLpi0",
+    "KSpi0", "KSpi0PartReco", "KSeta", "KSetaPrimepipieta", "KSetaPrimerhogamma", "KSomega"}};
+  /**
+   * List of the SCMB tags used in the analysis
+   */
+  static constexpr std::array<std::string_view, 2> m_SCMBTags{{
+    "KSpipi", "KLpipi"}};
 };
 
 #endif

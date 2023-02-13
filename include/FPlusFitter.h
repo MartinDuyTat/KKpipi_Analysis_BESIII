@@ -19,7 +19,7 @@
 #include"RooDataSet.h"
 #include"RooMultiVarGaussian.h"
 #include"Settings.h"
-#include"cisiK0pipi.h"
+#include"cisiK0pipiRooFit.h"
 #include"CholeskySmearing.h"
 
 class FPlusFitter {
@@ -137,7 +137,7 @@ class FPlusFitter {
     /**
      * Struct storing all the information about ci, si and Ki for KSpipi and KLpipi
      */
-    cisiK0pipi m_cisi_K0pipi;
+    cisiK0pipiRooFit m_cisi_K0pipi;
     /**
      * Resets the floating parameters to the F+ model value and PDG value of the BF
      */

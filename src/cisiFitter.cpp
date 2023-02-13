@@ -50,7 +50,7 @@ void cisiFitter::RunToys() const {
   std::vector<double> ci_value(m_NumberBins), si_value(m_NumberBins);
   std::vector<double> ci_err(m_NumberBins), si_err(m_NumberBins);
   std::vector<double> ci_pull(m_NumberBins), si_pull(m_NumberBins);
-  TFile File("cisiToyResults.root", "RECREATE");
+  TFile File(m_Settings.get("ManyToysOutputFilename").c_str(), "RECREATE");
   TTree Tree("cisiTree", "");
   Tree.Branch("BF_KKpipi_value", &BF_KKpipi_value);
   Tree.Branch("BF_KKpipi_err", &BF_KKpipi_err);
@@ -103,13 +103,16 @@ void cisiFitter::RunToys() const {
 
 void cisiFitter::SetupMinimiser(ROOT::Minuit2::Minuit2Minimizer &Minimiser) const {
   Minimiser.SetVariable(0, "BF_KKpipi", 0.00247, 0.1);
+  Minimiser.SetVariableLimits(0, 0.001, 0.010);
   for(int i = 1; i <= m_NumberBins; i++) {
     Minimiser.SetVariable(i, "c" + std::to_string(i), 1.0, 1.0);
     Minimiser.SetVariableLimits(i, -2.0, 2.0);
   }
   for(int i = 1; i <= m_NumberBins; i++) {
     Minimiser.SetVariable(i + m_NumberBins, "s" + std::to_string(i), 0.0, 1.0);
-    Minimiser.SetVariableLimits(i + m_NumberBins, -2.0, 2.0);
-    Minimiser.FixVariable(i + m_NumberBins);
+    Minimiser.SetVariableLimits(i + m_NumberBins, -3.0, 3.0);
+    if(m_Settings.getB("Fix_si")) {
+      Minimiser.FixVariable(i + m_NumberBins);
+    }
   }
 }

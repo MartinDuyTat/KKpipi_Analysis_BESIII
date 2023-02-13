@@ -1,25 +1,25 @@
-// Martin Duy Tat 3rd October 2022
+// Martin Duy Tat 13th February 2023
 /**
- * RawBinnedCPTagYields inhertis from RawBinnedDTYields
- * It initialises binned yields of a CP tag
+ * RawBinnedSCMBTagYields inhertis from RawBinnedDTYields
+ * It initialises binned yields of a SCMB tag
  */
 
-#ifndef RAWBINNEDCPTAGYIELDS
-#define RAWBINNEDCPTAGYIELDS
+#ifndef RAWBINNEDSCMBTAGYIELDS
+#define RAWBINNEDSCMBTAGYIELDS
 
 #include<string>
 #include<vector>
 #include"RawBinnedDTYields.h"
 #include"Settings.h"
 
-class RawBinnedCPTagYields: public RawBinnedDTYields {
+class RawBinnedSCMBTagYields: public RawBinnedDTYields {
  public:
   /**
    * Constructor that parses the fitted double tag yields
    * @param Tag The name of the tag
    * @param settings The settings file
    */
-  RawBinnedCPTagYields(const std::string &Tag, const Settings &settings);
+  RawBinnedSCMBTagYields(const std::string &Tag, const Settings &settings);
  private:
   /**
    * Helper function that parses the binned double tag yields from a file

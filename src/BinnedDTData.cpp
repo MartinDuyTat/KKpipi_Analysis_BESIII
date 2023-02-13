@@ -12,8 +12,10 @@
 #include"BinnedDTData.h"
 #include"RawBinnedDTYields.h"
 #include"RawBinnedCPTagYields.h"
+#include"RawBinnedSCMBTagYields.h"
 #include"BinnedDTYieldPrediction.h"
 #include"BinnedCPTagYieldPrediction.h"
+#include"BinnedSCMBTagYieldPrediction.h"
 
 BinnedDTData::BinnedDTData(const std::string &Tag,
 			   const std::vector<double> &Ki,
@@ -83,11 +85,19 @@ void BinnedDTData::PrintComparison(double BF_KKpipi,
   const auto MeasuredYields = m_DTYields->GetDoubleTagYields();
   std::cout << "Fitted and predicted yield comparison:\n";
   std::cout << std::left << std::setw(10) << "Fitted";
+  std::cout << std::left << std::setw(10) << "+ Error";
+  std::cout << std::left << std::setw(10) << "- Error";
   std::cout << std::left << std::setw(10) << "Predicted\n";
   for(std::size_t i = 0; i < PredictedYields.size(); i++) {
     std::cout << std::left << std::setw(10);
     std::cout << std::fixed << std::setprecision(2);
     std::cout << MeasuredYields[i].Value;
+    std::cout << std::left << std::setw(10);
+    std::cout << std::fixed << std::setprecision(2);
+    std::cout << MeasuredYields[i].PlusUncertainty;
+    std::cout << std::left << std::setw(10);
+    std::cout << std::fixed << std::setprecision(2);
+    std::cout << MeasuredYields[i].NegativeUncertainty;
     std::cout << std::left << std::setw(10);
     std::cout << std::fixed << std::setprecision(2);
     std::cout << PredictedYields[i] << "\n";
@@ -100,7 +110,11 @@ double BinnedDTData::GetAsymmetricStd(const AsymmetricUncertainty &Yield,
   const double StdDiff = Yield.PlusUncertainty - Yield.NegativeUncertainty;
   const double YieldDiff = Yield.Value - Prediction;
   const double Var = Std2 + StdDiff*YieldDiff;
-  return TMath::Sqrt(Var);
+  if(Var < 0.0) {
+    return 1.0e-6;
+  } else {
+    return TMath::Sqrt(Var);
+  }
 }
 
 TMatrixT<double> BinnedDTData::CreateCovarianceMatrix(
@@ -121,9 +135,12 @@ TMatrixT<double> BinnedDTData::CreateCovarianceMatrix(
 std::unique_ptr<const RawBinnedDTYields> BinnedDTData::GetRawDTYields(
     const std::string &Tag,
     const Settings &settings) const {
-  const auto iter = std::find(m_CPTags.begin(), m_CPTags.end(), Tag);
-  if(iter != m_CPTags.end()) {
+  const auto iter_CP = std::find(m_CPTags.begin(), m_CPTags.end(), Tag);
+  const auto iter_SCMB = std::find(m_SCMBTags.begin(), m_SCMBTags.end(), Tag);
+  if(iter_CP != m_CPTags.end()) {
     return std::make_unique<const RawBinnedCPTagYields>(Tag, settings);
+  } else if(iter_SCMB != m_SCMBTags.end()) {
+    return std::make_unique<const RawBinnedSCMBTagYields>(Tag, settings);
   } else {
     throw std::runtime_error(Tag + " is not a valid tag mode");
   }
@@ -134,12 +151,18 @@ std::unique_ptr<const BinnedDTYieldPrediction> BinnedDTData::GetDTPredictions(
     const std::vector<double> &Ki,
     const std::vector<double> &Kbari,
     const Settings &settings) const {
-  const auto iter = std::find(m_CPTags.begin(), m_CPTags.end(), Tag);
-  if(iter != m_CPTags.end()) {
+  const auto iter_CP = std::find(m_CPTags.begin(), m_CPTags.end(), Tag);
+  const auto iter_SCMB = std::find(m_SCMBTags.begin(), m_SCMBTags.end(), Tag);
+  if(iter_CP != m_CPTags.end()) {
     return std::make_unique<const BinnedCPTagYieldPrediction>(Tag,
 							      Ki,
 							      Kbari,
 							      settings);
+  } else if(iter_SCMB != m_SCMBTags.end()) {
+    return std::make_unique<const BinnedSCMBTagYieldPrediction>(Tag,
+								Ki,
+								Kbari,
+								settings);
   } else {
     throw std::runtime_error(Tag + " is not a valid tag mode");
   }
