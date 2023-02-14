@@ -7,6 +7,7 @@
 #define CISIFITTER
 
 #include<vector>
+#include<string>
 #include"Minuit2/Minuit2Minimizer.h"
 #include"Settings.h"
 #include"cisiLikelihood.h"
@@ -38,7 +39,7 @@ class cisiFitter {
   /**
    * Number of bins in the binning scheme
    */
-  const int m_NumberBins;
+  const std::size_t m_NumberBins;
   /**
    * The settings
    */
@@ -47,6 +48,20 @@ class cisiFitter {
    * Helper function to set up minimiser
    */
   void SetupMinimiser(ROOT::Minuit2::Minuit2Minimizer &Minimiser) const;
+  /**
+   * Helper function to load values of ci and si used for toy generation
+   * @param c_or_s String indicating if we want ci or si
+   */
+  std::vector<double> GetGeneratorcisi(const std::string &c_or_s) const;
+  /**
+   * Function for drawing the contours of ci vs si
+   * @param Minimiser The minimiser
+   * @param ci The fitted values of ci
+   * @param si The fitted values of si
+   */
+  void Plot_cisi(ROOT::Minuit2::Minuit2Minimizer &Minimiser,
+		 const std::vector<double> &ci,
+		 const std::vector<double> &si) const;
 };
 
 #endif

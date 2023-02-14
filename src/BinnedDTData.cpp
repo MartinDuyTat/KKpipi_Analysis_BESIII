@@ -21,6 +21,7 @@ BinnedDTData::BinnedDTData(const std::string &Tag,
 			   const std::vector<double> &Ki,
 			   const std::vector<double> &Kbari,
 			   const Settings &settings):
+  m_TagMode(Tag),
   m_DTYields(GetRawDTYields(Tag, settings)),
   m_DTPredictions(GetDTPredictions(Tag, Ki, Kbari, settings)) {
 }
@@ -90,7 +91,7 @@ void BinnedDTData::PrintComparison(double BF_KKpipi,
   const auto PredictedYields =
     m_DTPredictions->GetPredictedBinYields(BF_KKpipi, ci, si);
   const auto MeasuredYields = m_DTYields->GetDoubleTagYields();
-  std::cout << "Fitted and predicted yield comparison:\n";
+  std::cout << "Fitted and predicted yield comparison for " << m_TagMode << ":\n";
   std::cout << std::left << std::setw(10) << "Fitted";
   std::cout << std::left << std::setw(10) << "+ Error";
   std::cout << std::left << std::setw(10) << "- Error";

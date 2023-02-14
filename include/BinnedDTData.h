@@ -88,6 +88,10 @@ class BinnedDTData {
 		       const std::vector<double> &si) const;
  private:
   /**
+   * The name of this tag mode
+   */
+  const std::string m_TagMode;
+  /**
    * The measured raw double tag yields
    */
   std::unique_ptr<const RawBinnedDTYields> m_DTYields;

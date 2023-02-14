@@ -1,8 +1,15 @@
+
 // Martin Duy Tat 13th October 2022
 
 #include"TFile.h"
 #include"TTree.h"
 #include"TRandom.h"
+#include"TMath.h"
+#include"TCanvas.h"
+#include"TGraph.h"
+#include"TAxis.h"
+#include"TLatex.h"
+#include"TLine.h"
 #include"Minuit2/Minuit2Minimizer.h"
 #include"Math/Functor.h"
 #include"Settings.h"
@@ -22,7 +29,7 @@ void cisiFitter::Minimise() const {
   auto LikelihoodFunction = [=, &cisiLikelihoodRef] (const double *x) {
     const double BF_KKpipi = x[0];
     std::vector<double> ci, si;
-    for(int i = 0; i < m_NumberBins; i++) {
+    for(std::size_t i = 0; i < m_NumberBins; i++) {
       ci.push_back(x[i + 1]);
       si.push_back(x[i + m_NumberBins + 1]);
     }
@@ -35,11 +42,12 @@ void cisiFitter::Minimise() const {
   const double *X = Minimiser.X();
   std::vector<double> ci;
   std::vector<double> si;
-  for(int i = 0; i < m_NumberBins; i++) {
+  for(std::size_t i = 0; i < m_NumberBins; i++) {
     ci.push_back(X[i + 1]);
     si.push_back(X[i + m_NumberBins + 1]);
   }
   m_cisiLikelihood.PrintComparison(X[0], ci, si);
+  Plot_cisi(Minimiser, ci, si);
 }
 
 void cisiFitter::RunToys() const {
@@ -47,7 +55,8 @@ void cisiFitter::RunToys() const {
   const double Generator_BF_KKpipi = 0.00247;
   double BF_KKpipi_value, BF_KKpipi_err, BF_KKpipi_pull;
   int Status, CovStatus;
-  const std::vector<double> Generator_ci{0.50205, 0.588241}, Generator_si{-0.41232, 0.394319};
+  const std::vector<double> Generator_ci = GetGeneratorcisi("c");
+  const std::vector<double> Generator_si = GetGeneratorcisi("s");
   std::vector<double> ci_value(m_NumberBins), si_value(m_NumberBins);
   std::vector<double> ci_err(m_NumberBins), si_err(m_NumberBins);
   std::vector<double> ci_pull(m_NumberBins), si_pull(m_NumberBins);
@@ -58,7 +67,7 @@ void cisiFitter::RunToys() const {
   Tree.Branch("BF_KKpipi_value", &BF_KKpipi_value);
   Tree.Branch("BF_KKpipi_err", &BF_KKpipi_err);
   Tree.Branch("BF_KKpipi_pull", &BF_KKpipi_pull);
-  for(int i = 0; i < m_NumberBins; i++) {
+  for(std::size_t i = 0; i < m_NumberBins; i++) {
     Tree.Branch(("c" + std::to_string(i + 1) + "_value").c_str(), &ci_value[i]);
     Tree.Branch(("s" + std::to_string(i + 1) + "_value").c_str(), &si_value[i]);
     Tree.Branch(("c" + std::to_string(i + 1) + "_err").c_str(), &ci_err[i]);
@@ -72,7 +81,7 @@ void cisiFitter::RunToys() const {
   auto LikelihoodFunction = [=, &cisiLikelihoodRef] (const double *x) {
     const double BF_KKpipi = x[0];
     std::vector<double> ci, si;
-    for(int i = 0; i < m_NumberBins; i++) {
+    for(std::size_t i = 0; i < m_NumberBins; i++) {
       ci.push_back(x[i + 1]);
       si.push_back(x[i + m_NumberBins + 1]);
     }
@@ -96,7 +105,7 @@ void cisiFitter::RunToys() const {
     BF_KKpipi_value = X[0];
     BF_KKpipi_err = E[0];
     BF_KKpipi_pull = (BF_KKpipi_value - Generator_BF_KKpipi)/BF_KKpipi_err;
-    for(int i = 0; i < m_NumberBins; i++) {
+    for(std::size_t i = 0; i < m_NumberBins; i++) {
       ci_value[i] = X[i + 1];
       si_value[i] = X[i + m_NumberBins + 1];
       ci_err[i] = E[i + 1];
@@ -118,15 +127,89 @@ void cisiFitter::RunToys() const {
 void cisiFitter::SetupMinimiser(ROOT::Minuit2::Minuit2Minimizer &Minimiser) const {
   Minimiser.SetVariable(0, "BF_KKpipi", 0.00247, 0.1);
   Minimiser.SetVariableLimits(0, 0.001, 0.010);
-  for(int i = 1; i <= m_NumberBins; i++) {
+  for(std::size_t i = 1; i <= m_NumberBins; i++) {
     Minimiser.SetVariable(i, "c" + std::to_string(i), 1.0, 1.0);
-    Minimiser.SetVariableLimits(i, -2.0, 2.0);
+    Minimiser.SetVariableLimits(i, -3.0, 3.0);
   }
-  for(int i = 1; i <= m_NumberBins; i++) {
+  for(std::size_t i = 1; i <= m_NumberBins; i++) {
     Minimiser.SetVariable(i + m_NumberBins, "s" + std::to_string(i), 0.0, 1.0);
-    Minimiser.SetVariableLimits(i + m_NumberBins, -3.0, 3.0);
+    Minimiser.SetVariableLimits(i + m_NumberBins, -2.0, 2.0);
     if(m_Settings.getB("Fix_si")) {
       Minimiser.FixVariable(i + m_NumberBins);
     }
   }
+}
+
+std::vector<double> cisiFitter::GetGeneratorcisi(const std::string &c_or_s) const {
+  std::vector<double> cisi(m_NumberBins);
+  const std::string Prefix = "Generator_" + c_or_s;
+  for(std::size_t Bin = 1; Bin <= m_NumberBins; Bin++) {
+    cisi[Bin - 1] = m_Settings.getD(Prefix + std::to_string(Bin));
+  }
+  return cisi;
+}
+
+void cisiFitter::Plot_cisi(ROOT::Minuit2::Minuit2Minimizer &Minimiser,
+			   const std::vector<double> &ci,
+			   const std::vector<double> &si) const {
+  // Make canvas
+  TCanvas c("cisi_c", "", 900, 900);
+  // Draw circle
+  const std::size_t Points = 101;
+  std::vector<double> circle_x(Points), circle_y(Points);
+  for(std::size_t i = 0; i < 101; i++) {
+    circle_x[i] = TMath::Cos(2.0*TMath::Pi()*i/100.0);
+    circle_y[i] = TMath::Sin(2.0*TMath::Pi()*i/100.0);
+  }
+  TGraph Circle(Points, circle_x.data(), circle_y.data());
+  Circle.SetLineWidth(3);
+  Circle.SetTitle(";#it{c_{i}};#it{s_{i}}");
+  Circle.Draw("AL");
+  const double Boundary = 1.5;
+  Circle.GetXaxis()->SetLimits(-1.5, 1.5);
+  Circle.GetYaxis()->SetRangeUser(-1.5, 1.5);
+  Circle.GetXaxis()->SetNdivisions(505);
+  Circle.GetYaxis()->SetNdivisions(505);
+  // Draw prediction of F+
+  const double c_fromFPlus = 2*0.73 - 1;
+  const double c_fromFPlus_err = 2*0.04;
+  TLine LeftLine(c_fromFPlus - c_fromFPlus_err, -Boundary,
+		 c_fromFPlus - c_fromFPlus_err, Boundary);
+  TLine RightLine(c_fromFPlus + c_fromFPlus_err, -Boundary,
+		  c_fromFPlus + c_fromFPlus_err, Boundary);
+  LeftLine.SetLineWidth(3);
+  RightLine.SetLineWidth(3);
+  LeftLine.SetLineStyle(kDashed);
+  RightLine.SetLineStyle(kDashed);
+  LeftLine.Draw("L SAME");
+  RightLine.Draw("L SAME");
+  // Draw fit results
+  TGraph Results(m_NumberBins, ci.data(), si.data());
+  Results.SetMarkerStyle(8);
+  std::vector<TLatex> PointLabels;
+  for(std::size_t Bin = 1; Bin <= m_NumberBins; Bin++) {
+    PointLabels.push_back(TLatex(ci[Bin - 1] + 0.05, si[Bin - 1], std::to_string(Bin).c_str()));
+    PointLabels.back().DrawClone("SAME");
+  }
+  Results.Draw("P SAME");
+  // Create and draw contours
+  Minimiser.SetPrintLevel(-1);
+  std::vector<TGraph> Contours;
+  std::vector<double> ErrorDefs{1.0};
+  for(double ErrorDef : ErrorDefs) {
+    Minimiser.SetErrorDef(ErrorDef);
+    for(std::size_t Bin = 1; Bin <= m_NumberBins; Bin++) {
+      std::vector<double> x(Points), y(Points);
+      unsigned int nPoints = Points - 1;
+      Minimiser.Contour(Bin, Bin + m_NumberBins, nPoints, x.data(), y.data());
+      x.back() = x[0];
+      y.back() = y[0];
+      Contours.push_back(TGraph(Points, x.data(), y.data()));
+      Contours.back().SetLineWidth(3);
+    }
+  }
+  for(auto &Contour : Contours) {
+    Contour.Draw("L SAME");
+  }
+  c.SaveAs("cisi_contours.pdf");
 }
