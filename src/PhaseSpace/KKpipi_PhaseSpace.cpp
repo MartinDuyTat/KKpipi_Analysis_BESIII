@@ -21,6 +21,9 @@ KKpipi_PhaseSpace::KKpipi_PhaseSpace(TTree *Tree,
                                                          m_KSKKBinning(nullptr) {
   //m_AmplitudePhaseSpace.SetBinEdges({1.20923});
   //m_AmplitudePhaseSpace.UseVariableBinWidths(true);
+  if(TrueBins && !ReconstructedBins) {
+    m_AmplitudePhaseSpace.SetKSVeto(0.477, 0.507);
+  }
   if(ReconstructedBins) {
     SetBranchAddresses_Rec(Tree);
   }
