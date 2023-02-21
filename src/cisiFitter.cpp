@@ -47,6 +47,7 @@ void cisiFitter::Minimise() const {
     si.push_back(X[i + m_NumberBins + 1]);
   }
   m_cisiLikelihood.PrintComparison(X[0], ci, si);
+  m_cisiLikelihood.PrintKi(ci, si);
   Plot_cisi(Minimiser, ci, si);
 }
 
@@ -55,6 +56,7 @@ void cisiFitter::RunToys() const {
   const double Generator_BF_KKpipi = 0.00247;
   double BF_KKpipi_value, BF_KKpipi_err, BF_KKpipi_pull;
   int Status, CovStatus;
+  double LL;
   const std::vector<double> Generator_ci = GetGeneratorcisi("c");
   const std::vector<double> Generator_si = GetGeneratorcisi("s");
   std::vector<double> ci_value(m_NumberBins), si_value(m_NumberBins);
@@ -64,6 +66,7 @@ void cisiFitter::RunToys() const {
   TTree Tree("cisiTree", "");
   Tree.Branch("Status", &Status);
   Tree.Branch("CovStatus", &CovStatus);
+  Tree.Branch("LL", &LL);
   Tree.Branch("BF_KKpipi_value", &BF_KKpipi_value);
   Tree.Branch("BF_KKpipi_err", &BF_KKpipi_err);
   Tree.Branch("BF_KKpipi_pull", &BF_KKpipi_pull);
@@ -100,6 +103,7 @@ void cisiFitter::RunToys() const {
     Minimiser.Minimize();
     Status = Minimiser.Status();
     CovStatus = Minimiser.CovMatrixStatus();
+    LL = Minimiser.MinValue();
     const double *X = Minimiser.X();
     const double *E = Minimiser.Errors();
     BF_KKpipi_value = X[0];
@@ -211,5 +215,5 @@ void cisiFitter::Plot_cisi(ROOT::Minuit2::Minuit2Minimizer &Minimiser,
   for(auto &Contour : Contours) {
     Contour.Draw("L SAME");
   }
-  c.SaveAs("cisi_contours.pdf");
+  c.SaveAs("Contours_cisi.pdf");
 }

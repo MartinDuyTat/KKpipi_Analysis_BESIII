@@ -5,6 +5,7 @@
 #include<string>
 #include<regex>
 #include<stdexcept>
+#include<sstream>
 #include"TChain.h"
 #include"TTree.h"
 #include"TEntryList.h"
@@ -249,6 +250,37 @@ namespace Utilities {
     } else {
       throw std::invalid_argument("Unknown tag: " + Tag);
     }
+  }
+  
+  void AddTreeAliases(TTree *Tree, const std::string &Filename) {
+    std::ifstream File(Filename);
+    std::string Line;
+    while(std::getline(File, Line)) {
+      if(Line.empty()) {
+	continue;
+      }
+      std::stringstream ss(Line);
+      std::string Word;
+      ss >> Word;
+      if(Word == "Alias") {
+	std::string AliasName;
+	ss >> AliasName;
+	std::string Formula;
+	std::getline(File, Formula);
+	Tree->SetAlias(AliasName.c_str(), Formula.c_str());
+      }
+    }
+    File.close();
+  }
+
+  void AddExtraCuts(TCut &Cuts, const std::string &Filename) {
+    std::ifstream File(Filename);
+    std::string Line;
+    while(std::getline(File, Line)) {
+      TCut NewCut(Line.c_str());
+      Cuts = Cuts && NewCut;
+    }
+    File.close();
   }
 
 }

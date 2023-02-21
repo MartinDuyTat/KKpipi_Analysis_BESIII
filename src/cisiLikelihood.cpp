@@ -13,8 +13,7 @@
 
 cisiLikelihood::cisiLikelihood(const Settings &settings):
   m_TagData(SetupTags(settings)),
-  m_Ki(GetKi(settings).first),
-  m_Kbari(GetKi(settings).second) {
+  m_Ki(settings) {
 }
 
 double cisiLikelihood::CalculateLogLikelihood(double BF_KKpipi,
@@ -53,7 +52,7 @@ std::vector<BinnedDTData> cisiLikelihood::SetupTags(const Settings &settings) co
 		 TagModes.end(),
 		 std::back_inserter(TagData),
 		 [&] (const auto &Tag) {
-		   return BinnedDTData(Tag, m_Ki, m_Kbari, settings);
+		   return BinnedDTData(Tag, &m_Ki, settings);
 		 });
   return TagData;
 }
@@ -64,6 +63,11 @@ void cisiLikelihood::PrintComparison(double BF_KKpipi,
   std::for_each(m_TagData.begin(),
 		m_TagData.end(),
 		[&] (const auto &a) { a.PrintComparison(BF_KKpipi, ci, si); });
+}
+
+void cisiLikelihood::PrintKi(const std::vector<double> &ci,
+			     const std::vector<double> &si) const {
+  m_Ki.PrintKi(ci, si);
 }
 			     
 

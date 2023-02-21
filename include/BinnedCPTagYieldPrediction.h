@@ -11,6 +11,7 @@
 #include<string>
 #include"Settings.h"
 #include"BinnedDTYieldPrediction.h"
+#include"FlavourTags/KiCombiner.h"
 
 class BinnedCPTagYieldPrediction: public BinnedDTYieldPrediction {
  public:
@@ -18,12 +19,10 @@ class BinnedCPTagYieldPrediction: public BinnedDTYieldPrediction {
    * Constructor that stores the single tag yield, efficiency matrix and Ki
    * @param Tag The tag mode
    * @param Ki The Ki parameters normalised by the ST yield
-   * @param Kbari The Kbari parameters normalised by the ST yield
    * @param settings The settings file
    */
   BinnedCPTagYieldPrediction(const std::string &Tag,
-			     const std::vector<double> &Ki,
-			     const std::vector<double> &Kbari,
+			     const KiCombiner *Ki,
 			     const Settings &settings);
   /**
    * Default virtual destructor

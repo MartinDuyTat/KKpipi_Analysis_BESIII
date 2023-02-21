@@ -14,6 +14,7 @@
 #include"TMatrixT.h"
 #include"RawBinnedDTYields.h"
 #include"BinnedDTYieldPrediction.h"
+#include"FlavourTags/KiCombiner.h"
 
 class BinnedDTData {
  public:
@@ -25,8 +26,7 @@ class BinnedDTData {
    * @param settings The settings file
    */
   BinnedDTData(const std::string &Tag,
-	       const std::vector<double> &Ki,
-	       const std::vector<double> &Kbari,
+	       const KiCombiner *Ki,
 	       const Settings &settings);
   /**
    * Delete copy constructor
@@ -133,14 +133,13 @@ class BinnedDTData {
    */
   std::unique_ptr<const BinnedDTYieldPrediction> GetDTPredictions(
     const std::string &Tag,
-    const std::vector<double> &Ki,
-    const std::vector<double> &Kbari,
+    const KiCombiner *Ki,
     const Settings &settings) const;
   /**
    * List of the CP tags used in the analysis
    */
-  static constexpr std::array<std::string_view, 12> m_CPTags{{
-    "KK", "KKPartReco", "pipi", "pipipi0", "KSpi0pi0", "KLpi0",
+  static constexpr std::array<std::string_view, 13> m_CPTags{{
+    "KK", "KKPartReco", "pipi", "pipipi0", "pipipi0PartReco", "KSpi0pi0", "KLpi0",
     "KSpi0", "KSpi0PartReco", "KSeta", "KSetaPrimepipieta", "KSetaPrimerhogamma", "KSomega"}};
   /**
    * List of the SCMB tags used in the analysis

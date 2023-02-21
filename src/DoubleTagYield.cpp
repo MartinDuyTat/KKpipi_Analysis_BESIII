@@ -66,8 +66,8 @@ void DoubleTagYield::DoFit() {
       CombinatorialYield->setConstant();
     }
   }
-  // Perform a second fit if fit is binned
-  if(Categories.size() > 1) {
+  // Perform a second fit if necessary
+  if(m_Settings.contains("SecondFit") && m_Settings.getB("SecondFit")) {
     Result = Model->fitTo(*DataSet, Save(), NumCPU(nCPUs), Strategy(2), Minos(true), Minimizer("Minuit2","migrad"));
   }
   Result->Print("V");
@@ -260,7 +260,7 @@ void DoubleTagYield::PlotProjections(BinnedDataLoader *DataLoader, BinnedFitMode
     PullFrame->GetYaxis()->SetLabelFont(62);
     PullFrame->GetYaxis()->SetLabelSize(0.1);*/
     PullFrame->Draw();
-    std::string PlotFilename = m_Settings.get("MBCPlotFilenamePrefix") + "_" + Category + ".png";
+    std::string PlotFilename = m_Settings.get("MBCPlotFilenamePrefix") + "_" + Category + ".pdf";
     Pad1.SetFrameLineWidth(3);
     c1.Draw();
     c1.SaveAs(PlotFilename.c_str());
@@ -295,15 +295,22 @@ void DoubleTagYield::SaveSignalYields(const BinnedFitModel &FitModel, RooFitResu
   if(Size > 0) {
     TFile File("RawYieldsCorrelationMatrix.root", "RECREATE");
     TMatrixTSym<double> CorrelationMatrix(Size);
+    TMatrixTSym<double> CovarianceMatrix(Size);
     const auto categories = category.GetCategories();
     for(std::size_t i = 0; i < Size; i++) {
       const std::string Name_i = categories[i] + "_SignalYield";
+      auto YieldVariable_i = static_cast<RooRealVar*>(FitModel.m_Yields.at(Name_i));
+      const double Error_i = YieldVariable_i->getError();
       for(std::size_t j = 0; j < Size; j++) {
 	const std::string Name_j = categories[j] + "_SignalYield";
+	auto YieldVariable_j = static_cast<RooRealVar*>(FitModel.m_Yields.at(Name_j));
+	const double Error_j = YieldVariable_j->getError();
 	CorrelationMatrix(i, j) = Result->correlation(Name_i.c_str(), Name_j.c_str());
+	CovarianceMatrix(i, j) = CorrelationMatrix(i, j)*Error_i*Error_j;
       }
     }
     CorrelationMatrix.Write("CorrelationMatrix");
+    CovarianceMatrix.Write("CovarianceMatrix");
     File.Close();
   }
   Outfile.close();

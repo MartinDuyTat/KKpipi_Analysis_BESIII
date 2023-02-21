@@ -6,16 +6,15 @@
 #include"TMatrixT.h"
 #include"BinnedDTYieldPrediction.h"
 #include"Settings.h"
+#include"FlavourTags/KiCombiner.h"
 
 BinnedDTYieldPrediction::BinnedDTYieldPrediction(const std::string &Tag,
-						 const std::vector<double> &Ki,
-						 const std::vector<double> &Kbari,
+						 const KiCombiner *Ki,
 						 const Settings &settings):
   m_SingleTagYield(GetSTYield(Tag, settings)),
   m_EfficiencyMatrix_CPEven(GetEffMatrix(Tag, settings, +1)),
   m_EfficiencyMatrix_CPOdd(GetEffMatrix(Tag, settings, -1)),
-  m_Ki(Ki),
-  m_Kbari(Kbari) {
+  m_Ki(Ki) {
 }
 
 double BinnedDTYieldPrediction::GetSTYield(const std::string &Tag,

@@ -26,6 +26,8 @@ add_library(KKpipiStrongPhase
 	    TopoAnaReader.cpp
 	    TruthMatchingCuts.cpp
 	    Utilities.cpp
+	    FlavourTags/FlavourTagYield.cpp
+	    FlavourTags/KiCombiner.cpp
 	    HadronicParameters/DCS_Parameters.cpp
 	    HadronicParameters/Ki.cpp
 	    HadronicParameters/cisi.cpp

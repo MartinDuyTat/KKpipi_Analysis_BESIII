@@ -5,13 +5,13 @@
 #include"TMath.h"
 #include"BinnedSCMBTagYieldPrediction.h"
 #include"Settings.h"
+#include"FlavourTags/KiCombiner.h"
 
 BinnedSCMBTagYieldPrediction::BinnedSCMBTagYieldPrediction(
   const std::string &Tag,
-  const std::vector<double> &Ki,
-  const std::vector<double> &Kbari,
+  const KiCombiner *Ki,
   const Settings &settings):
-  BinnedDTYieldPrediction(Tag, Ki, Kbari, settings),
+  BinnedDTYieldPrediction(Tag, Ki, settings),
   m_TagMode(Tag),
   m_Tag_Kicisi(settings) {
 }
@@ -20,7 +20,8 @@ std::vector<double> BinnedSCMBTagYieldPrediction::GetPredictedBinYields(
   double BF_KKpipi,
   const std::vector<double> &ci,
   const std::vector<double> &si) const {
-  const std::size_t Size = m_Ki.size();
+  const std::vector<double> KiVector = m_Ki->GetKi(ci, si);
+  const std::size_t Size = KiVector.size()/2;
   const std::size_t TotalSize = 8*2*Size;
   TMatrixT<double> BinYields(TotalSize, 1);
   std::size_t BinYields_index = 0;
@@ -29,7 +30,9 @@ std::vector<double> BinnedSCMBTagYieldPrediction::GetPredictedBinYields(
       if(SignalBin == 0) {
 	continue;
       }
-      const size_t j = TMath::Abs(SignalBin) - 1;
+      const size_t j = TMath::Abs(SignalBin);
+      const double Ki = KiVector[j - 1 + Size];
+      const double Kbari = KiVector[-j + Size];
       const bool Conj = SignalBin < 0;
       // Get the Ki, ci and si information on the tag side
       const double TagKi = m_Tag_Kicisi.Get_Ki(TagBin, m_TagMode);
@@ -37,11 +40,11 @@ std::vector<double> BinnedSCMBTagYieldPrediction::GetPredictedBinYields(
       const double Tagci = m_Tag_Kicisi.Get_ci(TagBin, m_TagMode);
       const double Tagsi = m_Tag_Kicisi.Get_si(TagBin, m_TagMode);
       // D0 yield
-      const double D0Yield = TagKbari*(Conj ? m_Kbari[j] : m_Ki[j]);
-      const double Dbar0Yield = TagKi*(Conj ? m_Ki[j] : m_Kbari[j]);
-      const double SqrtKK = TMath::Sqrt(TagKi*TagKbari*m_Ki[j]*m_Kbari[j]);
-      const double Interference = -2.0*SqrtKK*(Tagci*ci[j] +
-                                               Tagsi*si[j]*(Conj ? -1 : +1));
+      const double D0Yield = TagKbari*(Conj ? Kbari : Ki);
+      const double Dbar0Yield = TagKi*(Conj ? Ki : Kbari);
+      const double SqrtKK = TMath::Sqrt(TagKi*TagKbari*Ki*Kbari);
+      const double Interference = -2.0*SqrtKK*(Tagci*ci[j - 1] +
+                                               Tagsi*si[j - 1]*(Conj ? -1 : +1));
       const double Sign = m_TagMode == "KLpipi" ? -1 : +1;
       const double UnnormalisedYield = D0Yield + Dbar0Yield + Sign*Interference;
       const double NormalisedYield = m_SingleTagYield*UnnormalisedYield*BF_KKpipi;

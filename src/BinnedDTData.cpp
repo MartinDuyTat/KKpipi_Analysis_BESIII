@@ -16,14 +16,14 @@
 #include"BinnedDTYieldPrediction.h"
 #include"BinnedCPTagYieldPrediction.h"
 #include"BinnedSCMBTagYieldPrediction.h"
+#include"FlavourTags/KiCombiner.h"
 
 BinnedDTData::BinnedDTData(const std::string &Tag,
-			   const std::vector<double> &Ki,
-			   const std::vector<double> &Kbari,
+			   const KiCombiner *Ki,
 			   const Settings &settings):
   m_TagMode(Tag),
   m_DTYields(GetRawDTYields(Tag, settings)),
-  m_DTPredictions(GetDTPredictions(Tag, Ki, Kbari, settings)) {
+  m_DTPredictions(GetDTPredictions(Tag, Ki, settings)) {
 }
 
 double BinnedDTData::GetLogLikelihood(double BF_KKpipi,
@@ -156,20 +156,17 @@ std::unique_ptr<const RawBinnedDTYields> BinnedDTData::GetRawDTYields(
 
 std::unique_ptr<const BinnedDTYieldPrediction> BinnedDTData::GetDTPredictions(
     const std::string &Tag,
-    const std::vector<double> &Ki,
-    const std::vector<double> &Kbari,
+    const KiCombiner *Ki,
     const Settings &settings) const {
   const auto iter_CP = std::find(m_CPTags.begin(), m_CPTags.end(), Tag);
   const auto iter_SCMB = std::find(m_SCMBTags.begin(), m_SCMBTags.end(), Tag);
   if(iter_CP != m_CPTags.end()) {
     return std::make_unique<const BinnedCPTagYieldPrediction>(Tag,
 							      Ki,
-							      Kbari,
 							      settings);
   } else if(iter_SCMB != m_SCMBTags.end()) {
     return std::make_unique<const BinnedSCMBTagYieldPrediction>(Tag,
 								Ki,
-								Kbari,
 								settings);
   } else {
     throw std::runtime_error(Tag + " is not a valid tag mode");

@@ -72,6 +72,9 @@ int main(int argc, char *argv[]) {
       TCut Cuts = Utilities::LoadCuts(SignalMode + RecSignalMode, TagMode + RecTagMode, TagType, DataMC, IncludeDeltaECuts, TruthMatch, settings.contains("KKpipiPartReco") && settings.getB("KKpipiPartReco"));
       // This cut removes empty NTuples
       Cuts = Cuts && TCut("!(Run == 0 && Event == 0)");
+      if(settings.contains("ExtraCuts")) {
+	Utilities::AddExtraCuts(Cuts, settings.get("ExtraCuts"));
+      }
       std::cout << "Cuts ready, will apply the following cuts:\n" << Cuts.GetTitle() << "\n";
       ApplyCuts applyCuts(Cuts);
       std::cout << "Cuts ready\n";
@@ -86,9 +89,15 @@ int main(int argc, char *argv[]) {
 	std::cout << "WARNING: No entries in " << OutputFilename << "\n";
 	continue;
       }
+      if(settings.contains("TreeAliases")) {
+	Utilities::AddTreeAliases(&Chain, settings.get("TreeAliases"));
+      }
       std::cout << "Applying cuts...\n";
       TFile OutputFile(OutputFilename.c_str(), "RECREATE");
       TTree *OutputTree = applyCuts(&Chain, DataSetType, LuminosityScale);
+      if(settings.contains("TreeAliases")) {
+	Utilities::AddTreeAliases(OutputTree, settings.get("TreeAliases"));
+      }
       OutputTree->SetDirectory(&OutputFile);
       OutputTree->Write();
       OutputFile.Close();

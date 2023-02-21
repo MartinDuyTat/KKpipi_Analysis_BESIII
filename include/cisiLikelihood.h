@@ -59,6 +59,13 @@ class cisiLikelihood {
   void PrintComparison(double BF_KKpipi,
 		       const std::vector<double> &ci,
 		       const std::vector<double> &si) const;
+  /**
+   * Function that prints a the Ki with DCS corrections and normalised
+   * @param ci The ci parameters
+   * @param si The si parameters
+   */
+  void PrintKi(const std::vector<double> &ci,
+	       const std::vector<double> &si) const;
  private:
   /**
    * Vector of all the tags
@@ -67,11 +74,7 @@ class cisiLikelihood {
   /**
    * The Ki parameters
    */
-  std::vector<double> m_Ki;
-  /**
-   * The Kbari parameters
-   */
-  std::vector<double> m_Kbari;
+  const KiCombiner m_Ki;
   /**
    * Helper function that sets up all the tags
    * @param settings The settings file

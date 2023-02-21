@@ -10,6 +10,7 @@
 #include<string>
 #include"TMatrixT.h"
 #include"Settings.h"
+#include"FlavourTags/KiCombiner.h"
 
 class BinnedDTYieldPrediction {
  public:
@@ -21,8 +22,7 @@ class BinnedDTYieldPrediction {
    * @param settings The settings file
    */
   BinnedDTYieldPrediction(const std::string &Tag,
-			  const std::vector<double> &Ki,
-			  const std::vector<double> &Kbari,
+			  const KiCombiner *Ki,
 			  const Settings &settings);
   /**
    * Function that returns the predicted bin yield
@@ -47,11 +47,7 @@ class BinnedDTYieldPrediction {
   /**
    * The Ki parameters normalised by the ST yield
    */
-  const std::vector<double> &m_Ki;
-  /**
-   * The Kbari parameters normalised by the ST yield
-   */
-  const std::vector<double> &m_Kbari;
+  const KiCombiner* const m_Ki;
  private:
   /**
    * Helper function to get the single tag yield

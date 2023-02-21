@@ -107,6 +107,19 @@ namespace Utilities {
    * Get the correct ROOT LaTeX name for the tag mode
    */
   std::string GetTagNameLaTeX(const std::string &Tag);
+  /**
+   * Parse TTree aliases from a file and add them to the TTree
+   * @param Tree Pointer to the TTree
+   * @param Filename File containing the aliases
+   */
+  void AddTreeAliases(TTree *Tree, const std::string &Filename);
+  /**
+   * Parse some extra cuts and add them to the current set of cuts
+   * @param Cuts The current set of cuts
+   * @param Filename The file containing the extra cuts
+   */
+  void AddExtraCuts(TCut &Cuts, const std::string &Filename);
+  
 }
 
 #endif
