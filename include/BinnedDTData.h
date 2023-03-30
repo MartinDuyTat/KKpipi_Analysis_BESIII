@@ -159,6 +159,16 @@ class BinnedDTData {
    */
   static constexpr std::array<std::string_view, 3> m_SCMBTags{{
     "KSpipi", "KSpipiPartReco", "KLpipi"}};
+  /**
+   * Helper function to find the general Poisson parameter for a non-integer yield
+   * @param Yield The yield we want to find the Poisson parameter of
+   */
+  double FindPoissonParameter(double Yield) const;
+  /**
+   * Helper function to find the asymmetric Poisson uncertainties of a yield
+   * @param Yield The yield we want to find the asymmetric uncertainties of
+   */
+  std::pair<double, double> GetAsymmetricUncertainties(double Yield) const;
 };
 
 #endif

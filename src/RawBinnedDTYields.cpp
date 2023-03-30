@@ -37,6 +37,11 @@ RawBinnedDTYields::GetToyYields(const std::vector<double> &PredictedYields,
 					      m_Yields[i],
 					      SymmetricUncertainties);
     ToyYields[i].Value = GeneratedYield.first;
+    /*if(!SymmetricUncertainties) {
+      const auto Uncertainties = GetAsymmetricUncertainties(GeneratedYield.first);
+      ToyYields[i].PlusUncertainty = Uncertainties.first;
+      ToyYields[i].NegativeUncertainty = Uncertainties.second;
+    }*/
     Probability *= GeneratedYield.second;
   }
   return std::make_pair(ToyYields, Probability);
@@ -47,6 +52,7 @@ std::pair<double, double> RawBinnedDTYields::GenerateYield(
   const AsymmetricUncertainty &DataYield,
   bool SymmetricUncertainties) const {
   if(SymmetricUncertainties) {
+    // Symmetric uncertainties are straight forward, use Gaussian
     const double Sigma = DataYield.SymmetricUncertainty;
     const double GeneratedYield = gRandom->Gaus(PredictedYield, Sigma);
     const double GeneratedProbability = TMath::Gaus(GeneratedYield,
@@ -54,12 +60,14 @@ std::pair<double, double> RawBinnedDTYields::GenerateYield(
 						    Sigma);
     return std::make_pair(GeneratedYield, GeneratedProbability);
   } else {
+    // Asymmetric uncertainties are more complicated
     const double SigmaPlus = DataYield.PlusUncertainty;
     const double SigmaMinus = DataYield.NegativeUncertainty;
     const double Std2 = SigmaPlus*SigmaMinus;
     const double StdDiff = SigmaMinus - SigmaPlus;
     const double SigmaFactor = SigmaPlus*SigmaMinus
                               /TMath::Abs(SigmaMinus - SigmaPlus);
+    // There are some hard limits where the likelihood diverges
     double LowerLimit = PredictedYield;
     double UpperLimit = PredictedYield;
     if(SigmaPlus > SigmaMinus) {
@@ -72,7 +80,9 @@ std::pair<double, double> RawBinnedDTYields::GenerateYield(
       LowerLimit -= 5.0*SigmaMinus;
       UpperLimit += 5.0*SigmaPlus;
     }
+    LowerLimit = std::max(LowerLimit, 0.0);
     double GeneratedProbability, GeneratedYield;
+    // Perform a rejection sampling using the asymmetric likelihood
     while(true) {
       GeneratedYield = gRandom->Uniform(LowerLimit, UpperLimit);
       const double YieldDiff = GeneratedYield - PredictedYield;

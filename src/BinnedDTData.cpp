@@ -10,6 +10,9 @@
 #include"TMatrixT.h"
 #include"TMath.h"
 #include"TRandom.h"
+#include"TF1.h"
+#include"Math/Functor.h"
+#include"Math/RootFinder.h"
 #include"BinnedDTData.h"
 #include"RawBinnedDTYields.h"
 #include"RawBinnedCPTagYields.h"
@@ -33,11 +36,6 @@ BinnedDTData::BinnedDTData(const std::string &Tag,
 double BinnedDTData::GetLogLikelihood(double BF_KKpipi,
 				      const std::vector<double> &ci,
 				      const std::vector<double> &si) const {
-  /*for(std::size_t i = 0; i < ci.size(); i++) {
-    if(ci[i]*ci[i] + si[i]*si[i] > 1.0) {
-      return 1.0e30;
-    }
-  }*/
   const auto MeasuredYields = m_DTYields->GetDoubleTagYields();
   return GetLogLikelihood(BF_KKpipi, ci, si, MeasuredYields);
 }
@@ -76,7 +74,7 @@ void BinnedDTData::GenerateToyYields(double BF_KKpipi,
   std::size_t TotalGeneratedToys = 0;
   std::size_t Counter = 0;
   while(Counter < StatsMultiplier) {
-    const auto ToyYields = m_DTYields->GetToyYields(PredictedYields,
+    auto ToyYields = m_DTYields->GetToyYields(PredictedYields,
 						    m_SymmetricUncertainties);
     const double LogLikelihood = GetLogLikelihood(BF_KKpipi,
 						  ci, si,
@@ -86,6 +84,14 @@ void BinnedDTData::GenerateToyYields(double BF_KKpipi,
     const double ToyProbability = Probability/GenProbability;
     const double RandomNumber = gRandom->Uniform(0, 1);
     if(ToyProbability/m_EnvelopeConstant > RandomNumber) {
+      // Set asymmetric Poisson uncertainties
+      if(!m_SymmetricUncertainties) {
+	for(auto &ToyYield : ToyYields.first) {
+	  const auto Uncertainties = GetAsymmetricUncertainties(ToyYield.Value);
+	  ToyYield.PlusUncertainty = Uncertainties.first;
+	  ToyYield.NegativeUncertainty = Uncertainties.second;
+	}
+      }
       m_ToyDTYields.push_back(ToyYields.first);
       Counter++;
     }
@@ -205,4 +211,37 @@ std::unique_ptr<const BinnedDTYieldPrediction> BinnedDTData::GetDTPredictions(
   } else {
     throw std::runtime_error(Tag + " is not a valid tag mode");
   }
+}
+
+double BinnedDTData::FindPoissonParameter(double Yield) const {
+  auto fcn = [=](double lambda) {
+    TF1 f1("f1", "TMath::Poisson(x, [0])", 0.0, Yield + 0.7);
+    f1.SetParameter(0, lambda);
+    return f1.GetMaximumX() - Yield;
+  };
+  ROOT::Math::RootFinder Solver;
+  Solver.Solve(fcn, 0.0, Yield + 0.7);
+  return Solver.Root();
+}
+
+std::pair<double, double>
+BinnedDTData::GetAsymmetricUncertainties(double Yield) const {
+  double lambda = FindPoissonParameter(Yield);
+  auto fcn = [=](double x) {
+    auto LL = [](double y, double lambda) {
+      return -2.0*TMath::Log(TMath::Poisson(y, lambda));
+    };
+    return LL(x, lambda) - LL(lambda, lambda) - 1.0;
+  };
+  ROOT::Math::RootFinder Solver;
+  Solver.Solve(fcn, Yield, Yield + std::max(2.0*TMath::Sqrt(Yield), 2.0));
+  const double SigmaPlus = Solver.Root() - Yield;
+  double SigmaMinus;
+  if(fcn(0.0) < 0.0) {
+    SigmaMinus = Yield;
+  } else {
+    Solver.Solve(fcn, 0.0, Yield);
+    SigmaMinus = Yield - Solver.Root();
+  }
+  return std::make_pair(SigmaPlus, SigmaMinus);
 }
