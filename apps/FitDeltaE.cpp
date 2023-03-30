@@ -24,21 +24,8 @@ int main(int argc, char *argv[]) {
     Chain.Add(Filename.c_str());
   }
   DeltaEFit deltaEFit(&Chain, settings);
-  bool DoFit;;
-  do {
-    std::cout << "Fitting Delta E...\n";
-    deltaEFit.FitDeltaE();
-    std::cout << "Delta E fit done!\n";
-    std::cout << "Reload settings and perform fit again? (y/n)\n";
-    std::string Answer;
-    std::cin >> Answer;
-    if(Answer == "y") {
-      settings = Utilities::parse_args(argc, argv);
-      deltaEFit.ReloadSettings(settings);
-      DoFit = true;
-    } else {
-      DoFit = false;
-    }
-  } while(DoFit);
+  std::cout << "Fitting Delta E...\n";
+  deltaEFit.FitDeltaE();
+  std::cout << "Delta E fit done!\n";
   return 0;
 }

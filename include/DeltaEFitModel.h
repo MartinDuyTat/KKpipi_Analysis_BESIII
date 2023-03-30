@@ -7,6 +7,7 @@
 #define DELTAEFITMODEL
 
 #include<vector>
+#include<memory>
 #include"RooArgList.h"
 #include"RooAddPdf.h"
 #include"RooRealVar.h"
@@ -37,7 +38,7 @@ class DeltaEFitModel {
     /**
      * Vector of all PDF components
      */
-    std::vector<FitShape*> m_ModelComponents;
+    std::vector<std::unique_ptr<FitShape>> m_ModelComponents;
     /**
      * List of all PDFs
      */
@@ -45,7 +46,7 @@ class DeltaEFitModel {
     /**
      * The full fit model of \f$\Delta E\f$
      */
-    RooAddPdf* m_FullModel = nullptr;
+    RooAddPdf* m_FullModel;
     /**
      * Fit settings
      */

@@ -14,7 +14,6 @@ add_executable(FitSingleTagMBC FitSingleTagMBC.cpp)
 add_executable(GetDCSCorrections GetDCSCorrections.cpp)
 add_executable(GetDoubleTagEfficiencies GetDoubleTagEfficiencies.cpp)
 add_executable(GetSingleTagEfficiencies GetSingleTagEfficiencies.cpp)
-add_executable(MakeDeltaECuts MakeDeltaECuts.cpp)
 add_executable(MakeResolutionHistograms MakeResolutionHistograms.cpp)
 add_executable(PredictDoubleTaggedYields PredictDoubleTaggedYields.cpp)
 add_executable(PrepareTagTree PrepareTagTree.cpp)
@@ -70,9 +69,6 @@ target_link_libraries(GetSingleTagEfficiencies PUBLIC KKpipiStrongPhase)
 target_link_libraries(GetSingleTagEfficiencies PUBLIC ROOT::Physics ROOT::RIO ROOT::Tree)
 target_link_libraries(GetSingleTagEfficiencies PUBLIC ${KKPIPI_BINNED_FIT_LIB} -ldl)
 
-target_link_libraries(MakeDeltaECuts PUBLIC KKpipiStrongPhase)
-target_link_libraries(MakeDeltaECuts PUBLIC ROOT::Physics)
-
 target_link_libraries(MakeResolutionHistograms PUBLIC KKpipiStrongPhase)
 target_link_libraries(MakeResolutionHistograms PUBLIC ROOT::Physics)
 target_link_libraries(MakeResolutionHistograms PUBLIC ${KKPIPI_BINNED_FIT_LIB} -ldl)
@@ -96,7 +92,6 @@ install(TARGETS AnalyzeTopoAna
 		GetDCSCorrections
 		GetSingleTagEfficiencies
 		GetDoubleTagEfficiencies
-		MakeDeltaECuts
 		MakeResolutionHistograms
 		PredictDoubleTaggedYields
 		PrepareTagTree DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/../bin)

@@ -12,6 +12,7 @@ BinnedDTYieldPrediction::BinnedDTYieldPrediction(const std::string &Tag,
 						 const KiCombiner *Ki,
 						 const Settings &settings):
   m_SingleTagYield(GetSTYield(Tag, settings)),
+  m_EfficiencyMatrix(GetEffMatrix(Tag, settings, 0)),
   m_EfficiencyMatrix_CPEven(GetEffMatrix(Tag, settings, +1)),
   m_EfficiencyMatrix_CPOdd(GetEffMatrix(Tag, settings, -1)),
   m_Ki(Ki) {
@@ -30,9 +31,14 @@ TMatrixT<double> BinnedDTYieldPrediction::GetEffMatrix(
   const std::string &Tag, const Settings &settings, int CPEvenOdd) const {
   TFile EffMatrixFile(settings.get(Tag + "_EfficiencyMatrix").c_str(), "READ");
   TMatrixT<double> *EffMatrix = nullptr;
-  const std::string EffMatrixName = CPEvenOdd > 0 ?
-                                    "EffMatrix_CPEven" :
-                                    "EffMatrix_CPOdd";
+  std::string EffMatrixName;
+  if(CPEvenOdd == 0) {
+    EffMatrixName = "EffMatrix";
+  } else if(CPEvenOdd > 0) {
+    EffMatrixName = "EffMatrix_CPEven";
+  } else {
+    EffMatrixName = "EffMatrix_CPOdd";
+  }
   EffMatrixFile.GetObject(EffMatrixName.c_str(), EffMatrix);
   /*if(Smearing && m_Settings.get("Systematics") == "Efficiency") {
     TMatrixT<double> *EffMatrix_err = nullptr;

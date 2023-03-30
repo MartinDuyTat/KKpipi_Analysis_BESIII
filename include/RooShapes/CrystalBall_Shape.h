@@ -16,6 +16,10 @@ class CrystalBall_Shape: public FitShape {
      * Default constructor, see FitShape constructor
      */
     CrystalBall_Shape(const std::string &Name, const Settings &settings, RooRealVar *x);
+    /**
+     * Default virtual destructor
+     */
+    virtual ~CrystalBall_Shape() = default;
   private:
     /**
      * Initialize a double Gaussian

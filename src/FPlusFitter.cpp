@@ -200,7 +200,7 @@ void FPlusFitter::AddMeasurement_CP(const std::string &TagMode, bool Smearing) {
   DT_Yield_err /= DT_Eff;
   // Create variable with a normalized yield and add to dataset
   std::string YieldName = TagMode + "_Normalized_Yield";
-  m_YieldVars[YieldName] = RooRealVar(YieldName.c_str(), "", DT_Yield/ST_Yield);
+  m_YieldVars.insert({YieldName, RooRealVar(YieldName.c_str(), "", DT_Yield/ST_Yield)});
   if(m_YieldVars[YieldName].getVal() < 0.0) {
     m_YieldVars[YieldName].setVal(0.0);
   }
@@ -238,7 +238,7 @@ void FPlusFitter::AddMeasurement_KShh(const std::string &TagMode, bool Smearing)
   std::cout << "Adding " << TagMode << " tag mode\n";
   for(int i = 0; i < Bins; i++) {
     std::string YieldName = TagMode + "_Normalized_Yield_Bin" + std::to_string(i + 1);
-    m_YieldVars[YieldName] = RooRealVar(YieldName.c_str(), "", DT_Yields_EffCorrected(i, 0)/ST_Yield);
+    m_YieldVars.insert({YieldName, RooRealVar(YieldName.c_str(), "", DT_Yields_EffCorrected(i, 0)/ST_Yield)});
     if(m_YieldVars[YieldName].getVal() < 0.0) {
       m_YieldVars[YieldName].setVal(0.0);
     }

@@ -15,6 +15,10 @@ class Chebychev_Shape: public FitShape {
      * Default constructor, see FitShape constructor
      */
     Chebychev_Shape(const std::string &Name, const Settings &settings, RooRealVar *x);
+    /**
+     * Default virtual destructor
+     */
+    virtual ~Chebychev_Shape() = default;
   private:
     /**
      * Initialize the Chebychev polynomial

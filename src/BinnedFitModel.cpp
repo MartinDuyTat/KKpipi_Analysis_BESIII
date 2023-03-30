@@ -65,12 +65,12 @@ void BinnedFitModel::InitializeYields() {
     for(int i = 0; i < PeakingBackgrounds; i++) {
       std::string Name = Mode + "_PeakingBackground" + std::to_string(i) + "_" + CategoryString;
       if(!m_Settings["MBC_Shape"].contains(Name + "_Yield")) {
-	auto BackgroundSignalRatio = Utilities::load_param(m_Settings["MBC_Shape"], Name + "_BackgroundToSignalRatio");
+	auto BackgroundSignalRatio = Utilities::load_param(m_Settings["BackgroundToSignalRatio"], Name + "_BackgroundToSignalRatio");
 	std::cout << "Adding peaking background with background-to-signal ratio: " << BackgroundSignalRatio->getVal() << "\n";
 	// Quantum correlation is accounted for with a correction factor
 	RooRealVar *QCFactor = nullptr;
-	if(m_Settings["MBC_Shape"].contains(Name + "_QuantumCorrelationFactor")) {
-	  QCFactor = Utilities::load_param(m_Settings["MBC_Shape"], Name + "_QuantumCorrelationFactor");
+	if(m_Settings["QuantumCorrelationFactor"].contains(Name + "_QuantumCorrelationFactor")) {
+	  QCFactor = Utilities::load_param(m_Settings["QuantumCorrelationFactor"], Name + "_QuantumCorrelationFactor");
 	  std::cout << "Quantum correlation correction factor: " << QCFactor->getVal() << "\n";
 	} else {
 	  QCFactor = Unique::create<RooRealVar*>((Name + "QuantumCorrelationFactor").c_str(), "", 1.0);

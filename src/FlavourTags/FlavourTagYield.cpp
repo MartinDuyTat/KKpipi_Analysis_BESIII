@@ -24,6 +24,8 @@ FlavourTagYield::FlavourTagYield(const std::string &TagMode,
   m_rD(LoadCharmParameter(TagMode, settings, "rD")),
   m_R(LoadCharmParameter(TagMode, settings, "R")),
   m_DeltaD(LoadCharmParameter(TagMode, settings, "deltaD")),
+  m_SinDeltaD(TMath::Sin(TMath::Pi()*m_DeltaD.first/180.0)),
+  m_CosDeltaD(TMath::Cos(TMath::Pi()*m_DeltaD.first/180.0)),
   m_CharmCovMatrix(LoadCharmCovMatrix(TagMode, settings)),
   m_RawSingleTagYield(GetSTYield(TagMode, settings)),
   m_SingleTagEfficiency(GetSTEfficiency(TagMode, settings)) {
@@ -38,10 +40,10 @@ uncertainties::udouble FlavourTagYield::GetKi(
   const uncertainties::udouble Yield = GetDTFlavourYield(Bin);
   const double SingleTagYield =
     m_RawSingleTagYield.first/m_SingleTagEfficiency.first;
-  return Yield*DCSCorrection/SingleTagYield;
+  return Yield*(DCSCorrection/SingleTagYield);
 }
 
-uncertainties::udouble FlavourTagYield::GetDTFlavourYield(int Bin) const {
+const uncertainties::udouble& FlavourTagYield::GetDTFlavourYield(int Bin) const {
   const std::size_t NumberBins = m_DTFlavourYields.size()/2;
   if(Bin > 0) {
     return m_DTFlavourYields[NumberBins + Bin - 1];
@@ -62,11 +64,10 @@ double FlavourTagYield::CalculateDCSCorrection(int Bin,
   }
   const int Sign = Bin > 0 ? +1 : -1;
   const double DCS_term = m_rD.first*m_rD.first*Kbari/Ki;
-  const double CosDeltaD = TMath::Cos(TMath::Pi()*m_DeltaD.first/180.0);
-  const double SinDeltaD = TMath::Sin(TMath::Pi()*m_DeltaD.first/180.0)*Sign;
   const int BinIndex = TMath::Abs(Bin) - 1;
-  const double Interference_term = -2.0*m_rD.first*m_R.first*(CosDeltaD*ci[BinIndex]
-                                                            - SinDeltaD*si[BinIndex]);
+  const double Eff_si = si[BinIndex]*Sign;
+  const double Interference_term = -2.0*m_rD.first*m_R.first*(m_CosDeltaD*ci[BinIndex]
+                                                            - m_SinDeltaD*Eff_si);
   const double SqrtKK = TMath::Sqrt(Kbari/Ki);
   return 1.0/(1.0 + DCS_term + SqrtKK*Interference_term);
 }

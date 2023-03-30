@@ -34,7 +34,7 @@ std::vector<uncertainties::udouble> KiCombiner::GetKiWithUncertainties(
 						     Ki.end(),
 						     uncertainties::udouble(0.0, 0.0));
   std::transform(Ki.begin(), Ki.end(), Ki.begin(),
-		 [=] (const auto &a) { return a/Sum; });
+		 [&] (const auto &a) { return a/Sum; });
   return Ki;
 }
 
@@ -42,7 +42,8 @@ std::vector<double> KiCombiner::GetKi(const std::vector<double> &ci,
 				      const std::vector<double> &si) const {
   const auto Ki_unc = GetKiWithUncertainties(ci, si);
   std::vector<double> Ki;
-  for(const auto Ki_u : Ki_unc) {
+  Ki.reserve(m_NumberBins*2);
+  for(const auto &Ki_u : Ki_unc) {
     Ki.push_back(uncertainties::nom(Ki_u));
   }
   return Ki;
@@ -72,7 +73,7 @@ KiCombiner::LoadFlavourTags(const Settings &settings) const {
   std::vector<std::string> TagModes =
     Utilities::ConvertStringToVector(settings.get("FlavourTagModes"));
   std::vector<FlavourTagYield> FlavourTags;
-  for(const auto Tag : TagModes) {
+  for(const auto &Tag : TagModes) {
     FlavourTags.push_back(FlavourTagYield(Tag, settings));
   }
   return FlavourTags;

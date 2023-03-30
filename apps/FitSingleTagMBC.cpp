@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
   std::string TreeName = settings.get("TreeName");
   TChain Chain(TreeName.c_str());
   std::string Mode = settings.get("Mode");
-  std::string DataFilename = Utilities::ReplaceString(settings["Datasets_WithDeltaECuts"].get("Dskim"), "TAG", Mode);
+  std::string DataFilename = Utilities::ReplaceString(settings["Datasets_WithDeltaECuts"].get("Data"), "TAG", Mode);
   Chain.Add(DataFilename.c_str());
   std::string SignalMCFilename = settings["Datasets_WithDeltaECuts"].get("SignalMC_ST");
   SignalMCFilename = Utilities::ReplaceString(SignalMCFilename, "TAG", Mode);

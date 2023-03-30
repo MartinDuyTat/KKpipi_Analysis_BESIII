@@ -1,0 +1,3 @@
+SignalTagMaximumShowerEnergy < 0.3 && SignalTagUMiss > -0.30 && SignalTagUMiss < 0.30
+SignalMBC > 1.855
+SignalMBC < 1.875

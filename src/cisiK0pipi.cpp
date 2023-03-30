@@ -45,7 +45,7 @@ std::vector<double> cisiK0pipi::Initialisecisi(const Settings &settings) {
                                + std::to_string(Bin);
 	const std::string TagBinning = TagModes[i] + "_BinningScheme";
 	const double ci_or_si = settings[TagBinning]["cisi"].getD(Name);
-	cisi[Bin - 1 + i*8 + j*16] = ci_or_si;
+	cisi[Bin - 1 + j*8 + i*16] = ci_or_si;
 	//double cisi_err = settings[TagBinning]["cisi"].getD(Name + "_err");
       }
     }
@@ -61,18 +61,18 @@ std::vector<double> cisiK0pipi::Initialisecisi(const Settings &settings) {
 }
 
 double cisiK0pipi::Get_Ki(std::size_t Bin, const std::string &TagMode) const {
-  if(TagMode == "KSpipi") {
-    return m_Ki_KSpipi[Bin - 1].first;
-  } else {
+  if(TagMode == "KLpipi") {
     return m_Ki_KLpipi[Bin - 1].first;
+  } else {
+    return m_Ki_KSpipi[Bin - 1].first;
   }
 }
 
 double cisiK0pipi::Get_Kbari(std::size_t Bin, const std::string &TagMode) const {
-  if(TagMode == "KSpipi") {
-    return m_Ki_KSpipi[Bin - 1 + 8].first;
-  } else {
+  if(TagMode == "KLpipi") {
     return m_Ki_KLpipi[Bin - 1 + 8].first;
+  } else {
+    return m_Ki_KSpipi[Bin - 1 + 8].first;
   }
 }
 

@@ -12,9 +12,11 @@
 DeltaECut::DeltaECut(const std::string &TagMode,
 		     const std::string &TagType,
 		     const std::string &DataMC,
+		     const std::string &FilepathPrefix,
 		     bool KKpipiPartReco): m_TagMode(TagMode),
 					   m_TagType(TagType),
 					   m_DataMC(DataMC),
+					   m_FilepathPrefix(FilepathPrefix),
 					   m_KKpipiPartReco(KKpipiPartReco) {
   if(m_TagType == "ST") {
     if(m_TagMode.find("KL") != std::string::npos || m_TagMode == "KeNu" || m_KKpipiPartReco) {
@@ -40,8 +42,7 @@ TCut DeltaECut::GetDeltaECut() const {
 }
 
 TCut DeltaECut::GetDeltaECutFromFile(const std::string &TagMode, const std::string &TagSide) const {
-  std::string CutFilename(std::string(DELTAE_CUTS_DIR) + "DeltaECuts_" + m_DataMC + ".cut");
-  Settings DeltaESettings("DeltaESettings", CutFilename);
+  Settings DeltaESettings("DeltaESettings", m_FilepathPrefix + "_" + m_DataMC + ".txt");
   double Lower = DeltaESettings.getD(TagMode + "_DeltaE_LowerCut");
   double Upper = DeltaESettings.getD(TagMode + "_DeltaE_UpperCut");
   std::string Cut = std::string(TagSide + "DeltaE > " + std::to_string(Lower) + " && " + TagSide + "DeltaE < " + std::to_string(Upper));

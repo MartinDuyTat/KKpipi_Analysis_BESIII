@@ -63,13 +63,15 @@ int main(int argc, char *argv[]) {
 	InputFilename = Utilities::ReplaceString(InputFilename, "TAG", TagMode);
       }
     }
-    std::vector<std::string> Years = InputFilename.find("YEAR") == std::string::npos ? std::vector<std::string>{""} : std::vector<std::string>{"2010", "2011"};
+    const std::vector<std::string> Years = DataSetType == 10 ?
+                                           std::vector<std::string>{""} :
+                                           Utilities::ConvertStringToVector(settings.get("Years"));
     for(const auto &Year : Years) {
       double LuminosityScale = settings["LuminosityScale"].getD(Dataset + Year);
       std::cout << "Luminosity scale is " << LuminosityScale << "\n";
       std::string OutputFilename = settings.get("OutputFilenamePrefix") + "_" + Dataset + Year + ".root";
       std::string DataMC = DataSetType == 0 ? "Data" : "MC";
-      TCut Cuts = Utilities::LoadCuts(SignalMode + RecSignalMode, TagMode + RecTagMode, TagType, DataMC, IncludeDeltaECuts, TruthMatch, settings.contains("KKpipiPartReco") && settings.getB("KKpipiPartReco"));
+      TCut Cuts = Utilities::LoadCuts(SignalMode + RecSignalMode, TagMode + RecTagMode, TagType, DataMC, IncludeDeltaECuts, settings, TruthMatch, settings.contains("KKpipiPartReco") && settings.getB("KKpipiPartReco"));
       // This cut removes empty NTuples
       Cuts = Cuts && TCut("!(Run == 0 && Event == 0)");
       if(settings.contains("ExtraCuts")) {

@@ -37,6 +37,10 @@ class BinnedDTYieldPrediction {
    */
   const double m_SingleTagYield;
   /**
+   * The efficiency matrix with default model (or K0pipi reweighting)
+   */
+  const TMatrixT<double> m_EfficiencyMatrix;
+  /**
    * The efficiency matrix for the CP even KKpipi model
    */
   const TMatrixT<double> m_EfficiencyMatrix_CPEven;

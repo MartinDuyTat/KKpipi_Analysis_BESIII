@@ -100,17 +100,17 @@ int KKpipi_PhaseSpace::TrueKKpipiBin() {
   } else {
     SignalEnd_index = m_TrueKinematics.NumberParticles;
   }
+  m_TrueMomenta.clear();
+  std::vector<int> DaughterIDs{321, -321, 211, -211};
+  for(auto DaughterID : DaughterIDs) {
+    std::vector<double>::size_type Daughter_index = std::find(IDs.begin() + m_TrueKinematics.SignalD_index + 1, IDs.begin() + SignalEnd_index, DaughterID) - IDs.begin();
+    m_TrueMomenta.push_back(m_TrueKinematics.TruePx[Daughter_index]);
+    m_TrueMomenta.push_back(m_TrueKinematics.TruePy[Daughter_index]);
+    m_TrueMomenta.push_back(m_TrueKinematics.TruePz[Daughter_index]);
+    m_TrueMomenta.push_back(m_TrueKinematics.TrueEnergy[Daughter_index]);
+  }
   // Reconstruct true KKpipi binning
   if(!m_KSKKBinning) {
-    m_TrueMomenta.clear();
-    std::vector<int> DaughterIDs{321, -321, 211, -211};
-    for(auto DaughterID : DaughterIDs) {
-      std::vector<double>::size_type Daughter_index = std::find(IDs.begin() + m_TrueKinematics.SignalD_index + 1, IDs.begin() + SignalEnd_index, DaughterID) - IDs.begin();
-      m_TrueMomenta.push_back(m_TrueKinematics.TruePx[Daughter_index]);
-      m_TrueMomenta.push_back(m_TrueKinematics.TruePy[Daughter_index]);
-      m_TrueMomenta.push_back(m_TrueKinematics.TruePz[Daughter_index]);
-      m_TrueMomenta.push_back(m_TrueKinematics.TrueEnergy[Daughter_index]);
-    }
     return m_AmplitudePhaseSpace.WhichBin(m_TrueMomenta);
   } else {
     std::map<int, TLorentzVector> Momenta;
@@ -219,4 +219,8 @@ std::map<std::string, double> KKpipi_PhaseSpace::GetRecDalitzCoordinates() const
   DalitzCoordinates.insert({"s23", (PiPlus + PiMinus).M2()});
   DalitzCoordinates.insert({"s012", (KPlus + KMinus + PiPlus).M2()});
   return DalitzCoordinates;
+}
+
+bool KKpipi_PhaseSpace::BackgroundFromKSKK() const {
+  return m_KSKKBinning;
 }

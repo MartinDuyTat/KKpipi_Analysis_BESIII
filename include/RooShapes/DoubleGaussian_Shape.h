@@ -16,6 +16,10 @@ class DoubleGaussian_Shape: public FitShape {
      * Default constructor, see FitShape constructor
      */
     DoubleGaussian_Shape(const std::string &Name, const Settings &settings, RooRealVar *x);
+    /**
+     * Default virtual destructor
+     */
+    virtual ~DoubleGaussian_Shape() = default;
   private:
     /**
      * Initialize a double Gaussian

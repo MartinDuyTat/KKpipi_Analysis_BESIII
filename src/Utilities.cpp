@@ -58,6 +58,7 @@ namespace Utilities {
 		const std::string &TagType,
 		const std::string &DataMC,
 		bool IncludeDeltaECuts,
+		const Settings &settings,
 		bool TruthMatch,
 		bool KKpipiPartReco) {
     std::string Mode = TagMode;
@@ -67,7 +68,8 @@ namespace Utilities {
     InitialCuts initialCuts(Mode, TagType, KKpipiPartReco);
     TCut Cuts = initialCuts.GetInitialCuts();
     if(IncludeDeltaECuts) {
-      DeltaECut deltaECut(Mode, TagType, DataMC, KKpipiPartReco);
+      std::string Filepath = settings.get("DeltaEFilePrefix");
+      DeltaECut deltaECut(Mode, TagType, DataMC, Filepath, KKpipiPartReco);
       Cuts = Cuts && deltaECut.GetDeltaECut();
     }
     if(TruthMatch) {
@@ -201,16 +203,19 @@ namespace Utilities {
   }
 
   double SumWeights(TTree *Tree, const std::string &WeightName, const std::string &Cut) {
-    TTree *ClonedTree = Tree->CloneTree();
-    ClonedTree->Draw(">> elist", Cut.c_str(), "entrylist");
+    Tree->Draw(">> elist", Cut.c_str(), "entrylist");
     TEntryList *elist = (TEntryList*)gDirectory->Get("elist");
-    ClonedTree->SetEntryList(elist);
+    Tree->SetEntryList(elist);
     double Total = 0.0, Weight;
-    ClonedTree->SetBranchAddress(WeightName.c_str(), &Weight);
+    Tree->SetBranchStatus("*", 0);
+    Tree->SetBranchStatus(WeightName.c_str(), 1);
+    Tree->SetBranchAddress(WeightName.c_str(), &Weight);
     for(Long64_t i = 0; i < elist->GetN(); i++) {
-      ClonedTree->GetEntry(ClonedTree->GetEntryNumber(i));
+     Tree->GetEntry(Tree->GetEntryNumber(i));
       Total += Weight;
     }
+    Tree->SetEntryList(nullptr);
+    Tree->SetBranchStatus("*", 1);
     return Total;
   }
 

@@ -17,9 +17,14 @@ class DeltaECut {
      * @param TagMode The name of the tag mode we want to apply the cuts to
      * @param TagType "ST" for single tags, "DT" double tags
      * @param DataMC "MC" or "Data" (cuts are different for MC and data)
+     * @param Filepath Filepath to the Delta E cuts file, excluding the "_Data.txt" or "_MC.txt"
      * @param KKpipiPartReco Set to true for partially reconstructed KKpipi
      */
-    DeltaECut(const std::string &TagMode, const std::string &TagType, const std::string &DataMC, bool KKpipiPartReco = false);
+    DeltaECut(const std::string &TagMode,
+	      const std::string &TagType,
+	      const std::string &DataMC,
+	      const std::string &FilepathPrefix,
+	      bool KKpipiPartReco = false);
     /**
      * Function that returns the complete initial cut
      */
@@ -38,6 +43,10 @@ class DeltaECut {
      */
     std::string m_DataMC;
     /**
+     * The filepath to the Delta E cuts file
+     */
+    std::string m_FilepathPrefix;
+    /**
      * Flag that is true if the KKpipi signal tag is partially reconstructed
      */
     bool m_KKpipiPartReco;
@@ -47,7 +56,6 @@ class DeltaECut {
      * @param TagSide "Signal" or "Tag" for double tags, blank for single tags
      */
     TCut GetDeltaECutFromFile(const std::string &TagMode, const std::string &TagSide = std::string()) const;
-    
 };
 
 #endif

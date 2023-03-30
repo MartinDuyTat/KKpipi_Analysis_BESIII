@@ -1,5 +1,7 @@
 SignalTagKSFitSuccess == 0 || (SignalTagKSFitSuccess == 1 && SignalTagKSDecayLengthFit/SignalTagKSDecayLengthErrorFit < 2)
 SignalTagMpipi< 0.477 || SignalTagMpipi > 0.507
-SignalMissingMass2 > 0.18 && SignalMissingMass2 < 0.38
+SignalMissingMass2 > 0.1 && SignalMissingMass2 < 0.4
+TagMBC > 1.86 && TagMBC < 1.87
 SignalNumberPi0 == 0
-TagMBC > 1.855 && TagMBC < 1.875
+SignalTagKPlusenergy < 0.7
+SignalTagKMinusenergy < 0.7

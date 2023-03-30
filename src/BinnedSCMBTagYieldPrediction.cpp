@@ -52,9 +52,7 @@ std::vector<double> BinnedSCMBTagYieldPrediction::GetPredictedBinYields(
       BinYields_index++;
     }
   }
-  /*const auto EffMatrix = (1.0 - m_FPlus)*m_EfficiencyMatrix_CPEven
-                       + m_FPlus*m_EfficiencyMatrix_CPOdd;*/
-  const auto EffMatrix = m_EfficiencyMatrix_CPEven;
+  const auto EffMatrix = m_EfficiencyMatrix;
   const auto EffCorrBinYields = EffMatrix*BinYields;
   std::vector<double> FinalBinYields(TotalSize);
   for(std::size_t i = 0; i < TotalSize; i++) {

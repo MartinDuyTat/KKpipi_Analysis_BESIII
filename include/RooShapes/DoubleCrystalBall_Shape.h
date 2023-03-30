@@ -16,6 +16,10 @@ class DoubleCrystalBall_Shape: public FitShape {
      * Default constructor, see FitShape constructor
      */
     DoubleCrystalBall_Shape(const std::string &Name, const Settings &settings, RooRealVar *x);
+    /**
+     * Default virtual destructor
+     */
+    virtual ~DoubleCrystalBall_Shape() = default;
   private:
     /**
      * Initialize a double Gaussian

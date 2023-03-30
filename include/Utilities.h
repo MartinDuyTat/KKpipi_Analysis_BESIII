@@ -45,7 +45,14 @@ namespace Utilities {
    * @param TruthMatch Set to true to truth match
    * @param KKpipiPartReco Set to true if KKpipi signal mode is partially reconstructed
    */
-  TCut LoadCuts(const std::string &SignalMode, const std::string &TagMode, const std::string &TagType, const std::string &DataMC, bool IncludeDeltaECuts, bool TruthMatch = false, bool KKpipiPartReco = false);
+  TCut LoadCuts(const std::string &SignalMode,
+		const std::string &TagMode,
+		const std::string &TagType,
+		const std::string &DataMC,
+		bool IncludeDeltaECuts,
+		const Settings &settings,
+		bool TruthMatch = false,
+		bool KKpipiPartReco = false);
   /**
    * Parse arguments and set up a Settings object
    * Copied from GGSZ code repository

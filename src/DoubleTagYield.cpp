@@ -30,16 +30,15 @@
 #include"Utilities.h"
 #include"Bes3plotstyle.h"
 
-DoubleTagYield::DoubleTagYield(const Settings &settings, TTree *Tree): m_SignalMBC("SignalMBC", "", 1.83, 1.8865),
+DoubleTagYield::DoubleTagYield(const Settings &settings, TTree *Tree): m_SignalMBC(m_Settings.get("FitVariable").c_str(), "",
+										   m_Settings.getD("FitRange_low"),
+										   m_Settings.getD("FitRange_high")),
 								       m_Settings(settings), m_Tree(Tree) {
   for(int i = 0; i < 2; i++) {
     RooMsgService::instance().getStream(i).removeTopic(RooFit::Eval);
     RooMsgService::instance().getStream(i).removeTopic(RooFit::Caching);
     RooMsgService::instance().getStream(i).removeTopic(RooFit::Minimization);
     RooMsgService::instance().getStream(i).removeTopic(RooFit::Plotting);
-  }
-  if(!m_Settings.getB("FullyReconstructed")) {
-    m_SignalMBC = RooRealVar(m_Settings.get("FitVariable").c_str(), "", m_Settings.getD("FitRange_low"), m_Settings.getD("FitRange_high"));
   }
   m_SignalMBC.setBins(500, "cache");
 }
@@ -213,9 +212,11 @@ void DoubleTagYield::PlotProjections(BinnedDataLoader *DataLoader, BinnedFitMode
     RooPlot *Data_RooPlot = DataSet->plotOn(Frame, Binning(m_Settings.getI("Bins_in_plots")), MarkerSize(3), LineWidth(3), Cut((std::string(CategoryVariable->GetName()) + "==" + std::string(CategoryVariable->GetName()) + "::" + Category).c_str()));
     auto Data_RooHist = Data_RooPlot->getHist();
     // Against my wishes, I had to remove data points of empty bins
-    for(int i = 0; i < Data_RooHist->GetN(); i++) {
-      if(Data_RooHist->GetPointY(i) == 0.0) {
-	Data_RooHist->SetPointY(i, -1000.0);
+    if(m_Settings.contains("HideEmptyBins") && m_Settings.getB("HideEmptyBins")) {
+      for(int i = 0; i < Data_RooHist->GetN(); i++) {
+	if(Data_RooHist->GetPointY(i) == 0.0) {
+	  Data_RooHist->SetPointY(i, -1000.0);
+	}
       }
     }
     FormatData(Data_RooHist);
@@ -239,9 +240,11 @@ void DoubleTagYield::PlotProjections(BinnedDataLoader *DataLoader, BinnedFitMode
     Data_RooPlot = DataSet->plotOn(Frame, Binning(m_Settings.getI("Bins_in_plots")), MarkerSize(3), LineWidth(3), Cut((std::string(CategoryVariable->GetName()) + "==" + std::string(CategoryVariable->GetName()) + "::" + Category).c_str()));
     Data_RooHist = Data_RooPlot->getHist();
     // Against my wishes, I had to remove data points of empty bins
-    for(int i = 0; i < Data_RooHist->GetN(); i++) {
-      if(Data_RooHist->GetPointY(i) == 0.0) {
-	Data_RooHist->SetPointY(i, -1000.0);
+    if(m_Settings.contains("HideEmptyBins") && m_Settings.getB("HideEmptyBins")) {
+      for(int i = 0; i < Data_RooHist->GetN(); i++) {
+	if(Data_RooHist->GetPointY(i) == 0.0) {
+	  Data_RooHist->SetPointY(i, -1000.0);
+	}
       }
     }
     Frame->Draw();
@@ -249,7 +252,7 @@ void DoubleTagYield::PlotProjections(BinnedDataLoader *DataLoader, BinnedFitMode
     Text.Draw("SAME");
     Pad2.cd();
     RooPlot *PullFrame = m_SignalMBC.frame();
-    PullFrame->addObject(Pull);
+    PullFrame->addObject(Pull, "P");
     TLine *Line = new TLine(m_SignalMBC.getMin(), 0.0, m_SignalMBC.getMax(), 0.0);
     PullFrame->addObject(Line);
     PullFrame->SetMinimum(-5);
@@ -268,14 +271,17 @@ void DoubleTagYield::PlotProjections(BinnedDataLoader *DataLoader, BinnedFitMode
 }
 
 void DoubleTagYield::SaveSignalYields(const BinnedFitModel &FitModel, RooFitResult *Result, const Category &category) const {
+  // Open output file
   std::ofstream Outfile(m_Settings.get("FittedSignalYieldsFile"));
   Outfile << std::fixed << std::setprecision(4);
+  // Save fit status
   Outfile << "* KKpipi vs " << m_Settings.get("Mode") << " double tag yield fit results\n\n";
   Outfile << "status " << Result->status() << "\n";
   Outfile << "covQual " << Result->covQual() << "\n\n";
   if(m_Settings.getB("FullyReconstructed")) {
     Outfile << "* These yields are after the sideband has been subtracted off the signal yield\n\n";
   }
+  // Loop over all categories and save signal yields
   for(const auto & cat : category.GetCategories()) {
     std::string Name = cat + "_SignalYield";
     double Sideband = 0.0;
@@ -291,6 +297,18 @@ void DoubleTagYield::SaveSignalYields(const BinnedFitModel &FitModel, RooFitResu
       Outfile << Name << "_sideband " << std::setw(8) << std::right << Sideband << "\n";
     }
   }
+  // Save other parameters as well
+  Outfile << std::fixed << std::setprecision(6);
+  for(const auto &FitParameter : FitModel.m_Parameters) {
+    auto Parameter = FitParameter.second;
+    const std::string Name = Parameter->GetName();
+    Outfile << Name << "          " << std::setw(12) << std::right << Parameter->getVal() << "\n";
+    Outfile << Name << "_err      " << std::setw(12) << std::right << Parameter->getError() << "\n";
+    Outfile << Name << "_low_err  " << std::setw(12) << std::right << Parameter->getErrorLo() << "\n";
+    Outfile << Name << "_high_err " << std::setw(12) << std::right << Parameter->getErrorHi() << "\n";
+  }
+  Outfile.close();
+  // Loop over all categories and save correlation and covarience matrices
   std::size_t Size = category.GetCategories().size();
   if(Size > 0) {
     TFile File("RawYieldsCorrelationMatrix.root", "RECREATE");
@@ -313,7 +331,6 @@ void DoubleTagYield::SaveSignalYields(const BinnedFitModel &FitModel, RooFitResu
     CovarianceMatrix.Write("CovarianceMatrix");
     File.Close();
   }
-  Outfile.close();
 }
 
 double DoubleTagYield::GetSidebandYield(int SignalBin, int TagBin) const {

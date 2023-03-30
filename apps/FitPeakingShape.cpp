@@ -81,18 +81,17 @@ int main(int argc, char *argv[]) {
     RooArgSet Variables;
     Variables.add(MBC);
     std::string WeightName("");
-    RooRealVar WeightVar;
     if(settings["MBC_Shape"].contains(Name + "_Weight")) {
       WeightName = settings["MBC_Shape"].get(Name + "_Weight");
-      WeightVar = RooRealVar(WeightName.c_str(), "", 0.0, 1.0);
-      Variables.add(WeightVar);
+      RooRealVar WeightVar(WeightName.c_str(), "", 0.0, 1.0);
+      Variables.addClone(WeightVar);
     }
     std::string Cut("");
     RooRealVar iDcyTr("iDcyTr", "", 0, 100000);
     if(settings["MBC_Shape"].contains(Name + "_ComponentsToIgnore")) {
       Variables.add(iDcyTr);
       auto ComponentsToIgnore = Utilities::ConvertStringToVector(settings["MBC_Shape"].get(Name + "_ComponentsToIgnore"));
-      for(const auto ComponentToIgnore : ComponentsToIgnore) {
+      for(const auto &ComponentToIgnore : ComponentsToIgnore) {
 	Cut += "iDcyTr != " + ComponentToIgnore;
 	if(!(ComponentToIgnore == ComponentsToIgnore.back())) {
 	  Cut += " && ";

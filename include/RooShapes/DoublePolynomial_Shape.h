@@ -15,6 +15,10 @@ class DoublePolynomial_Shape: public FitShape {
      * Default constructor, see FitShape constructor
      */
     DoublePolynomial_Shape(const std::string &Name, const Settings &settings, RooRealVar *x);
+    /**
+     * Default virtual destructor
+     */
+    virtual ~DoublePolynomial_Shape() = default;
   private:
     /**
      * Initialize a double polynomial
