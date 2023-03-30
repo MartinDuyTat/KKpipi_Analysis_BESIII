@@ -129,7 +129,7 @@ void SingleTagYield::InitializePeakingBackgrounds() {
       std::cout << "Adding peaking background with yield: " << PeakingYield << "\n";
       // This is automatically handled in FitShape
     } else {
-      double BackgroundToSignalRatio = m_Settings["MBC_Shape"].getD(Name + "_BackgroundToSignalRatio");
+      double BackgroundToSignalRatio = m_Settings["BackgroundToSignalRatio"].getD(Name + "_BackgroundToSignalRatio");
       PeakingPDF->UseRelativeYield(m_Parameters["Yield"], BackgroundToSignalRatio);
       std::cout << "Adding peaking background with background-to-signal ratio: " << BackgroundToSignalRatio << "\n";
     }
@@ -252,7 +252,7 @@ void SingleTagYield::PlotSingleTagYield(const RooDataSet &Data) const {
   Text.Draw("SAME");
   Pad2.cd();
   RooPlot *PullFrame = m_MBC.frame();
-  PullFrame->addObject(Pull);
+  PullFrame->addObject(Pull, "P");
   TLine *Line = new TLine(1.83, 0.0, 1.8865, 0.0);
   PullFrame->addObject(Line);
   PullFrame->SetMinimum(-5);
@@ -276,7 +276,7 @@ void SingleTagYield::SaveFitParameters() const {
   std::ofstream OutputFile(m_Settings.get("ResultsFilename"));
   OutputFile << "status " << m_Result->status() << "\n";
   OutputFile << "covQual " << m_Result->covQual() << "\n";
-  for(const auto Param : m_Parameters) {
+  for(const auto &Param : m_Parameters) {
     OutputFile << Mode + "_" + Param.first << " " << Param.second->getVal() << "\n";
     OutputFile << Mode + "_" + Param.first << "_err " << Param.second->getError() << "\n";
   }

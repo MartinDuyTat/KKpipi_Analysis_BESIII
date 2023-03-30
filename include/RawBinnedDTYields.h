@@ -8,8 +8,8 @@
 #define RAWBINNEDDTYIELDS
 
 #include<vector>
-#include<unordered_map>
 #include<memory>
+#include<utility>
 #include"TMatrixTSym.h"
 
 struct AsymmetricUncertainty {
@@ -25,6 +25,10 @@ struct AsymmetricUncertainty {
    * The negative uncertainty
    */
   double NegativeUncertainty;
+  /**
+   * The symmetric uncertainty (Hessian)
+   */
+  double SymmetricUncertainty;
 };
 
 class RawBinnedDTYields {
@@ -55,9 +59,14 @@ class RawBinnedDTYields {
    */
   const TMatrixTSym<double>& GetCorrelationMatrix() const;
   /**
-   * Generate toy yields with a uniform distribution in a 5 sigma window
+   * Generate toy yields, drawn from a Gaussian distribution
+   * @param PredictedYields The predicted yields based on input parameters
+   * @param SymmetricUncertainties Set to true for symmetric uncertainties
+   * @return The toy yields and the probability of the underlying Gaussian distribution
    */
-  std::vector<AsymmetricUncertainty> GetToyYields() const;
+  std::pair<std::vector<AsymmetricUncertainty>, double>
+  GetToyYields(const std::vector<double> &PredictedYields,
+	       bool SymmetricUncertainties) const;
  private:
   /**
    * The binned double tag yields with asymmetric uncertainties
@@ -67,6 +76,15 @@ class RawBinnedDTYields {
    * The correlation matrix
    */
   const TMatrixTSym<double> m_CorrelationMatrix;
+  /**
+   * Helper function that generates a single yield from asymmetric uncertainties
+   * @param PredictedYield The predicted yield given ci and si
+   * @param DataYield The yield and uncertainties measured in data
+   * @param SymmetricUncertainties Set to true to use the symmetric uncertaintnies
+   */
+  std::pair<double, double> GenerateYield(double PredictedYield,
+					  const AsymmetricUncertainty &DataYield,
+					  bool SymmetricUncertainties) const;
 };
 
 #endif

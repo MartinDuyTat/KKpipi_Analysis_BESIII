@@ -31,7 +31,8 @@ RawBinnedCPTagYields::ParseYields(const std::string &Tag,
 							 "_high_err");
     const double MinusError = -settings[SettingsName].getD(YieldName +
 							   "_low_err");
-    Yields.push_back({Yield, PlusError, MinusError});
+    const double SymmetricError = settings[SettingsName].getD(YieldName + "_err");
+    Yields.push_back({Yield, PlusError, MinusError, SymmetricError});
   }
   return Yields;
 }

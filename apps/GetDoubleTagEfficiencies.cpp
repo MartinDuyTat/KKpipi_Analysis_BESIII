@@ -31,6 +31,12 @@ int main(int argc, char *argv[]) {
       CPEvenFractions.insert({i, FPlus});
     }
   }
+  const bool K0pipiQCMC = settings.contains("K0pipi_QCMC_TagMode");
+  std::string K0pipiMode;
+  if(K0pipiQCMC) {
+    K0pipiMode = settings.get("K0pipi_QCMC_TagMode");
+    std::cout << "Using QCMC reweighting for " << K0pipiMode << "\n";
+  }
   std::cout << "Setting up all bin combinations...\n";
   Category category(settings);
   auto BinCombinations = category.GetBinCombinations();
@@ -59,9 +65,11 @@ int main(int argc, char *argv[]) {
 	Utilities::SumWeights(&TruthChain,
 			      "ModelWeight_CPOdd",
 			      std::string(BinCut.GetTitle()));
+      const std::string ModelWeightPostfix =
+	K0pipiQCMC ? "_" + K0pipiMode + "_TagBin" + std::to_string(Bin.second) : "";
       const double Events =
 	Utilities::SumWeights(&TruthChain,
-			      "ModelWeight",
+			      "ModelWeight" + ModelWeightPostfix,
 			      std::string(BinCut.GetTitle()));
       if(QCMCReweighting) {
 	const double EvenEvents = Events_CPEven*(1.0 - CPEvenFractions[Bin.second]);
@@ -93,6 +101,15 @@ int main(int argc, char *argv[]) {
   Chain.SetBranchAddress("ModelWeight", &ModelWeight);
   Chain.SetBranchAddress("ModelWeight_CPEven", &ModelWeight_CPEven);
   Chain.SetBranchAddress("ModelWeight_CPOdd", &ModelWeight_CPOdd);
+  std::map<int, double> K0pipiWeights;
+  if(K0pipiQCMC) {
+    for(int TagBin = 1; TagBin <= 8; TagBin++) {
+      K0pipiWeights.insert({TagBin, 0.0});
+      const std::string WeightName = "ModelWeight_" + K0pipiMode
+	                           + "_TagBin" + std::to_string(TagBin);
+      Chain.SetBranchAddress(WeightName.c_str(), &K0pipiWeights[TagBin]);
+    }
+  }
   bool DataMCMismatchWeight = settings.getB("DataMCMismatchWeight");
   if(DataMCMismatchWeight) {
     Chain.SetBranchAddress("DataMCMismatchWeight", &DataMCWeight);
@@ -134,7 +151,11 @@ int main(int argc, char *argv[]) {
 	const double OddWeight = ModelWeight_CPOdd*CPEvenFractions[TagBin_true];
 	EffMatrix(RecBin_index, TrueBin_index) += EvenWeight + OddWeight;
       } else {
-	EffMatrix(RecBin_index, TrueBin_index) += ModelWeight;
+	if(K0pipiQCMC) {
+	  EffMatrix(RecBin_index, TrueBin_index) += K0pipiWeights[TagBin_true];
+	} else {
+	  EffMatrix(RecBin_index, TrueBin_index) += ModelWeight;
+	}
 	EffMatrix_CPEven(RecBin_index, TrueBin_index) += ModelWeight_CPEven;
 	EffMatrix_CPOdd(RecBin_index, TrueBin_index) += ModelWeight_CPOdd;
       }

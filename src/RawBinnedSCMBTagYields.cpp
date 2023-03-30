@@ -38,7 +38,8 @@ RawBinnedSCMBTagYields::ParseYields(const std::string &Tag,
       const double Yield = settings[SettingsName].getD(YieldName);
       const double PlusError = settings[SettingsName].getD(YieldName + "_high_err");
       const double MinusError = -settings[SettingsName].getD(YieldName + "_low_err");
-      Yields.push_back({Yield, PlusError, MinusError});
+      const double SymmetricError = settings[SettingsName].getD(YieldName + "_err");
+      Yields.push_back({Yield, PlusError, MinusError, SymmetricError});
     }
   }
   return Yields;

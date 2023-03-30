@@ -56,6 +56,14 @@ class FlavourTagYield {
    */
   const std::pair<double, double> m_DeltaD;
   /**
+   * Sine of the charm strong phase difference between DCS and CF amplitudes
+   */
+  const double m_SinDeltaD;
+  /**
+   * Cosine of the charm strong phase difference between DCS and CF amplitudes
+   */
+  const double m_CosDeltaD;
+  /**
    * The covariance matrix of the charm parameters
    */
   const TMatrixT<double> m_CharmCovMatrix;
@@ -71,7 +79,7 @@ class FlavourTagYield {
    * Helper function that gets the DCS and efficiency corrected flavour tag yield
    * @param Bin Bin number
    */
-  uncertainties::udouble GetDTFlavourYield(int Bin) const;
+  const uncertainties::udouble& GetDTFlavourYield(int Bin) const;
   /**
    * Helper function that calculates the DCS correction using 3 iterations
    */

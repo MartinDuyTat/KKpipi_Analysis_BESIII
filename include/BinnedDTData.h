@@ -11,6 +11,7 @@
 #include<string>
 #include<array>
 #include<string_view>
+#include"Eigen/Dense"
 #include"TMatrixT.h"
 #include"RawBinnedDTYields.h"
 #include"BinnedDTYieldPrediction.h"
@@ -104,17 +105,29 @@ class BinnedDTData {
    */
   mutable std::vector<std::vector<AsymmetricUncertainty>> m_ToyDTYields;
   /**
+   * Flag that is true if the uncertainties of the yields are symmetrized
+   */
+  const bool m_SymmetricUncertainties;
+  /**
+   * The constant to ensure that the Gaussian envelope covers the whole PDF
+   */
+  mutable double m_EnvelopeConstant;
+  /**
+   * Flag that is true if the toy generation efficiency is displayed
+   */
+  const bool m_DisplayToyEfficiency;
+  /**
    * Helper function that calculates the standard deviation from asymmetric uncertainties
    */
   double GetAsymmetricStd(const AsymmetricUncertainty &Yield,
 			  double Prediction) const;
   /**
-   * Helper function that creates the covariance matrix
+   * Helper function that creates the inverse of the covariance matrix
    */
-  TMatrixT<double> CreateCovarianceMatrix(
+  Eigen::MatrixXd CreateInvCovarianceMatrix(
     const std::vector<double> &PredictedYields,
     const std::vector<AsymmetricUncertainty> &MeasuredYields,
-    TMatrixT<double> CorrelationMatrix) const;
+    const TMatrixT<double> &CorrelationMatrix) const;
   /**
    * Helper function that creates the correct raw yield object
    * @param Tag The tag mode
@@ -144,8 +157,8 @@ class BinnedDTData {
   /**
    * List of the SCMB tags used in the analysis
    */
-  static constexpr std::array<std::string_view, 2> m_SCMBTags{{
-    "KSpipi", "KLpipi"}};
+  static constexpr std::array<std::string_view, 3> m_SCMBTags{{
+    "KSpipi", "KSpipiPartReco", "KLpipi"}};
 };
 
 #endif

@@ -1,4 +1,3 @@
-
 // Martin Duy Tat 13th October 2022
 
 #include"TFile.h"
@@ -90,9 +89,18 @@ void cisiFitter::RunToys() const {
     }
     return m_cisiLikelihood.CalculateToyLogLikelihood(BF_KKpipi, ci, si);
   };
-  std::size_t NumberToys = m_Settings.getI("NumberToys");
   std::size_t StatsMultiplier = m_Settings.getI("StatsMultiplier");
+  std::size_t NumberOfToysToSkip = m_Settings.getI("NumberOfToysToSkip");
+  for(std::size_t i = 0; i < NumberOfToysToSkip; i++) {
+    std::cout << "Skipped toy " << i << "\n";
+    cisiLikelihoodRef.GenerateToy(Generator_BF_KKpipi,
+				  Generator_ci,
+				  Generator_si,
+				  StatsMultiplier);
+  }
+  std::size_t NumberToys = m_Settings.getI("NumberToys");
   for(std::size_t i = 0; i < NumberToys; i++) {
+    std::cout << "Toy " << i << "\n";
     cisiLikelihoodRef.GenerateToy(Generator_BF_KKpipi,
 				  Generator_ci,
 				  Generator_si,
@@ -117,10 +125,12 @@ void cisiFitter::RunToys() const {
       double ErrorLow, ErrorHigh;
       Minimiser.GetMinosError(i + 1, ErrorLow, ErrorHigh, 0);
       ci_pull[i] = ci_value[i] - Generator_ci[i];
-      ci_pull[i] /= ci_pull[i] <= 0.0 ? ErrorHigh : -ErrorLow;
+      //ci_pull[i] /= ci_pull[i] <= 0.0 ? ErrorHigh : -ErrorLow;
+      ci_pull[i] /= ci_err[i];
       si_pull[i] = si_value[i] - Generator_si[i];
       Minimiser.GetMinosError(i + 1 + m_NumberBins, ErrorLow, ErrorHigh, 0);
-      si_pull[i] /= si_pull[i] <= 0.0 ? ErrorHigh : -ErrorLow;
+      //si_pull[i] /= si_pull[i] <= 0.0 ? ErrorHigh : -ErrorLow;
+      si_pull[i] /= si_err[i];
     }
     Tree.Fill();
   }
@@ -131,13 +141,19 @@ void cisiFitter::RunToys() const {
 void cisiFitter::SetupMinimiser(ROOT::Minuit2::Minuit2Minimizer &Minimiser) const {
   Minimiser.SetVariable(0, "BF_KKpipi", 0.00247, 0.1);
   Minimiser.SetVariableLimits(0, 0.001, 0.010);
+  const double cMin = m_Settings.getD("c_min");
+  const double cMax = m_Settings.getD("c_max");
   for(std::size_t i = 1; i <= m_NumberBins; i++) {
-    Minimiser.SetVariable(i, "c" + std::to_string(i), 1.0, 1.0);
-    Minimiser.SetVariableLimits(i, -3.0, 3.0);
+    const std::string Name = "c" + std::to_string(i);
+    Minimiser.SetVariable(i, Name, 1.0, 1.0);
+    Minimiser.SetVariableLimits(i, cMin, cMax);
   }
+  const double sMin = m_Settings.getD("s_min");
+  const double sMax = m_Settings.getD("s_max");
   for(std::size_t i = 1; i <= m_NumberBins; i++) {
-    Minimiser.SetVariable(i + m_NumberBins, "s" + std::to_string(i), 0.0, 1.0);
-    Minimiser.SetVariableLimits(i + m_NumberBins, -2.0, 2.0);
+    const std::string Name = "s" + std::to_string(i);
+    Minimiser.SetVariable(i + m_NumberBins, Name, 0.0, 1.0);
+    Minimiser.SetVariableLimits(i + m_NumberBins, sMin, sMax);
     if(m_Settings.getB("Fix_si")) {
       Minimiser.FixVariable(i + m_NumberBins);
     }
@@ -169,9 +185,9 @@ void cisiFitter::Plot_cisi(ROOT::Minuit2::Minuit2Minimizer &Minimiser,
   Circle.SetLineWidth(3);
   Circle.SetTitle(";#it{c_{i}};#it{s_{i}}");
   Circle.Draw("AL");
-  const double Boundary = 1.5;
-  Circle.GetXaxis()->SetLimits(-1.5, 1.5);
-  Circle.GetYaxis()->SetRangeUser(-1.5, 1.5);
+  const double Boundary = m_Settings.getD("PlotBoundary");
+  Circle.GetXaxis()->SetLimits(-Boundary, Boundary);
+  Circle.GetYaxis()->SetRangeUser(-Boundary, Boundary);
   Circle.GetXaxis()->SetNdivisions(505);
   Circle.GetYaxis()->SetNdivisions(505);
   // Draw prediction of F+
@@ -192,14 +208,14 @@ void cisiFitter::Plot_cisi(ROOT::Minuit2::Minuit2Minimizer &Minimiser,
   Results.SetMarkerStyle(8);
   std::vector<TLatex> PointLabels;
   for(std::size_t Bin = 1; Bin <= m_NumberBins; Bin++) {
-    PointLabels.push_back(TLatex(ci[Bin - 1] + 0.05, si[Bin - 1], std::to_string(Bin).c_str()));
+    PointLabels.push_back(TLatex(ci[Bin - 1], si[Bin - 1] + 0.03, std::to_string(Bin).c_str()));
     PointLabels.back().DrawClone("SAME");
   }
   Results.Draw("P SAME");
   // Create and draw contours
   Minimiser.SetPrintLevel(-1);
   std::vector<TGraph> Contours;
-  std::vector<double> ErrorDefs{1.0};
+  std::vector<double> ErrorDefs{1.0, 4.0};
   for(double ErrorDef : ErrorDefs) {
     Minimiser.SetErrorDef(ErrorDef);
     for(std::size_t Bin = 1; Bin <= m_NumberBins; Bin++) {
