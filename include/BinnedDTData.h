@@ -22,12 +22,10 @@ class BinnedDTData {
   /**
    * Constructor that stores pointers to the raw yields and predicted yields
    * @param Tag The tag mode
-   * @param Ki The Ki parameters normalised by the ST yield
    * @param Kbari The Kbari parameters normalised by the ST yield
    * @param settings The settings file
    */
   BinnedDTData(const std::string &Tag,
-	       const KiCombiner *Ki,
 	       const Settings &settings);
   /**
    * Delete copy constructor
@@ -42,51 +40,71 @@ class BinnedDTData {
    * @param BF_KKpipi The KKpipi branching fraction
    * @param ci The ci parameters
    * @param si The si parameters
+   * @param Ki The Ki parameters
+   * @param Kbari The Kbari parameters
    */
   double GetLogLikelihood(double BF_KKpipi,
 			  const std::vector<double> &ci,
-			  const std::vector<double> &si) const;
+			  const std::vector<double> &si,
+			  const std::vector<double> &Ki,
+			  const std::vector<double> &Kbari) const;
   /**
    * Calculate the log likelihood from this tag, using alternative yields
    * @param BF_KKpipi The KKpipi branching fraction
    * @param ci The ci parameters
    * @param si The si parameters
+   * @param Ki The Ki parameters
+   * @param Kbari The Kbari parameters
    * @param MeasuredYields The measured yields
    */
   double GetLogLikelihood(
     double BF_KKpipi,
     const std::vector<double> &ci,
     const std::vector<double> &si,
+    const std::vector<double> &Ki,
+    const std::vector<double> &Kbari,
     const std::vector<AsymmetricUncertainty> &MeasuredYields) const;
   /**
    * Generate toy yields using hit and miss method
    * @param BF_KKpipi The KKpipi branching fraction
    * @param ci The ci parameters used in toy generation
    * @param si The si parameters used in toy generation
+   * @param Ki The Ki parameters used in toy generation
+   * @param Kbari The Kbari parameters used in toy generation
    * @param StatsMultiplier The statistics multiplier
    */
   void GenerateToyYields(double BF_KKpipi,
 			 const std::vector<double> &ci,
 			 const std::vector<double> &si,
+			 const std::vector<double> &Ki,
+			 const std::vector<double> &Kbari,
 			 std::size_t StatsMultiplier) const;
   /**
    * Calculate the log likelihood from this tag using the generated toy yields
    * @param BF_KKpipi The KKpipi branching fraction
    * @param ci The ci parameters
    * @param si The si parameters
+   * @param Ki The Ki parameters
+   * @param Kbari The Kbari parameters
    */
   double GetToyLogLikelihood(double BF_KKpipi,
 			     const std::vector<double> &ci,
-			     const std::vector<double> &si) const;
+			     const std::vector<double> &si,
+			     const std::vector<double> &Ki,
+			     const std::vector<double> &Kbari) const;
   /**
    * Function that prints a comparison between predicted and measured yields
    * @param BF_KKpipi The KKpipi branching fraction
    * @param ci The ci parameters
    * @param si The si parameters
+   * @param Ki The Ki parameters
+   * @param Kbari The Kbari parameters
    */
   void PrintComparison(double BF_KKpipi,
 		       const std::vector<double> &ci,
-		       const std::vector<double> &si) const;
+		       const std::vector<double> &si,
+		       const std::vector<double> &Ki,
+		       const std::vector<double> &Kbari) const;
  private:
   /**
    * The name of this tag mode
@@ -140,13 +158,11 @@ class BinnedDTData {
    * Helper function that creates the correct yield prediction object
    * @param Tag The tag mode
    * @param STYieldFlavour The flavour single tag yield
-   * @param Ki The Ki parameters
    * @param Kbari The Kbari parameters
    * @param settings The settings file
    */
   std::unique_ptr<const BinnedDTYieldPrediction> GetDTPredictions(
     const std::string &Tag,
-    const KiCombiner *Ki,
     const Settings &settings) const;
   /**
    * List of the CP tags used in the analysis
@@ -159,6 +175,11 @@ class BinnedDTData {
    */
   static constexpr std::array<std::string_view, 3> m_SCMBTags{{
     "KSpipi", "KSpipiPartReco", "KLpipi"}};
+  /**
+   * List of the flavour tags used in the analysis
+   */
+  static constexpr std::array<std::string_view, 4> m_FlavourTags{{
+    "Kpi", "Kpipi0", "Kpipipi", "KeNu"}};
   /**
    * Helper function to find the general Poisson parameter for a non-integer yield
    * @param Yield The yield we want to find the Poisson parameter of

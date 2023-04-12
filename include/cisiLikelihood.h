@@ -26,55 +26,60 @@ class cisiLikelihood {
    * @param BF_KKpipi The KKpipi branching fraction
    * @param ci The cosine of the strong phases
    * @param si The sine of the strong phases
+   * @param Ki The fractional D0 bin yield
+   * @param Kbari The fractional Dbar0 bin yield
    */
   double CalculateLogLikelihood(double BF_KKpipi,
 				const std::vector<double> &ci,
-				const std::vector<double> &si) const;
+				const std::vector<double> &si,
+				const std::vector<double> &Ki,
+				const std::vector<double> &kbari) const;
   /**
    * Generate toy datasets for all tags
    * @param BF_KKpipi The KKpipi branching fraction
    * @param ci The cosine of the strong phases used to generate toy
    * @param si The sine of the strong phases used to generate toy
+   * @param Ki The fractional D0 bin yield
+   * @param Kbari The fractional Dbar0 bin yield
    * @param StatsMultiplier The statistics multiplier
    */
   void GenerateToy(double BF_KKpipi,
 		   const std::vector<double> &ci,
 		   const std::vector<double> &si,
+		   const std::vector<double> &Ki,
+		   const std::vector<double> &Kbari,
 		   std::size_t StatsMultiplier = 1) const;
   /**
    * Function that returns the likelihood based on ci and si values with toy data
    * @param BF_KKpipi The KKpipi branching fraction
    * @param ci The cosine of the strong phases
    * @param si The sine of the strong phases
+   * @param Ki The fractional D0 bin yield
+   * @param Kbari The fractional Dbar0 bin yield
    */
   double CalculateToyLogLikelihood(double BF_KKpipi,
 				   const std::vector<double> &ci,
-				   const std::vector<double> &si) const;
+				   const std::vector<double> &si,
+				   const std::vector<double> &Ki,
+				   const std::vector<double> &Kbar) const;
   /**
    * Function that prints a comparison between predicted and measured yields
    * @param BF_KKpipi The KKpipi branching fraction
    * @param ci The ci parameters
    * @param si The si parameters
+   * @param Ki The fractional D0 bin yield
+   * @param Kbari The fractional Dbar0 bin yield
    */
   void PrintComparison(double BF_KKpipi,
 		       const std::vector<double> &ci,
-		       const std::vector<double> &si) const;
-  /**
-   * Function that prints a the Ki with DCS corrections and normalised
-   * @param ci The ci parameters
-   * @param si The si parameters
-   */
-  void PrintKi(const std::vector<double> &ci,
-	       const std::vector<double> &si) const;
+		       const std::vector<double> &si,
+		       const std::vector<double> &Ki,
+		       const std::vector<double> &Kbari) const;
  private:
   /**
    * Vector of all the tags
    */
   const std::vector<BinnedDTData> m_TagData;
-  /**
-   * The Ki parameters
-   */
-  const KiCombiner m_Ki;
   /**
    * Helper function that sets up all the tags
    * @param settings The settings file
@@ -83,8 +88,8 @@ class cisiLikelihood {
   /**
    * Helper function that loads Ki and Kbari
    */
-  std::pair<std::vector<double>, std::vector<double>>
-  GetKi(const Settings &settings) const;
+  /*std::pair<std::vector<double>, std::vector<double>>
+  GetKi(const Settings &settings) const;*/
 };
 
 #endif

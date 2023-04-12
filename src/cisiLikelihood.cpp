@@ -12,15 +12,16 @@
 #include"Utilities.h"
 
 cisiLikelihood::cisiLikelihood(const Settings &settings):
-  m_TagData(SetupTags(settings)),
-  m_Ki(settings) {
+  m_TagData(SetupTags(settings)) {
 }
 
 double cisiLikelihood::CalculateLogLikelihood(double BF_KKpipi,
 					      const std::vector<double> &ci,
-					      const std::vector<double> &si) const {
+					      const std::vector<double> &si,
+					      const std::vector<double> &Ki,
+					      const std::vector<double> &Kbari) const {
   auto LikelihoodAdder = [&] (double a, const BinnedDTData &b) {
-    return a + b.GetLogLikelihood(BF_KKpipi, ci, si);
+    return a + b.GetLogLikelihood(BF_KKpipi, ci, si, Ki, Kbari);
   };
   return std::accumulate(m_TagData.begin(), m_TagData.end(), 0.0, LikelihoodAdder);
 }
@@ -28,18 +29,22 @@ double cisiLikelihood::CalculateLogLikelihood(double BF_KKpipi,
 void cisiLikelihood::GenerateToy(double BF_KKpipi,
 				 const std::vector<double> &ci,
 				 const std::vector<double> &si,
+				 const std::vector<double> &Ki,
+				 const std::vector<double> &Kbari,
 				 std::size_t StatsMultiplier) const {
   for(const auto &TagData : m_TagData) {
-    TagData.GenerateToyYields(BF_KKpipi, ci, si, StatsMultiplier);
+    TagData.GenerateToyYields(BF_KKpipi, ci, si, Ki, Kbari,StatsMultiplier);
   }
 }
 
 double cisiLikelihood::CalculateToyLogLikelihood(
   double BF_KKpipi,
   const std::vector<double> &ci,
-  const std::vector<double> &si) const {
+  const std::vector<double> &si,
+  const std::vector<double> &Ki,
+  const std::vector<double> &Kbari) const {
   auto LikelihoodAdder = [&] (double a, const BinnedDTData &b) {
-    return a + b.GetToyLogLikelihood(BF_KKpipi, ci, si);
+    return a + b.GetToyLogLikelihood(BF_KKpipi, ci, si, Ki, Kbari);
   };
   return std::accumulate(m_TagData.begin(), m_TagData.end(), 0.0, LikelihoodAdder);
 }
@@ -52,26 +57,23 @@ std::vector<BinnedDTData> cisiLikelihood::SetupTags(const Settings &settings) co
 		 TagModes.end(),
 		 std::back_inserter(TagData),
 		 [&] (const auto &Tag) {
-		   return BinnedDTData(Tag, &m_Ki, settings);
+		   return BinnedDTData(Tag, settings);
 		 });
   return TagData;
 }
 
 void cisiLikelihood::PrintComparison(double BF_KKpipi,
 				     const std::vector<double> &ci,
-				     const std::vector<double> &si) const {
+				     const std::vector<double> &si,
+				     const std::vector<double> &Ki,
+				     const std::vector<double> &Kbari) const {
   std::for_each(m_TagData.begin(),
 		m_TagData.end(),
-		[&] (const auto &a) { a.PrintComparison(BF_KKpipi, ci, si); });
-}
+		[&] (const auto &a) {
+		  a.PrintComparison(BF_KKpipi, ci, si, Ki, Kbari); });
+}			     
 
-void cisiLikelihood::PrintKi(const std::vector<double> &ci,
-			     const std::vector<double> &si) const {
-  m_Ki.PrintKi(ci, si);
-}
-			     
-
-std::pair<std::vector<double>, std::vector<double>>
+/*std::pair<std::vector<double>, std::vector<double>>
 cisiLikelihood::GetKi(const Settings &settings) const {
   int NumberBins = settings["BinningScheme"].getI("NumberBins");
   std::vector<double> Ki, Kbari;
@@ -88,4 +90,4 @@ cisiLikelihood::GetKi(const Settings &settings) const {
   std::transform(Kbari.begin(), Kbari.end(), Kbari.begin(),
 		 [=] (double a) {return a/Sum;});
   return std::make_pair(Ki, Kbari);
-}
+}*/

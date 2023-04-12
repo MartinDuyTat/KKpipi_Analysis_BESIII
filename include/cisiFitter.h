@@ -50,9 +50,9 @@ class cisiFitter {
   void SetupMinimiser(ROOT::Minuit2::Minuit2Minimizer &Minimiser) const;
   /**
    * Helper function to load values of ci and si used for toy generation
-   * @param c_or_s String indicating if we want ci or si
+   * @param c_or_s_or_K String indicating if we want ci or si or Ki or Kbari
    */
-  std::vector<double> GetGeneratorcisi(const std::string &c_or_s) const;
+  std::vector<double> GetGeneratorcisi(const std::string &c_or_s_or_K) const;
   /**
    * Function for drawing the contours of ci vs si
    * @param Minimiser The minimiser

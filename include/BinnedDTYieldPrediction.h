@@ -10,19 +10,16 @@
 #include<string>
 #include"TMatrixT.h"
 #include"Settings.h"
-#include"FlavourTags/KiCombiner.h"
 
 class BinnedDTYieldPrediction {
  public:
   /**
    * Constructor that stores the single tag yield, efficiency matrix and Ki
    * @param Tag The tag mode
-   * @param Ki The Ki parameters normalised by the ST yield
    * @param Kbari The Kbari parameters normalised by the ST yield
    * @param settings The settings file
    */
   BinnedDTYieldPrediction(const std::string &Tag,
-			  const KiCombiner *Ki,
 			  const Settings &settings);
   /**
    * Function that returns the predicted bin yield
@@ -30,7 +27,9 @@ class BinnedDTYieldPrediction {
   virtual std::vector<double> GetPredictedBinYields(
     double BF_KKpipi,
     const std::vector<double> &ci,
-    const std::vector<double> &si) const = 0;
+    const std::vector<double> &si,
+    const std::vector<double> &Ki,
+    const std::vector<double> &Kbari) const = 0;
  protected:
   /**
    * The single tag yield of this tag, after efficiency correction
@@ -52,10 +51,6 @@ class BinnedDTYieldPrediction {
    * The efficiency matrix with K0pipi reweighting
    */
   const TMatrixT<double> m_EfficiencyMatrix_K0pipi;
-  /**
-   * The Ki parameters normalised by the ST yield
-   */
-  const KiCombiner* const m_Ki;
  private:
   /**
    * Helper function to get the single tag yield

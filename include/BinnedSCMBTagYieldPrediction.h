@@ -12,7 +12,6 @@
 #include"Settings.h"
 #include"BinnedDTYieldPrediction.h"
 #include"cisiK0pipi.h"
-#include"FlavourTags/KiCombiner.h"
 
 class BinnedSCMBTagYieldPrediction: public BinnedDTYieldPrediction {
  public:
@@ -20,11 +19,9 @@ class BinnedSCMBTagYieldPrediction: public BinnedDTYieldPrediction {
    * Constructor that stores the single tag yield, efficiency matrix, signal mode Ki
    * It also loads Ki, ci and si for the tag mode
    * @param Tag The tag mode
-   * @param Ki The Ki parameters normalised by the ST yield
    * @param settings The settings file
    */
   BinnedSCMBTagYieldPrediction(const std::string &Tag,
-			       const KiCombiner *Ki,
 			       const Settings &settings);
   /**
    * Default virtual destructor
@@ -36,7 +33,9 @@ class BinnedSCMBTagYieldPrediction: public BinnedDTYieldPrediction {
   virtual std::vector<double> GetPredictedBinYields(
     double BF_KKpipi,
     const std::vector<double> &ci,
-    const std::vector<double> &si) const override;
+    const std::vector<double> &si,
+    const std::vector<double> &Ki,
+    const std::vector<double> &Kbari) const override;
  private:
   /**
    * The tag mode

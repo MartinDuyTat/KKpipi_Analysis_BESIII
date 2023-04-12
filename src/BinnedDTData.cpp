@@ -17,17 +17,17 @@
 #include"RawBinnedDTYields.h"
 #include"RawBinnedCPTagYields.h"
 #include"RawBinnedSCMBTagYields.h"
+#include"RawBinnedFlavourTagYields.h"
 #include"BinnedDTYieldPrediction.h"
 #include"BinnedCPTagYieldPrediction.h"
 #include"BinnedSCMBTagYieldPrediction.h"
-#include"FlavourTags/KiCombiner.h"
+#include"BinnedFlavourTagYieldPrediction.h"
 
 BinnedDTData::BinnedDTData(const std::string &Tag,
-			   const KiCombiner *Ki,
 			   const Settings &settings):
   m_TagMode(Tag),
   m_DTYields(GetRawDTYields(Tag, settings)),
-  m_DTPredictions(GetDTPredictions(Tag, Ki, settings)),
+  m_DTPredictions(GetDTPredictions(Tag, settings)),
   m_SymmetricUncertainties(settings.getB("SymmetricUncertainties")),
   m_EnvelopeConstant(1.0),
   m_DisplayToyEfficiency(settings.getB("DisplayToyEfficiency")) {
@@ -35,18 +35,22 @@ BinnedDTData::BinnedDTData(const std::string &Tag,
 
 double BinnedDTData::GetLogLikelihood(double BF_KKpipi,
 				      const std::vector<double> &ci,
-				      const std::vector<double> &si) const {
+				      const std::vector<double> &si,
+				      const std::vector<double> &Ki,
+				      const std::vector<double> &Kbari) const {
   const auto MeasuredYields = m_DTYields->GetDoubleTagYields();
-  return GetLogLikelihood(BF_KKpipi, ci, si, MeasuredYields);
+  return GetLogLikelihood(BF_KKpipi, ci, si, Ki, Kbari, MeasuredYields);
 }
 
 double BinnedDTData::GetLogLikelihood(
   double BF_KKpipi,
   const std::vector<double> &ci,
   const std::vector<double> &si,
+  const std::vector<double> &Ki,
+  const std::vector<double> &Kbari,
   const std::vector<AsymmetricUncertainty> &MeasuredYields) const {
   const auto PredictedYields =
-    m_DTPredictions->GetPredictedBinYields(BF_KKpipi, ci, si);
+    m_DTPredictions->GetPredictedBinYields(BF_KKpipi, ci, si, Ki, Kbari);
   const auto CorrelationMatrix = m_DTYields->GetCorrelationMatrix();
   const auto InvCovMatrix = CreateInvCovarianceMatrix(PredictedYields,
 						      MeasuredYields,
@@ -67,10 +71,12 @@ double BinnedDTData::GetLogLikelihood(
 void BinnedDTData::GenerateToyYields(double BF_KKpipi,
 				     const std::vector<double> &ci,
 				     const std::vector<double> &si,
+				     const std::vector<double> &Ki,
+				     const std::vector<double> &Kbari,
 				     std::size_t StatsMultiplier) const {
   m_ToyDTYields.clear();
   const auto PredictedYields =
-    m_DTPredictions->GetPredictedBinYields(BF_KKpipi, ci, si);
+    m_DTPredictions->GetPredictedBinYields(BF_KKpipi, ci, si, Ki, Kbari);
   std::size_t TotalGeneratedToys = 0;
   std::size_t Counter = 0;
   while(Counter < StatsMultiplier) {
@@ -78,6 +84,7 @@ void BinnedDTData::GenerateToyYields(double BF_KKpipi,
 						    m_SymmetricUncertainties);
     const double LogLikelihood = GetLogLikelihood(BF_KKpipi,
 						  ci, si,
+						  Ki, Kbari,
 						  ToyYields.first);
     const double Probability = TMath::Exp(-0.5*LogLikelihood);
     const double GenProbability = ToyYields.second;
@@ -110,19 +117,23 @@ void BinnedDTData::GenerateToyYields(double BF_KKpipi,
 
 double BinnedDTData::GetToyLogLikelihood(double BF_KKpipi,
 					 const std::vector<double> &ci,
-					 const std::vector<double> &si) const {
+					 const std::vector<double> &si,
+					 const std::vector<double> &Ki,
+					 const std::vector<double> &Kbari) const {
   double LL = 0.0;
   for(const auto &ToyDTYield : m_ToyDTYields) {
-    LL += GetLogLikelihood(BF_KKpipi, ci, si, ToyDTYield);
+    LL += GetLogLikelihood(BF_KKpipi, ci, si, Ki, Kbari, ToyDTYield);
   }
   return LL;
 }
 
 void BinnedDTData::PrintComparison(double BF_KKpipi,
 				   const std::vector<double> &ci,
-				   const std::vector<double> &si) const {
+				   const std::vector<double> &si,
+				   const std::vector<double> &Ki,
+				   const std::vector<double> &Kbari) const {
   const auto PredictedYields =
-    m_DTPredictions->GetPredictedBinYields(BF_KKpipi, ci, si);
+    m_DTPredictions->GetPredictedBinYields(BF_KKpipi, ci, si, Ki, Kbari);
   const auto MeasuredYields = m_DTYields->GetDoubleTagYields();
   std::cout << "Fitted and predicted yield comparison for " << m_TagMode << ":\n";
   std::cout << std::left << std::setw(10) << "Fitted";
@@ -185,10 +196,14 @@ std::unique_ptr<const RawBinnedDTYields> BinnedDTData::GetRawDTYields(
   const Settings &settings) const {
   const auto iter_CP = std::find(m_CPTags.begin(), m_CPTags.end(), Tag);
   const auto iter_SCMB = std::find(m_SCMBTags.begin(), m_SCMBTags.end(), Tag);
+  const auto iter_Flavour = std::find(m_FlavourTags.begin(),
+				      m_FlavourTags.end(), Tag);
   if(iter_CP != m_CPTags.end()) {
     return std::make_unique<const RawBinnedCPTagYields>(Tag, settings);
   } else if(iter_SCMB != m_SCMBTags.end()) {
     return std::make_unique<const RawBinnedSCMBTagYields>(Tag, settings);
+  } else if(iter_Flavour != m_FlavourTags.end()) {
+    return std::make_unique<const RawBinnedFlavourTagYields>(Tag, settings);
   } else {
     throw std::runtime_error(Tag + " is not a valid tag mode");
   }
@@ -196,18 +211,17 @@ std::unique_ptr<const RawBinnedDTYields> BinnedDTData::GetRawDTYields(
 
 std::unique_ptr<const BinnedDTYieldPrediction> BinnedDTData::GetDTPredictions(
   const std::string &Tag,
-  const KiCombiner *Ki,
   const Settings &settings) const {
   const auto iter_CP = std::find(m_CPTags.begin(), m_CPTags.end(), Tag);
   const auto iter_SCMB = std::find(m_SCMBTags.begin(), m_SCMBTags.end(), Tag);
+  const auto iter_Flavour = std::find(m_FlavourTags.begin(),
+				      m_FlavourTags.end(), Tag);
   if(iter_CP != m_CPTags.end()) {
-    return std::make_unique<const BinnedCPTagYieldPrediction>(Tag,
-							      Ki,
-							      settings);
+    return std::make_unique<const BinnedCPTagYieldPrediction>(Tag, settings);
   } else if(iter_SCMB != m_SCMBTags.end()) {
-    return std::make_unique<const BinnedSCMBTagYieldPrediction>(Tag,
-								Ki,
-								settings);
+    return std::make_unique<const BinnedSCMBTagYieldPrediction>(Tag, settings);
+  } else if(iter_Flavour != m_FlavourTags.end()) {
+    return std::make_unique<const BinnedFlavourTagYieldPrediction>(Tag, settings);
   } else {
     throw std::runtime_error(Tag + " is not a valid tag mode");
   }

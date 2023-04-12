@@ -7,17 +7,14 @@
 #include"BinnedDTYieldPrediction.h"
 #include"Settings.h"
 #include"Utilities.h"
-#include"FlavourTags/KiCombiner.h"
 
 BinnedDTYieldPrediction::BinnedDTYieldPrediction(const std::string &Tag,
-						 const KiCombiner *Ki,
 						 const Settings &settings):
   m_SingleTagYield(GetSTYield(Tag, settings)),
   m_EfficiencyMatrix(GetEffMatrix(Tag, settings, "EffMatrix")),
   m_EfficiencyMatrix_CPEven(GetEffMatrix(Tag, settings, "EffMatrix_CPEven")),
   m_EfficiencyMatrix_CPOdd(GetEffMatrix(Tag, settings, "EffMatrix_CPOdd")),
-  m_EfficiencyMatrix_K0pipi(GetEffMatrix(Tag, settings, "EffMatrix_K0pipi")),
-  m_Ki(Ki) {
+  m_EfficiencyMatrix_K0pipi(GetEffMatrix(Tag, settings, "EffMatrix_K0pipi")) {
 }
 
 double BinnedDTYieldPrediction::GetSTYield(const std::string &Tag,
