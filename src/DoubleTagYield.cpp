@@ -30,9 +30,9 @@
 #include"Utilities.h"
 #include"Bes3plotstyle.h"
 
-DoubleTagYield::DoubleTagYield(const Settings &settings, TTree *Tree): m_SignalMBC(m_Settings.get("FitVariable").c_str(), "",
-										   m_Settings.getD("FitRange_low"),
-										   m_Settings.getD("FitRange_high")),
+DoubleTagYield::DoubleTagYield(const Settings &settings, TTree *Tree): m_SignalMBC(settings.get("FitVariable").c_str(), "",
+										   settings.getD("FitRange_low"),
+										   settings.getD("FitRange_high")),
 								       m_Settings(settings), m_Tree(Tree) {
   for(int i = 0; i < 2; i++) {
     RooMsgService::instance().getStream(i).removeTopic(RooFit::Eval);

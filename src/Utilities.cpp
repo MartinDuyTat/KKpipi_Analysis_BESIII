@@ -6,6 +6,7 @@
 #include<regex>
 #include<stdexcept>
 #include<sstream>
+#include<unordered_map>
 #include"TChain.h"
 #include"TTree.h"
 #include"TEntryList.h"
@@ -206,12 +207,14 @@ namespace Utilities {
     Tree->Draw(">> elist", Cut.c_str(), "entrylist");
     TEntryList *elist = (TEntryList*)gDirectory->Get("elist");
     Tree->SetEntryList(elist);
-    double Total = 0.0, Weight;
+    double Total = 0.0, Weight = 1.0;
     Tree->SetBranchStatus("*", 0);
-    Tree->SetBranchStatus(WeightName.c_str(), 1);
-    Tree->SetBranchAddress(WeightName.c_str(), &Weight);
+    if(!WeightName.empty()) {
+      Tree->SetBranchStatus(WeightName.c_str(), 1);
+      Tree->SetBranchAddress(WeightName.c_str(), &Weight);
+    }
     for(Long64_t i = 0; i < elist->GetN(); i++) {
-     Tree->GetEntry(Tree->GetEntryNumber(i));
+      Tree->GetEntry(Tree->GetEntryNumber(i));
       Total += Weight;
     }
     Tree->SetEntryList(nullptr);
@@ -252,6 +255,8 @@ namespace Utilities {
       return "K_{S}^{0}#pi^{+}#pi^{#minus}";
     } else if(Tag == "KLpipi") {
       return "K_{L}^{0}#pi^{+}#pi^{#minus}";
+    } else if(Tag == "KeNu") {
+      return "K^{#minus}e^{+}#nu_{e}";
     } else {
       throw std::invalid_argument("Unknown tag: " + Tag);
     }
@@ -286,6 +291,27 @@ namespace Utilities {
       Cuts = Cuts && NewCut;
     }
     File.close();
+  }
+
+  std::unordered_map<std::string, double> ParseFile(const std::string &Filename) {
+    std::unordered_map<std::string, double> ParsedSettings;
+    std::ifstream File(Filename);
+    std::string Line;
+    while(std::getline(File, Line)) {
+      auto Comment = Line.find('*');
+      if(Comment != std::string::npos) {
+	Line = Line.substr(0, Comment);
+      }
+      if(Line.empty()) {
+	continue;
+      }
+      std::string Name;
+      double Value;
+      std::stringstream ss(Line);
+      ss >> Name >> Value;
+      ParsedSettings.insert({Name, Value});
+    }
+    return ParsedSettings;
   }
 
 }

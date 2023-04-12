@@ -14,6 +14,7 @@
 #include"TMath.h"
 #include"TFile.h"
 #include"Settings.h"
+#include"Utilities.h"
 #include"FlavourTags/FlavourTagYield.h"
 
 FlavourTagYield::FlavourTagYield(const std::string &TagMode,
@@ -93,6 +94,9 @@ FlavourTagYield::LoadFlavourYields(const std::string &TagMode,
 				   const Settings &settings) const {
   const std::size_t NumberBins = settings["BinningScheme"].getI("NumberBins");
   std::vector<double> FlavourYields(2*NumberBins);
+  const std::string DTYieldFilename =
+    Utilities::ReplaceString(settings.get("DT_Yield"), "TAG", TagMode);
+  const auto ParsedDTYields = Utilities::ParseFile(DTYieldFilename);
   std::size_t Index = 0;
   // Loop over all bins
   for(int Bin = -NumberBins; Bin <= static_cast<int>(NumberBins); Bin++) {
@@ -104,7 +108,7 @@ FlavourTagYield::LoadFlavourYields(const std::string &TagMode,
     const std::string BinName = std::to_string(TMath::Abs(Bin));
     const std::string VarName = NamePrefix + BinName + "_TagBin0_SignalYield";
     // Get the raw yields
-    FlavourYields[Index] = settings[TagMode + "_DT_Yield"].getD(VarName);
+    FlavourYields[Index] = ParsedDTYields.at(VarName);
     Index++;
   }
   // Load the covariance matrix
@@ -135,7 +139,8 @@ FlavourTagYield::LoadFlavourYields(const std::string &TagMode,
 TMatrixT<double>
 FlavourTagYield::LoadCovarianceMatrix(const std::string &TagMode,
 				      const Settings &settings) const {
-  const std::string Filename = settings.get(TagMode + "_RawYields_CorrelationMatrix");
+  const std::string Filename =
+    Utilities::ReplaceString(settings.get("RawYields_CorrMatrix"), "TAG", TagMode);
   TFile File(Filename.c_str(), "READ");
   TMatrixTSym<double> *CovMatrix = nullptr;
   File.GetObject("CovarianceMatrix", CovMatrix);
@@ -145,7 +150,8 @@ FlavourTagYield::LoadCovarianceMatrix(const std::string &TagMode,
 TMatrixT<double>
 FlavourTagYield::LoadEfficiencyMatrix(const std::string &TagMode,
 				      const Settings &settings) const {
-  std::string Filename = settings.get(TagMode + "_EfficiencyMatrix");
+  const std::string Filename = 
+    Utilities::ReplaceString(settings.get("EffMatrix"), "TAG", TagMode);
   TFile File(Filename.c_str(), "READ");
   TMatrixT<double> *EffMatrix = nullptr;
   File.GetObject("EffMatrix", EffMatrix);
@@ -184,10 +190,12 @@ FlavourTagYield::LoadCharmCovMatrix(const std::string &TagMode,
 std::pair<double, double>
 FlavourTagYield::GetSTYield(const std::string &Tag,
 			    const Settings &settings) const {
-  const std::string SettingsName(Tag + "_ST_Yield");
+  const std::string STYieldFilename =
+    Utilities::ReplaceString(settings.get("ST_Yield"), "TAG", Tag);
+  const auto ParsedSTYields = Utilities::ParseFile(STYieldFilename);
   const std::string YieldName(Tag + "_SingleTag_Yield");
-  const double Yield = settings[SettingsName].getD(YieldName);
-  const double Yield_err = settings[SettingsName].getD(YieldName + "_err");
+  const double Yield = ParsedSTYields.at(YieldName);
+  const double Yield_err = ParsedSTYields.at(YieldName + "_err");
   return std::make_pair(Yield, Yield_err);
 }
 

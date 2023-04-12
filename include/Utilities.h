@@ -7,6 +7,7 @@
 #include<vector>
 #include<memory>
 #include<numeric>
+#include<unordered_map>
 #include"TChain.h"
 #include"TTree.h"
 #include"TCut.h"
@@ -126,6 +127,10 @@ namespace Utilities {
    * @param Filename The file containing the extra cuts
    */
   void AddExtraCuts(TCut &Cuts, const std::string &Filename);
+  /**
+   * Parse settings from a single file and read them into a map
+   */
+  std::unordered_map<std::string, double> ParseFile(const std::string &Filename);
   
 }
 

@@ -1,7 +1,0 @@
-SignalTagIsSameDMother == 1
-abs(PiTrueID) == 13
-abs(SignalTagKTrueID) == 321
-SignalTagHighEPi0PhotonTrueID == 22
-SignalTagLowEPi0PhotonTrueID == 22
-SignalTagHighEPi0PhotonMotherTrueID == 111
-SignalTagLowEPi0PhotonMotherTrueID == 111

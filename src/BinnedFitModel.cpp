@@ -69,7 +69,7 @@ void BinnedFitModel::InitializeYields() {
 	std::cout << "Adding peaking background with background-to-signal ratio: " << BackgroundSignalRatio->getVal() << "\n";
 	// Quantum correlation is accounted for with a correction factor
 	RooRealVar *QCFactor = nullptr;
-	if(m_Settings["QuantumCorrelationFactor"].contains(Name + "_QuantumCorrelationFactor")) {
+	if(m_Settings.contains_subsettings("QuantumCorrelationFactor")) {
 	  QCFactor = Utilities::load_param(m_Settings["QuantumCorrelationFactor"], Name + "_QuantumCorrelationFactor");
 	  std::cout << "Quantum correlation correction factor: " << QCFactor->getVal() << "\n";
 	} else {

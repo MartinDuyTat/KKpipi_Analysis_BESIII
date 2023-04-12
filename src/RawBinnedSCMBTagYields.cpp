@@ -7,6 +7,7 @@
 #include"RawBinnedSCMBTagYields.h"
 #include"RawBinnedDTYields.h"
 #include"Settings.h"
+#include"Utilities.h"
 
 RawBinnedSCMBTagYields::RawBinnedSCMBTagYields(const std::string &Tag,
 					   const Settings &settings):
@@ -18,7 +19,9 @@ std::vector<AsymmetricUncertainty>
 RawBinnedSCMBTagYields::ParseYields(const std::string &Tag,
 				  const Settings &settings) const {
   std::vector<AsymmetricUncertainty> Yields;
-  const std::string SettingsName(Tag + "_DT_Yield");
+  const std::string DTYieldFilename =
+    Utilities::ReplaceString(settings.get("DT_Yield"), "TAG", Tag);
+  const auto ParsedDTYields = Utilities::ParseFile(DTYieldFilename);
   const std::string YieldNamePrefix("DoubleTag_SCMB_KKpipi_vs_" + Tag);
   std::size_t NumberBins = settings["BinningScheme"].getI("NumberBins");
   for(std::size_t TagBin = 1; TagBin <= 8; TagBin++) {
@@ -35,10 +38,10 @@ RawBinnedSCMBTagYields::ParseYields(const std::string &Tag,
 				  "_TagBin" + 
 				  std::to_string(TagBin) +
 				  "_SignalYield");
-      const double Yield = settings[SettingsName].getD(YieldName);
-      const double PlusError = settings[SettingsName].getD(YieldName + "_high_err");
-      const double MinusError = -settings[SettingsName].getD(YieldName + "_low_err");
-      const double SymmetricError = settings[SettingsName].getD(YieldName + "_err");
+      const double Yield = ParsedDTYields.at(YieldName);
+      const double PlusError = ParsedDTYields.at(YieldName + "_high_err");
+      const double MinusError = -ParsedDTYields.at(YieldName + "_low_err");
+      const double SymmetricError = ParsedDTYields.at(YieldName + "_err");
       Yields.push_back({Yield, PlusError, MinusError, SymmetricError});
     }
   }
@@ -48,7 +51,8 @@ RawBinnedSCMBTagYields::ParseYields(const std::string &Tag,
 TMatrixTSym<double>
 RawBinnedSCMBTagYields::LoadCorrelationMatrix(const std::string &Tag,
 					    const Settings &settings) const {
-  const std::string Filename = settings.get(Tag + "_RawYields_CorrelationMatrix");
+  const std::string Filename =
+    Utilities::ReplaceString(settings.get("RawYields_CorrMatrix"), "TAG", Tag);
   TFile File(Filename.c_str());
   TMatrixTSym<double> *CorrelationMatrix = nullptr;
   File.GetObject("CorrelationMatrix", CorrelationMatrix);

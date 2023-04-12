@@ -50,7 +50,6 @@ int main(int argc, char *argv[]) {
   }
   int EventsOutsidePhaseSpace = 0;
   int EventsOutsidePhaseSpace_true = 0;
-  int NumberExceptions = 0;
   std::cout << "Ready to bin phase space\n";
   int Entries = InputChain.GetEntries();
   for(int i = 0; i < Entries; i++) {
@@ -73,12 +72,7 @@ int main(int argc, char *argv[]) {
     }
     if(settings.getB("Bin_truth")) {
       std::pair<int, int> Bin;
-      try {
-	Bin = PhaseSpace->TrueBin();
-      } catch(const std::logic_error &e) {
-	NumberExceptions++;
-	  continue;
-      }
+      Bin = PhaseSpace->TrueBin();
       SignalBin_true = Bin.first;
       TagBin_true = Bin.second;
       if(Bin.first == 0) {
@@ -101,7 +95,6 @@ int main(int argc, char *argv[]) {
   if(settings.getB("Bin_truth")) {
     std::cout << "True events outside of phase space: " << EventsOutsidePhaseSpace_true << "\n";
   }
-  std::cout << "Number of events caught and elegantly skipped: " << NumberExceptions << "\n";
   OutputTree->Write();
   OutputFile.Close();
   std::cout << "Binning complete\n";

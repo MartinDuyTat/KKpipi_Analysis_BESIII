@@ -6,39 +6,39 @@
 #include"TMatrixT.h"
 #include"BinnedDTYieldPrediction.h"
 #include"Settings.h"
+#include"Utilities.h"
 #include"FlavourTags/KiCombiner.h"
 
 BinnedDTYieldPrediction::BinnedDTYieldPrediction(const std::string &Tag,
 						 const KiCombiner *Ki,
 						 const Settings &settings):
   m_SingleTagYield(GetSTYield(Tag, settings)),
-  m_EfficiencyMatrix(GetEffMatrix(Tag, settings, 0)),
-  m_EfficiencyMatrix_CPEven(GetEffMatrix(Tag, settings, +1)),
-  m_EfficiencyMatrix_CPOdd(GetEffMatrix(Tag, settings, -1)),
+  m_EfficiencyMatrix(GetEffMatrix(Tag, settings, "EffMatrix")),
+  m_EfficiencyMatrix_CPEven(GetEffMatrix(Tag, settings, "EffMatrix_CPEven")),
+  m_EfficiencyMatrix_CPOdd(GetEffMatrix(Tag, settings, "EffMatrix_CPOdd")),
+  m_EfficiencyMatrix_K0pipi(GetEffMatrix(Tag, settings, "EffMatrix_K0pipi")),
   m_Ki(Ki) {
 }
 
 double BinnedDTYieldPrediction::GetSTYield(const std::string &Tag,
 					   const Settings &settings) const {
-  const std::string SettingsName(Tag + "_ST_Yield");
+  const std::string STYieldFilename =
+    Utilities::ReplaceString(settings.get("ST_Yield"), "TAG", Tag);
+  const auto ParsedSTYields = Utilities::ParseFile(STYieldFilename);
   const std::string YieldName(Tag + "_SingleTag_Yield");
   const std::string EffName = Tag + "_SingleTagEfficiency";
   const double Efficiency = settings["ST_Efficiency"].getD(EffName);
-  return settings[SettingsName].getD(YieldName)/Efficiency;
+  return ParsedSTYields.at(YieldName)/Efficiency;
 }
 
 TMatrixT<double> BinnedDTYieldPrediction::GetEffMatrix(
-  const std::string &Tag, const Settings &settings, int CPEvenOdd) const {
-  TFile EffMatrixFile(settings.get(Tag + "_EfficiencyMatrix").c_str(), "READ");
+  const std::string &Tag,
+  const Settings &settings,
+  const std::string &EffMatrixName) const {
+  const std::string Filename =
+    Utilities::ReplaceString(settings.get("EffMatrix"), "TAG", Tag);
+  TFile EffMatrixFile(Filename.c_str(), "READ");
   TMatrixT<double> *EffMatrix = nullptr;
-  std::string EffMatrixName;
-  if(CPEvenOdd == 0) {
-    EffMatrixName = "EffMatrix";
-  } else if(CPEvenOdd > 0) {
-    EffMatrixName = "EffMatrix_CPEven";
-  } else {
-    EffMatrixName = "EffMatrix_CPOdd";
-  }
   EffMatrixFile.GetObject(EffMatrixName.c_str(), EffMatrix);
   /*if(Smearing && m_Settings.get("Systematics") == "Efficiency") {
     TMatrixT<double> *EffMatrix_err = nullptr;

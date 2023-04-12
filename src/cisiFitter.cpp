@@ -125,12 +125,12 @@ void cisiFitter::RunToys() const {
       double ErrorLow, ErrorHigh;
       Minimiser.GetMinosError(i + 1, ErrorLow, ErrorHigh, 0);
       ci_pull[i] = ci_value[i] - Generator_ci[i];
-      //ci_pull[i] /= ci_pull[i] <= 0.0 ? ErrorHigh : -ErrorLow;
-      ci_pull[i] /= ci_err[i];
-      si_pull[i] = si_value[i] - Generator_si[i];
+      ci_pull[i] /= ci_pull[i] <= 0.0 ? ErrorHigh : -ErrorLow;
+      //ci_pull[i] /= ci_err[i];
       Minimiser.GetMinosError(i + 1 + m_NumberBins, ErrorLow, ErrorHigh, 0);
-      //si_pull[i] /= si_pull[i] <= 0.0 ? ErrorHigh : -ErrorLow;
-      si_pull[i] /= si_err[i];
+      si_pull[i] = si_value[i] - Generator_si[i];
+      si_pull[i] /= si_pull[i] <= 0.0 ? ErrorHigh : -ErrorLow;
+      //si_pull[i] /= si_err[i];
     }
     Tree.Fill();
   }

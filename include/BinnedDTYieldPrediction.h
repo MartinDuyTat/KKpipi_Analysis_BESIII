@@ -37,7 +37,7 @@ class BinnedDTYieldPrediction {
    */
   const double m_SingleTagYield;
   /**
-   * The efficiency matrix with default model (or K0pipi reweighting)
+   * The efficiency matrix with default model
    */
   const TMatrixT<double> m_EfficiencyMatrix;
   /**
@@ -48,6 +48,10 @@ class BinnedDTYieldPrediction {
    * The efficiency matrix for the CP odd KKpipi model
    */
   const TMatrixT<double> m_EfficiencyMatrix_CPOdd;
+  /**
+   * The efficiency matrix with K0pipi reweighting
+   */
+  const TMatrixT<double> m_EfficiencyMatrix_K0pipi;
   /**
    * The Ki parameters normalised by the ST yield
    */
@@ -63,11 +67,11 @@ class BinnedDTYieldPrediction {
    * Helper function to get efficiency matrix
    * @param Tag The tag mode
    * @param settings The settings file
-   * @param CPEvenOdd +1 for CP even model reweighted, -1 for CP odd model reweighted
+   * @param EffMatrixName Name of efficiency matrix
    */
   TMatrixT<double> GetEffMatrix(const std::string &Tag,
 				const Settings &settings,
-				int CPEvenOdd) const;
+				const std::string &EffMatrixName) const;
 };
 
 #endif
