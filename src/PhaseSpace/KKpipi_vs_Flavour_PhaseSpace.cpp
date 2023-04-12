@@ -13,7 +13,7 @@ KKpipi_vs_Flavour_PhaseSpace::KKpipi_vs_Flavour_PhaseSpace(TTree *Tree, int Bins
 }
 
 std::pair<int, int> KKpipi_vs_Flavour_PhaseSpace::Bin() const {
-  return std::make_pair(KKpipiBin()*m_KaonCharge, 0);
+  return std::make_pair(-KKpipiBin()*m_KaonCharge, 0);
 }
 
 std::pair<int, int> KKpipi_vs_Flavour_PhaseSpace::TrueBin() {
@@ -33,5 +33,5 @@ std::pair<int, int> KKpipi_vs_Flavour_PhaseSpace::TrueBin() {
   } else {
     throw std::logic_error("Cannot find true tag kaon ID");
   }
-  return std::make_pair(TrueKKpipiBin()*KaonCharge, 0);
+  return std::make_pair(-TrueKKpipiBin()*KaonCharge, 0);
 }
