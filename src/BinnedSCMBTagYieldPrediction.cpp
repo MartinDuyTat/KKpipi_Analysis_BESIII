@@ -19,7 +19,8 @@ std::vector<double> BinnedSCMBTagYieldPrediction::GetPredictedBinYields(
   const std::vector<double> &ci,
   const std::vector<double> &si,
   const std::vector<double> &Ki,
-  const std::vector<double> &Kbari) const {
+  const std::vector<double> &Kbari,
+  double) const {
   const std::size_t Size = ci.size();
   const std::size_t TotalSize = 8*2*Size;
   TMatrixT<double> BinYields(TotalSize, 1);

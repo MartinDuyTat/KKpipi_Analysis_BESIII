@@ -13,7 +13,8 @@ BinnedFlavourTagYieldPrediction::BinnedFlavourTagYieldPrediction(const std::stri
   m_R(LoadCharmParameter(Tag, settings, "R")),
   m_DeltaD(LoadCharmParameter(Tag, settings, "deltaD")),
   m_SinDeltaD(TMath::Sin(TMath::Pi()*m_DeltaD.first)/180.0),
-  m_CosDeltaD(TMath::Cos(TMath::Pi()*m_DeltaD.first)/180.0) {
+  m_CosDeltaD(TMath::Cos(TMath::Pi()*m_DeltaD.first)/180.0),
+  m_FitDeltaKpi(Tag == "Kpi" && settings.getB("FitDeltaKpi")) {
 }
 
 std::vector<double> BinnedFlavourTagYieldPrediction::GetPredictedBinYields(
@@ -21,9 +22,18 @@ std::vector<double> BinnedFlavourTagYieldPrediction::GetPredictedBinYields(
   const std::vector<double> &ci,
   const std::vector<double> &si,
   const std::vector<double> &Ki,
-  const std::vector<double> &Kbari) const {
+  const std::vector<double> &Kbari,
+  double DeltaKpi) const {
   const std::size_t Size = ci.size();
   TMatrixT<double> BinYields(2*Size, 1);
+  double CosDeltaD, SinDeltaD;
+  if(m_FitDeltaKpi) {
+    CosDeltaD = TMath::Cos(TMath::Pi()*DeltaKpi/180.0);
+    SinDeltaD = TMath::Sin(TMath::Pi()*DeltaKpi/180.0);
+  } else {
+    CosDeltaD = m_CosDeltaD;
+    SinDeltaD = m_SinDeltaD;
+  }
   for(int Bin = -Size; Bin <= static_cast<int>(Size); Bin++) {
     if(Bin == 0) {
       continue;
@@ -37,18 +47,11 @@ std::vector<double> BinnedFlavourTagYieldPrediction::GetPredictedBinYields(
       K = Kbari[i];
       Kbar = Ki[i];
     }
-    // This is the correct convention, remember to swap to this with the new data!
-    /*const double D0Yield = Kbar;
+    const double D0Yield = Kbar;
     const double Dbar0Yield = K*m_rD.first*m_rD.first;
     const double SqrtKK = TMath::Sqrt(K*Kbar);
     const int Sign = Bin > 0 ? +1 : -1;
-    const double PhaseTerm = ci[i]*m_CosDeltaD + Sign*si[i]*m_SinDeltaD;*/
-    // This is the wrong convention
-    const double D0Yield = K;
-    const double Dbar0Yield = Kbar*m_rD.first*m_rD.first;
-    const double SqrtKK = TMath::Sqrt(K*Kbar);
-    const int Sign = Bin > 0 ? +1 : -1;
-    const double PhaseTerm = ci[i]*m_CosDeltaD - Sign*si[i]*m_SinDeltaD;
+    const double PhaseTerm = ci[i]*CosDeltaD + Sign*si[i]*SinDeltaD;
     const double Interference = -2.0*m_rD.first*m_R.first*SqrtKK*PhaseTerm;
     const double UnnormalisedYield = D0Yield + Dbar0Yield + Interference;
     const double NormalisedYield = m_SingleTagYield*UnnormalisedYield*BF_KKpipi;

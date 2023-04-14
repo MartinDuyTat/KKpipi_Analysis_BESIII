@@ -33,7 +33,8 @@ class BinnedCPTagYieldPrediction: public BinnedDTYieldPrediction {
     const std::vector<double> &ci,
     const std::vector<double> &si,
     const std::vector<double> &Ki,
-    const std::vector<double> &Kbari) const override;
+    const std::vector<double> &Kbari,
+    double DeltaKpi) const override;
  private:
   /**
    * The CP-even fraction of the tag

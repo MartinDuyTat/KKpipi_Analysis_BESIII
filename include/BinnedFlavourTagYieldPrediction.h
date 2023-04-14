@@ -33,7 +33,8 @@ class BinnedFlavourTagYieldPrediction: public BinnedDTYieldPrediction {
     const std::vector<double> &ci,
     const std::vector<double> &si,
     const std::vector<double> &Ki,
-    const std::vector<double> &Kbari) const override;
+    const std::vector<double> &Kbari,
+    double DeltaKpi) const override;
  private:
   /**
    * The ratio of DCS to CF amplitude, with uncertainty
@@ -55,6 +56,10 @@ class BinnedFlavourTagYieldPrediction: public BinnedDTYieldPrediction {
    * Cosine of the charm strong phase difference between DCS and CF amplitudes
    */
   const double m_CosDeltaD;
+  /**
+   * Flag that is true for the Kpi tag and if we float the strong phase
+   */
+  const bool m_FitDeltaKpi;
   /**
    * Helper function that loads the charm parameters
    */

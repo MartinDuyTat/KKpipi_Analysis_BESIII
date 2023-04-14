@@ -28,12 +28,14 @@ class cisiLikelihood {
    * @param si The sine of the strong phases
    * @param Ki The fractional D0 bin yield
    * @param Kbari The fractional Dbar0 bin yield
+   * @param DeltaKpi The D0->Kpi strong phase
    */
   double CalculateLogLikelihood(double BF_KKpipi,
 				const std::vector<double> &ci,
 				const std::vector<double> &si,
 				const std::vector<double> &Ki,
-				const std::vector<double> &kbari) const;
+				const std::vector<double> &Kbari,
+				double DeltaKpi) const;
   /**
    * Generate toy datasets for all tags
    * @param BF_KKpipi The KKpipi branching fraction
@@ -41,6 +43,7 @@ class cisiLikelihood {
    * @param si The sine of the strong phases used to generate toy
    * @param Ki The fractional D0 bin yield
    * @param Kbari The fractional Dbar0 bin yield
+   * @param DeltaKpi The D0->Kpi strong phase
    * @param StatsMultiplier The statistics multiplier
    */
   void GenerateToy(double BF_KKpipi,
@@ -48,6 +51,7 @@ class cisiLikelihood {
 		   const std::vector<double> &si,
 		   const std::vector<double> &Ki,
 		   const std::vector<double> &Kbari,
+		   double DeltaKpi,
 		   std::size_t StatsMultiplier = 1) const;
   /**
    * Function that returns the likelihood based on ci and si values with toy data
@@ -56,12 +60,14 @@ class cisiLikelihood {
    * @param si The sine of the strong phases
    * @param Ki The fractional D0 bin yield
    * @param Kbari The fractional Dbar0 bin yield
+   * @param DeltaKpi The D0->Kpi strong phase
    */
   double CalculateToyLogLikelihood(double BF_KKpipi,
 				   const std::vector<double> &ci,
 				   const std::vector<double> &si,
 				   const std::vector<double> &Ki,
-				   const std::vector<double> &Kbar) const;
+				   const std::vector<double> &Kbar,
+				   double DeltaKpi) const;
   /**
    * Function that prints a comparison between predicted and measured yields
    * @param BF_KKpipi The KKpipi branching fraction
@@ -69,12 +75,14 @@ class cisiLikelihood {
    * @param si The si parameters
    * @param Ki The fractional D0 bin yield
    * @param Kbari The fractional Dbar0 bin yield
+   * @param DeltaKpi The D0->Kpi strong phasep
    */
   void PrintComparison(double BF_KKpipi,
 		       const std::vector<double> &ci,
 		       const std::vector<double> &si,
 		       const std::vector<double> &Ki,
-		       const std::vector<double> &Kbari) const;
+		       const std::vector<double> &Kbari,
+		       double DeltaKpi) const;
  private:
   /**
    * Vector of all the tags

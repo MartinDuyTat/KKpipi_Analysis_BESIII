@@ -29,7 +29,8 @@ class BinnedDTYieldPrediction {
     const std::vector<double> &ci,
     const std::vector<double> &si,
     const std::vector<double> &Ki,
-    const std::vector<double> &Kbari) const = 0;
+    const std::vector<double> &Kbari,
+    double DeltaKpi) const = 0;
  protected:
   /**
    * The single tag yield of this tag, after efficiency correction

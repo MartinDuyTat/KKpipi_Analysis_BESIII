@@ -45,6 +45,10 @@ class cisiFitter {
    */
   Settings m_Settings;
   /**
+   * Flag that is true if we also fit \f$\delta_{K\pi}\f$
+   */
+  bool m_FitDeltaKpi;
+  /**
    * Helper function to set up minimiser
    */
   void SetupMinimiser(ROOT::Minuit2::Minuit2Minimizer &Minimiser) const;

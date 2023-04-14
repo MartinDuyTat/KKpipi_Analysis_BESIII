@@ -19,9 +19,10 @@ double cisiLikelihood::CalculateLogLikelihood(double BF_KKpipi,
 					      const std::vector<double> &ci,
 					      const std::vector<double> &si,
 					      const std::vector<double> &Ki,
-					      const std::vector<double> &Kbari) const {
+					      const std::vector<double> &Kbari,
+					      double DeltaKpi) const {
   auto LikelihoodAdder = [&] (double a, const BinnedDTData &b) {
-    return a + b.GetLogLikelihood(BF_KKpipi, ci, si, Ki, Kbari);
+    return a + b.GetLogLikelihood(BF_KKpipi, ci, si, Ki, Kbari, DeltaKpi);
   };
   return std::accumulate(m_TagData.begin(), m_TagData.end(), 0.0, LikelihoodAdder);
 }
@@ -31,9 +32,14 @@ void cisiLikelihood::GenerateToy(double BF_KKpipi,
 				 const std::vector<double> &si,
 				 const std::vector<double> &Ki,
 				 const std::vector<double> &Kbari,
+				 double DeltaKpi,
 				 std::size_t StatsMultiplier) const {
   for(const auto &TagData : m_TagData) {
-    TagData.GenerateToyYields(BF_KKpipi, ci, si, Ki, Kbari,StatsMultiplier);
+    TagData.GenerateToyYields(BF_KKpipi,
+			      ci, si,
+			      Ki, Kbari,
+			      DeltaKpi,
+			      StatsMultiplier);
   }
 }
 
@@ -42,9 +48,10 @@ double cisiLikelihood::CalculateToyLogLikelihood(
   const std::vector<double> &ci,
   const std::vector<double> &si,
   const std::vector<double> &Ki,
-  const std::vector<double> &Kbari) const {
+  const std::vector<double> &Kbari,
+  double DeltaKpi) const {
   auto LikelihoodAdder = [&] (double a, const BinnedDTData &b) {
-    return a + b.GetToyLogLikelihood(BF_KKpipi, ci, si, Ki, Kbari);
+    return a + b.GetToyLogLikelihood(BF_KKpipi, ci, si, Ki, Kbari, DeltaKpi);
   };
   return std::accumulate(m_TagData.begin(), m_TagData.end(), 0.0, LikelihoodAdder);
 }
@@ -66,11 +73,12 @@ void cisiLikelihood::PrintComparison(double BF_KKpipi,
 				     const std::vector<double> &ci,
 				     const std::vector<double> &si,
 				     const std::vector<double> &Ki,
-				     const std::vector<double> &Kbari) const {
+				     const std::vector<double> &Kbari,
+				     double DeltaKpi) const {
   std::for_each(m_TagData.begin(),
 		m_TagData.end(),
 		[&] (const auto &a) {
-		  a.PrintComparison(BF_KKpipi, ci, si, Ki, Kbari); });
+		  a.PrintComparison(BF_KKpipi, ci, si, Ki, Kbari, DeltaKpi); });
 }			     
 
 /*std::pair<std::vector<double>, std::vector<double>>

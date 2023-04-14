@@ -59,12 +59,12 @@ void DoubleTagYield::DoFit() {
   }
   auto Result = Model->fitTo(*DataSet, Save(), NumCPU(nCPUs), Strategy(2), Minos(true), Minimizer("Minuit2","migrad"));
   // Any bins with less than 0.5 combinatorial background events are set constant
-  for(const auto &Category : Categories) {
+  /*for(const auto &Category : Categories) {
     RooRealVar *CombinatorialYield = static_cast<RooRealVar*>(FitModel.m_Yields[Category + "_CombinatorialYield"]);
     if(CombinatorialYield->getVal() < 0.5) {
       CombinatorialYield->setConstant();
     }
-  }
+  }*/
   // Perform a second fit if necessary
   if(m_Settings.contains("SecondFit") && m_Settings.getB("SecondFit")) {
     Result = Model->fitTo(*DataSet, Save(), NumCPU(nCPUs), Strategy(2), Minos(true), Minimizer("Minuit2","migrad"));

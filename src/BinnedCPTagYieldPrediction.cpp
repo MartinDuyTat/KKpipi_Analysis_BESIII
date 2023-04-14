@@ -17,7 +17,8 @@ std::vector<double> BinnedCPTagYieldPrediction::GetPredictedBinYields(
   const std::vector<double> &ci,
   const std::vector<double> &,
   const std::vector<double> &Ki,
-  const std::vector<double> &Kbari) const {
+  const std::vector<double> &Kbari,
+  double) const {
   const std::size_t Size = ci.size();
   TMatrixT<double> BinYields(Size, 1);
   for(std::size_t Bin = 1; Bin <= Size; Bin++) {
