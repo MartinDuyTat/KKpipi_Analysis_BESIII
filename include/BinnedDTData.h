@@ -40,23 +40,20 @@ class BinnedDTData {
    * @param BF_KKpipi The KKpipi branching fraction
    * @param ci The ci parameters
    * @param si The si parameters
-   * @param Ki The Ki parameters
-   * @param Kbari The Kbari parameters
+   * @param Ri The Ri parameters
    * @param DeltaKpi The D0->Kpi strong phase
    */
   double GetLogLikelihood(double BF_KKpipi,
 			  const std::vector<double> &ci,
 			  const std::vector<double> &si,
-			  const std::vector<double> &Ki,
-			  const std::vector<double> &Kbari,
+			  const std::vector<double> &Ri,
 			  double DeltaKpi) const;
   /**
    * Calculate the log likelihood from this tag, using alternative yields
    * @param BF_KKpipi The KKpipi branching fraction
    * @param ci The ci parameters
    * @param si The si parameters
-   * @param Ki The Ki parameters
-   * @param Kbari The Kbari parameters
+   * @param Ri The Ri parameters
    * @param DeltaKpi The D0->Kpi strong phase
    * @param MeasuredYields The measured yields
    */
@@ -64,8 +61,7 @@ class BinnedDTData {
     double BF_KKpipi,
     const std::vector<double> &ci,
     const std::vector<double> &si,
-    const std::vector<double> &Ki,
-    const std::vector<double> &Kbari,
+    const std::vector<double> &Ri,
     double DeltaKpi,
     const std::vector<AsymmetricUncertainty> &MeasuredYields) const;
   /**
@@ -73,16 +69,14 @@ class BinnedDTData {
    * @param BF_KKpipi The KKpipi branching fraction
    * @param ci The ci parameters used in toy generation
    * @param si The si parameters used in toy generation
-   * @param Ki The Ki parameters used in toy generation
-   * @param Kbari The Kbari parameters used in toy generation
+   * @param Ri The Ri parameters used in toy generation
    * @param DeltaKpi The D0->Kpi strong phase used in toy generation
    * @param StatsMultiplier The statistics multiplier
    */
   void GenerateToyYields(double BF_KKpipi,
 			 const std::vector<double> &ci,
 			 const std::vector<double> &si,
-			 const std::vector<double> &Ki,
-			 const std::vector<double> &Kbari,
+			 const std::vector<double> &Ri,
 			 double DeltaKpi,
 			 std::size_t StatsMultiplier) const;
   /**
@@ -90,30 +84,26 @@ class BinnedDTData {
    * @param BF_KKpipi The KKpipi branching fraction
    * @param ci The ci parameters
    * @param si The si parameters
-   * @param Ki The Ki parameters
-   * @param Kbari The Kbari parameters
+   * @param Ri The Ri parameters
    * @param DeltaKpi The D0->Kpi strong phase
    */
   double GetToyLogLikelihood(double BF_KKpipi,
 			     const std::vector<double> &ci,
 			     const std::vector<double> &si,
-			     const std::vector<double> &Ki,
-			     const std::vector<double> &Kbari,
+			     const std::vector<double> &Ri,
 			     double DeltaKpi) const;
   /**
    * Function that prints a comparison between predicted and measured yields
    * @param BF_KKpipi The KKpipi branching fraction
    * @param ci The ci parameters
    * @param si The si parameters
-   * @param Ki The Ki parameters
-   * @param Kbari The Kbari parameters
+   * @param Ri The Ri parameters
    * @param DeltaKpi The D0->Kpi strong phase
    */
   void PrintComparison(double BF_KKpipi,
 		       const std::vector<double> &ci,
 		       const std::vector<double> &si,
-		       const std::vector<double> &Ki,
-		       const std::vector<double> &Kbari,
+		       const std::vector<double> &Ri,
 		       double DeltaKpi) const;
  private:
   /**

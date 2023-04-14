@@ -6,6 +6,8 @@
 #include<iterator>
 #include<numeric>
 #include<utility>
+#include<iostream>
+#include<iomanip>
 #include"Settings.h"
 #include"cisiLikelihood.h"
 #include"BinnedDTData.h"
@@ -18,11 +20,10 @@ cisiLikelihood::cisiLikelihood(const Settings &settings):
 double cisiLikelihood::CalculateLogLikelihood(double BF_KKpipi,
 					      const std::vector<double> &ci,
 					      const std::vector<double> &si,
-					      const std::vector<double> &Ki,
-					      const std::vector<double> &Kbari,
+					      const std::vector<double> &Ri,
 					      double DeltaKpi) const {
   auto LikelihoodAdder = [&] (double a, const BinnedDTData &b) {
-    return a + b.GetLogLikelihood(BF_KKpipi, ci, si, Ki, Kbari, DeltaKpi);
+    return a + b.GetLogLikelihood(BF_KKpipi, ci, si, Ri, DeltaKpi);
   };
   return std::accumulate(m_TagData.begin(), m_TagData.end(), 0.0, LikelihoodAdder);
 }
@@ -30,14 +31,12 @@ double cisiLikelihood::CalculateLogLikelihood(double BF_KKpipi,
 void cisiLikelihood::GenerateToy(double BF_KKpipi,
 				 const std::vector<double> &ci,
 				 const std::vector<double> &si,
-				 const std::vector<double> &Ki,
-				 const std::vector<double> &Kbari,
+				 const std::vector<double> &Ri,
 				 double DeltaKpi,
 				 std::size_t StatsMultiplier) const {
   for(const auto &TagData : m_TagData) {
     TagData.GenerateToyYields(BF_KKpipi,
-			      ci, si,
-			      Ki, Kbari,
+			      ci, si, Ri,
 			      DeltaKpi,
 			      StatsMultiplier);
   }
@@ -47,11 +46,10 @@ double cisiLikelihood::CalculateToyLogLikelihood(
   double BF_KKpipi,
   const std::vector<double> &ci,
   const std::vector<double> &si,
-  const std::vector<double> &Ki,
-  const std::vector<double> &Kbari,
+  const std::vector<double> &Ri,
   double DeltaKpi) const {
   auto LikelihoodAdder = [&] (double a, const BinnedDTData &b) {
-    return a + b.GetToyLogLikelihood(BF_KKpipi, ci, si, Ki, Kbari, DeltaKpi);
+    return a + b.GetToyLogLikelihood(BF_KKpipi, ci, si, Ri, DeltaKpi);
   };
   return std::accumulate(m_TagData.begin(), m_TagData.end(), 0.0, LikelihoodAdder);
 }
@@ -72,14 +70,29 @@ std::vector<BinnedDTData> cisiLikelihood::SetupTags(const Settings &settings) co
 void cisiLikelihood::PrintComparison(double BF_KKpipi,
 				     const std::vector<double> &ci,
 				     const std::vector<double> &si,
-				     const std::vector<double> &Ki,
-				     const std::vector<double> &Kbari,
+				     const std::vector<double> &Ri,
 				     double DeltaKpi) const {
   std::for_each(m_TagData.begin(),
 		m_TagData.end(),
 		[&] (const auto &a) {
-		  a.PrintComparison(BF_KKpipi, ci, si, Ki, Kbari, DeltaKpi); });
+		  a.PrintComparison(BF_KKpipi, ci, si, Ri, DeltaKpi); });
+  PrintFinalKi(Ri);
 }			     
+
+void cisiLikelihood::PrintFinalKi(const std::vector<double> &Ri) const {
+  std::vector<double> Ki, Kbari;
+  Utilities::ConvertRiToKi(Ri, Ki, Kbari);
+  std::cout << std::left << std::setw(10) << "Ki";
+  std::cout << std::left << std::setw(10) << "Kbari" << "\n";
+  for(std::size_t i = 0; i < Ki.size(); i++) {
+    std::cout << std::left << std::setw(10);
+    std::cout << std::fixed << std::setprecision(2);
+    std::cout << Ki[i];
+    std::cout << std::left << std::setw(10);
+    std::cout << std::fixed << std::setprecision(2);
+    std::cout << Kbari[i] << "\n";
+  }
+}
 
 /*std::pair<std::vector<double>, std::vector<double>>
 cisiLikelihood::GetKi(const Settings &settings) const {

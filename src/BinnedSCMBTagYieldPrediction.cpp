@@ -5,6 +5,7 @@
 #include"TMath.h"
 #include"BinnedSCMBTagYieldPrediction.h"
 #include"Settings.h"
+#include"Utilities.h"
 
 BinnedSCMBTagYieldPrediction::BinnedSCMBTagYieldPrediction(
   const std::string &Tag,
@@ -18,9 +19,10 @@ std::vector<double> BinnedSCMBTagYieldPrediction::GetPredictedBinYields(
   double BF_KKpipi,
   const std::vector<double> &ci,
   const std::vector<double> &si,
-  const std::vector<double> &Ki,
-  const std::vector<double> &Kbari,
+  const std::vector<double> &Ri,
   double) const {
+  std::vector<double> Ki, Kbari;
+  Utilities::ConvertRiToKi(Ri, Ki, Kbari);
   const std::size_t Size = ci.size();
   const std::size_t TotalSize = 8*2*Size;
   TMatrixT<double> BinYields(TotalSize, 1);

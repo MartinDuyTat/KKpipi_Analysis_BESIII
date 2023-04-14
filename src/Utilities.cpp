@@ -314,4 +314,53 @@ namespace Utilities {
     return ParsedSettings;
   }
 
+  void ConvertRiToKi(const std::vector<double> &Ri,
+		     std::vector<double> &Ki,
+		     std::vector<double> &Kbari) {
+    if(Ri.size()%2 == 1) {
+      throw std::runtime_error("Ri length must be even");
+    }
+    if(Ri.back() != 1.0) {
+      throw std::runtime_error("Last element of Ri must be 1.0");
+    }
+    const std::size_t N = Ri.size()/2;
+    Ki.resize(N);
+    Kbari.resize(N);
+    std::vector<double> MergedKi;
+    for(std::size_t i = 0; i < 2*N; i++) {
+      MergedKi.push_back(Ri[i]);
+      for(std::size_t j = 0; j < i; j++) {
+	MergedKi[i] *= 1 - Ri[j];
+      }
+    }
+    for(std::size_t i = 0; i < N; i++) {
+      Ki[i] = MergedKi[i + N];
+      Kbari[i] = MergedKi[N - i - 1];
+    }
+  }
+
+  std::vector<double> ConvertKiToRi(const std::vector<double> &Ki,
+				    const std::vector<double> &Kbari) {
+    std::vector<double> MergedKi;
+    const std::size_t N = Ki.size();
+    for(std::size_t i = 0; i < N; i++) {
+      MergedKi.push_back(Kbari[N - i - 1]);
+    }
+    for(std::size_t i = 0; i < N; i++) {
+      MergedKi.push_back(Ki[i]);
+    }
+    std::vector<double> Ri;
+    for(std::size_t i = 0; i < 2*N; i++) {
+      MergedKi.push_back(MergedKi[i]);
+      if(i != 0) {
+	double Sum = 0;
+	for(std::size_t j = i; j < 2*N; j++) {
+	  Sum += MergedKi[j];
+	}
+	MergedKi[i] /= Sum;
+      }
+    }
+    return Ri;
+  }
+
 }

@@ -131,7 +131,20 @@ namespace Utilities {
    * Parse settings from a single file and read them into a map
    */
   std::unordered_map<std::string, double> ParseFile(const std::string &Filename);
-  
+  /**
+   * Helper function to convert Ri to Ki
+   * @return Return by reference
+   */
+  void ConvertRiToKi(const std::vector<double> &Ri,
+			    std::vector<double> &Ki,
+			    std::vector<double> &Kbari);
+  /**
+   * Helper function to convert Ri to Ki
+   * @return Return by reference
+   */
+  std::vector<double> ConvertKiToRi(const std::vector<double> &Ki,
+				    const std::vector<double> &Kbari);
+
 }
 
 #endif

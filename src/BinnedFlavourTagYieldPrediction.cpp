@@ -5,6 +5,7 @@
 #include"TMath.h"
 #include"BinnedFlavourTagYieldPrediction.h"
 #include"Settings.h"
+#include"Utilities.h"
 
 BinnedFlavourTagYieldPrediction::BinnedFlavourTagYieldPrediction(const std::string &Tag,
 						       const Settings &settings):
@@ -21,9 +22,10 @@ std::vector<double> BinnedFlavourTagYieldPrediction::GetPredictedBinYields(
   double BF_KKpipi,
   const std::vector<double> &ci,
   const std::vector<double> &si,
-  const std::vector<double> &Ki,
-  const std::vector<double> &Kbari,
+  const std::vector<double> &Ri,
   double DeltaKpi) const {
+  std::vector<double> Ki, Kbari;
+  Utilities::ConvertRiToKi(Ri, Ki, Kbari);
   const std::size_t Size = ci.size();
   TMatrixT<double> BinYields(2*Size, 1);
   double CosDeltaD, SinDeltaD;

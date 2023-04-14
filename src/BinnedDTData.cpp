@@ -36,23 +36,21 @@ BinnedDTData::BinnedDTData(const std::string &Tag,
 double BinnedDTData::GetLogLikelihood(double BF_KKpipi,
 				      const std::vector<double> &ci,
 				      const std::vector<double> &si,
-				      const std::vector<double> &Ki,
-				      const std::vector<double> &Kbari,
+				      const std::vector<double> &Ri,
 				      double DeltaKpi) const {
   const auto MeasuredYields = m_DTYields->GetDoubleTagYields();
-  return GetLogLikelihood(BF_KKpipi, ci, si, Ki, Kbari, DeltaKpi, MeasuredYields);
+  return GetLogLikelihood(BF_KKpipi, ci, si, Ri, DeltaKpi, MeasuredYields);
 }
 
 double BinnedDTData::GetLogLikelihood(
   double BF_KKpipi,
   const std::vector<double> &ci,
   const std::vector<double> &si,
-  const std::vector<double> &Ki,
-  const std::vector<double> &Kbari,
+  const std::vector<double> &Ri,
   double DeltaKpi,
   const std::vector<AsymmetricUncertainty> &MeasuredYields) const {
   const auto PredictedYields =
-    m_DTPredictions->GetPredictedBinYields(BF_KKpipi, ci, si, Ki, Kbari, DeltaKpi);
+    m_DTPredictions->GetPredictedBinYields(BF_KKpipi, ci, si, Ri, DeltaKpi);
   const auto CorrelationMatrix = m_DTYields->GetCorrelationMatrix();
   const auto InvCovMatrix = CreateInvCovarianceMatrix(PredictedYields,
 						      MeasuredYields,
@@ -73,21 +71,19 @@ double BinnedDTData::GetLogLikelihood(
 void BinnedDTData::GenerateToyYields(double BF_KKpipi,
 				     const std::vector<double> &ci,
 				     const std::vector<double> &si,
-				     const std::vector<double> &Ki,
-				     const std::vector<double> &Kbari,
+				     const std::vector<double> &Ri,
 				     double DeltaKpi,
 				     std::size_t StatsMultiplier) const {
   m_ToyDTYields.clear();
   const auto PredictedYields =
-    m_DTPredictions->GetPredictedBinYields(BF_KKpipi, ci, si, Ki, Kbari, DeltaKpi);
+    m_DTPredictions->GetPredictedBinYields(BF_KKpipi, ci, si, Ri, DeltaKpi);
   std::size_t TotalGeneratedToys = 0;
   std::size_t Counter = 0;
   while(Counter < StatsMultiplier) {
     auto ToyYields = m_DTYields->GetToyYields(PredictedYields,
 						    m_SymmetricUncertainties);
     const double LogLikelihood = GetLogLikelihood(BF_KKpipi,
-						  ci, si,
-						  Ki, Kbari,
+						  ci, si, Ri,
 						  DeltaKpi,
 						  ToyYields.first);
     const double Probability = TMath::Exp(-0.5*LogLikelihood);
@@ -122,12 +118,11 @@ void BinnedDTData::GenerateToyYields(double BF_KKpipi,
 double BinnedDTData::GetToyLogLikelihood(double BF_KKpipi,
 					 const std::vector<double> &ci,
 					 const std::vector<double> &si,
-					 const std::vector<double> &Ki,
-					 const std::vector<double> &Kbari,
+					 const std::vector<double> &Ri,
 					 double DeltaKpi) const {
   double LL = 0.0;
   for(const auto &ToyDTYield : m_ToyDTYields) {
-    LL += GetLogLikelihood(BF_KKpipi, ci, si, Ki, Kbari, DeltaKpi, ToyDTYield);
+    LL += GetLogLikelihood(BF_KKpipi, ci, si, Ri, DeltaKpi, ToyDTYield);
   }
   return LL;
 }
@@ -135,11 +130,10 @@ double BinnedDTData::GetToyLogLikelihood(double BF_KKpipi,
 void BinnedDTData::PrintComparison(double BF_KKpipi,
 				   const std::vector<double> &ci,
 				   const std::vector<double> &si,
-				   const std::vector<double> &Ki,
-				   const std::vector<double> &Kbari,
+				   const std::vector<double> &Ri,
 				   double DeltaKpi) const {
   const auto PredictedYields =
-    m_DTPredictions->GetPredictedBinYields(BF_KKpipi, ci, si, Ki, Kbari, DeltaKpi);
+    m_DTPredictions->GetPredictedBinYields(BF_KKpipi, ci, si, Ri, DeltaKpi);
   const auto MeasuredYields = m_DTYields->GetDoubleTagYields();
   std::cout << "Fitted and predicted yield comparison for " << m_TagMode << ":\n";
   std::cout << std::left << std::setw(10) << "Fitted";

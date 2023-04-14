@@ -28,8 +28,7 @@ class BinnedDTYieldPrediction {
     double BF_KKpipi,
     const std::vector<double> &ci,
     const std::vector<double> &si,
-    const std::vector<double> &Ki,
-    const std::vector<double> &Kbari,
+    const std::vector<double> &Ri,
     double DeltaKpi) const = 0;
  protected:
   /**

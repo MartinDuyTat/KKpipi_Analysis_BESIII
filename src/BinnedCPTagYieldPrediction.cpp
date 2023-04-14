@@ -5,6 +5,7 @@
 #include"TMath.h"
 #include"BinnedCPTagYieldPrediction.h"
 #include"Settings.h"
+#include"Utilities.h"
 
 BinnedCPTagYieldPrediction::BinnedCPTagYieldPrediction(const std::string &Tag,
 						       const Settings &settings):
@@ -16,9 +17,10 @@ std::vector<double> BinnedCPTagYieldPrediction::GetPredictedBinYields(
   double BF_KKpipi,
   const std::vector<double> &ci,
   const std::vector<double> &,
-  const std::vector<double> &Ki,
-  const std::vector<double> &Kbari,
+  const std::vector<double> &Ri,
   double) const {
+  std::vector<double> Ki, Kbari;
+  Utilities::ConvertRiToKi(Ri, Ki, Kbari);
   const std::size_t Size = ci.size();
   TMatrixT<double> BinYields(Size, 1);
   for(std::size_t Bin = 1; Bin <= Size; Bin++) {
