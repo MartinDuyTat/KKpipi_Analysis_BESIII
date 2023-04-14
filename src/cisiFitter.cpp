@@ -311,7 +311,7 @@ void cisiFitter::Plot_cisi(ROOT::Minuit2::Minuit2Minimizer &Minimiser,
   // Create and draw contours
   Minimiser.SetPrintLevel(-1);
   std::vector<TGraph> Contours;
-  std::vector<double> ErrorDefs{1.0, 4.0};
+  std::vector<double> ErrorDefs{2.30};
   for(double ErrorDef : ErrorDefs) {
     Minimiser.SetErrorDef(ErrorDef);
     for(std::size_t Bin = 1; Bin <= m_NumberBins; Bin++) {
