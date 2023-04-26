@@ -26,8 +26,15 @@ BinnedDataLoader::~BinnedDataLoader() {
 }
 
 void BinnedDataLoader::MakeDataSet() {
+  m_Tree->SetBranchStatus("*", 0);
+  m_Tree->SetBranchStatus(m_Settings.get("FitVariable").c_str(), 1);
+  if(m_Settings.get("FitVariable") == "SignalMBC") {
+    m_Tree->SetBranchStatus("TagMBC", 1);
+  }
   std::string SignalBin_Name = m_Settings.get("SignalBin_variable");
+  m_Tree->SetBranchStatus(SignalBin_Name.c_str(), 1);
   std::string TagBin_Name = m_Settings.get("TagBin_variable");
+  m_Tree->SetBranchStatus(TagBin_Name.c_str(), 1);
   RooRealVar SignalBin(SignalBin_Name.c_str(), "", -8, 8);
   RooRealVar TagBin(TagBin_Name.c_str(), "", -8, 8);
   RooArgSet Variables(*m_SignalMBC, SignalBin, TagBin);
@@ -66,6 +73,6 @@ RooDataSet* BinnedDataLoader::GetDataSet() {
   return m_DataSet;
 }
 
-Category* BinnedDataLoader::GetCategoryObject() {
-  return &m_Category;
+const Category& BinnedDataLoader::GetCategoryObject() const {
+  return m_Category;
 }

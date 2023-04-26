@@ -2,25 +2,32 @@
 
 #include<vector>
 #include<string>
-#include"TFile.h"
-#include"TMatrixTSym.h"
 #include"RawBinnedFlavourTagYields.h"
 #include"RawBinnedDTYields.h"
 #include"Settings.h"
 #include"Utilities.h"
 
 RawBinnedFlavourTagYields::RawBinnedFlavourTagYields(const std::string &Tag,
-					   const Settings &settings):
-  RawBinnedDTYields(ParseYields(Tag, settings),
+						     const Settings &settings,
+						     int ToyNumber):
+  RawBinnedDTYields(ParseYields(Tag, settings, ToyNumber),
 		    LoadCorrelationMatrix(Tag, settings)) {
 }
 
 std::vector<AsymmetricUncertainty> 
 RawBinnedFlavourTagYields::ParseYields(const std::string &Tag,
-				  const Settings &settings) const {
+				       const Settings &settings,
+				       int ToyNumber) const {
   std::vector<AsymmetricUncertainty> Yields;
-  const std::string DTYieldFilename =
-    Utilities::ReplaceString(settings.get("DT_Yield"), "TAG", Tag);
+  std::string DTYieldFilename;
+  if(ToyNumber > 0) {
+    DTYieldFilename =
+      Utilities::ReplaceString(settings.get("DT_ToyYieldDir"), "TAG", Tag);
+    DTYieldFilename += "/Toy" + std::to_string(ToyNumber) + ".txt";
+  } else {
+    DTYieldFilename =
+      Utilities::ReplaceString(settings.get("DT_Yield"), "TAG", Tag);
+  }
   const auto ParsedDTYields = Utilities::ParseFile(DTYieldFilename);
   const std::string YieldNamePrefix("DoubleTag_Flavour_KKpipi_vs_" + Tag);
   std::size_t NumberBins = settings["BinningScheme"].getI("NumberBins");
@@ -41,16 +48,4 @@ RawBinnedFlavourTagYields::ParseYields(const std::string &Tag,
     Yields.push_back({Yield, PlusError, MinusError, SymmetricError});
   }
   return Yields;
-}
-
-TMatrixTSym<double>
-RawBinnedFlavourTagYields::LoadCorrelationMatrix(const std::string &Tag,
-					    const Settings &settings) const {
-  const std::string Filename =
-    Utilities::ReplaceString(settings.get("RawYields_CorrMatrix"), "TAG", Tag);
-  TFile File(Filename.c_str());
-  TMatrixTSym<double> *CorrelationMatrix = nullptr;
-  File.GetObject("CorrelationMatrix", CorrelationMatrix);
-  File.Close();
-  return *CorrelationMatrix;
 }

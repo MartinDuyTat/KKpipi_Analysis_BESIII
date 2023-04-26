@@ -6,6 +6,7 @@
 #include<stdexcept>
 #include<iostream>
 #include<iomanip>
+#include<fstream>
 #include"Eigen/Dense"
 #include"TMatrixT.h"
 #include"TMath.h"
@@ -30,7 +31,8 @@ BinnedDTData::BinnedDTData(const std::string &Tag,
   m_DTPredictions(GetDTPredictions(Tag, settings)),
   m_SymmetricUncertainties(settings.getB("SymmetricUncertainties")),
   m_EnvelopeConstant(1.0),
-  m_DisplayToyEfficiency(settings.getB("DisplayToyEfficiency")) {
+  m_DisplayToyEfficiency(settings.getB("DisplayToyEfficiency")),
+  m_Settings(settings) {
 }
 
 double BinnedDTData::GetLogLikelihood(double BF_KKpipi,
@@ -66,6 +68,10 @@ double BinnedDTData::GetLogLikelihood(
     }
   }
   return LogLikelihood;
+}
+
+void BinnedDTData::LoadToyDataset(int ToyNumber) const {
+  m_DTYields = GetRawDTYields(m_TagMode, m_Settings, ToyNumber);
 }
 
 void BinnedDTData::GenerateToyYields(double BF_KKpipi,
@@ -193,17 +199,24 @@ Eigen::MatrixXd BinnedDTData::CreateInvCovarianceMatrix(
 
 std::unique_ptr<const RawBinnedDTYields> BinnedDTData::GetRawDTYields(
   const std::string &Tag,
-  const Settings &settings) const {
+  const Settings &settings,
+  int ToyNumber) const {
   const auto iter_CP = std::find(m_CPTags.begin(), m_CPTags.end(), Tag);
   const auto iter_SCMB = std::find(m_SCMBTags.begin(), m_SCMBTags.end(), Tag);
   const auto iter_Flavour = std::find(m_FlavourTags.begin(),
 				      m_FlavourTags.end(), Tag);
   if(iter_CP != m_CPTags.end()) {
-    return std::make_unique<const RawBinnedCPTagYields>(Tag, settings);
+    return std::make_unique<const RawBinnedCPTagYields>(Tag,
+							settings,
+							ToyNumber);
   } else if(iter_SCMB != m_SCMBTags.end()) {
-    return std::make_unique<const RawBinnedSCMBTagYields>(Tag, settings);
+    return std::make_unique<const RawBinnedSCMBTagYields>(Tag,
+							  settings,
+							  ToyNumber);
   } else if(iter_Flavour != m_FlavourTags.end()) {
-    return std::make_unique<const RawBinnedFlavourTagYields>(Tag, settings);
+    return std::make_unique<const RawBinnedFlavourTagYields>(Tag,
+							     settings,
+							     ToyNumber);
   } else {
     throw std::runtime_error(Tag + " is not a valid tag mode");
   }
@@ -258,4 +271,55 @@ BinnedDTData::GetAsymmetricUncertainties(double Yield) const {
     SigmaMinus = Yield - Solver.Root();
   }
   return std::make_pair(SigmaPlus, SigmaMinus);
+}
+
+void BinnedDTData::SavePredictedBinYields(std::ofstream &File,
+					  double BF_KKpipi,
+					  const std::vector<double> &ci,
+					  const std::vector<double> &si,
+					  const std::vector<double> &Ri,
+					  double DeltaKpi) const {
+  const auto PredictedYields =
+    m_DTPredictions->GetPredictedBinYields(BF_KKpipi, ci, si, Ri, DeltaKpi);
+  const auto iter_CP = std::find(m_CPTags.begin(), m_CPTags.end(), m_TagMode);
+  const auto iter_SCMB = std::find(m_SCMBTags.begin(), m_SCMBTags.end(), m_TagMode);
+  const auto iter_Flavour = std::find(m_FlavourTags.begin(),
+				      m_FlavourTags.end(), m_TagMode);
+  if(iter_CP != m_CPTags.end()) {
+    for(std::size_t Bin = 1; Bin <= ci.size(); Bin++) {
+      File << "DoubleTag_CP_KKpipi_vs_";
+      File << m_TagMode << "_SignalBin" << Bin << " ";
+      File << PredictedYields[Bin - 1] << "\n";
+    }
+  } else if(iter_SCMB != m_SCMBTags.end()) {
+    // Assume K0pipi for now
+    std::size_t Counter = 0;
+    for(std::size_t TagBin = 1; TagBin <= 8; TagBin++) {
+      for(int SignalBin = -ci.size();
+	  SignalBin <= static_cast<int>(ci.size());
+	  SignalBin++) {
+	if(SignalBin == 0) {
+	  continue;
+	}
+	File << "DoubleTag_SCMB_KKpipi_vs_";
+	File << m_TagMode << "_SignalBin" << (SignalBin > 0 ? "P" : "M");
+	File << TMath::Abs(SignalBin) << "_TagBin" << TagBin << " ";
+	File << PredictedYields[Counter++] << "\n";
+      }
+    }
+  } else if(iter_Flavour != m_FlavourTags.end()) {
+    std::size_t Counter = 0;
+    for(int Bin = -ci.size(); Bin <= static_cast<int>(ci.size()); Bin++) {
+      if(Bin == 0) {
+	continue;
+      }
+      File << "DoubleTag_Flavour_KKpipi_vs_";
+      File << m_TagMode << "_SignalBin" << (Bin > 0 ? "P" : "M");
+      File << TMath::Abs(Bin) << "_TagBin0 ";
+      File << PredictedYields[Counter++] << "\n";
+    }
+  } else {
+    throw std::runtime_error(m_TagMode + " is not a valid tag mode");
+  }
+  File << "\n";
 }

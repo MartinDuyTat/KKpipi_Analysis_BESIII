@@ -39,7 +39,7 @@ class Category {
     /**
      * Get the category variable
      */
-    RooCategory* GetCategoryVariable();
+    RooCategory* GetCategoryVariable() const;
     /**
      * Get the signal bin number from the unique string that describes the category
      */
@@ -83,7 +83,7 @@ class Category {
     /**
      * Category variable used in the fit
      */
-    RooCategory m_CategoryVar;
+    mutable RooCategory m_CategoryVar;
     /**
      * Helper function that checks whether or not the bins are valid and throw an appropriate exception if not
      */

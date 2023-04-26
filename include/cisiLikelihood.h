@@ -7,6 +7,7 @@
 #define CISILIKELIHOOD
 
 #include<vector>
+#include<fstream>
 #include"Settings.h"
 #include"BinnedDTData.h"
 
@@ -34,6 +35,11 @@ class cisiLikelihood {
 				const std::vector<double> &si,
 				const std::vector<double> &Ri,
 				double DeltaKpi) const;
+  /**
+   * Load toy dataset
+   * @param ToyNumber The toy dataset number
+   */
+  void LoadToyDataset(int ToyNumber) const;
   /**
    * Generate toy datasets for all tags
    * @param BF_KKpipi The KKpipi branching fraction
@@ -79,6 +85,15 @@ class cisiLikelihood {
    * Function that prints the Ki
    */
   void PrintFinalKi(const std::vector<double> &Ri) const;
+  /**
+   * Dump the predicted yields for each tag in the file
+   */
+  void SavePredictedBinYields(std::ofstream &File,
+			      double BF_KKpipi,
+			      const std::vector<double> &ci,
+			      const std::vector<double> &si,
+			      const std::vector<double> &Ri,
+			      double DeltaKpi) const;
  private:
   /**
    * Vector of all the tags

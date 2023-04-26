@@ -27,13 +27,22 @@ class DoubleTagYield {
      */
     void DoFit();
     /**
+     * Perform toy studies
+     */
+    void DoToyFits();
+    /**
+     * Perform systematics studies
+     */
+    void DoSystematicsFits();
+    /**
      * Plot projections of each bin in the fit
      */
-    void PlotProjections(BinnedDataLoader *DataLoader, BinnedFitModel *FitModel);
+    void PlotProjections();
     /**
      * Save signal yields from fit
      */
-    void SaveSignalYields(const BinnedFitModel &FitModel, RooFitResult *Result, const Category &category) const;
+    void SaveSignalYields(const std::string &Filename,
+			  RooFitResult *Result) const;
   private:
     /**
      * The fit variable
@@ -48,6 +57,14 @@ class DoubleTagYield {
      */
     TTree *m_Tree;
     /**
+     * The data to be fitted
+     */
+    BinnedDataLoader m_DataLoader;
+    /**
+     * The fit model
+     */
+    BinnedFitModel m_FitModel;
+    /**
      * Helper function to find sideband yield with correctly reconstructed signal side and incorrect tag side reconstruction
      * Only use for fully reconstructed tags
      */
@@ -57,11 +74,15 @@ class DoubleTagYield {
      * @param Data DataSet
      * @param FitModel Fit model
      */
-    void sPlotReweight(RooDataSet &Data, BinnedFitModel &FitModel);
+    void sPlotReweight(RooDataSet &Data);
     /**
      * Initial parameters before fit
      */
     RooArgSet *m_InitialParameters;
+    /**
+     * Parameters after nominal fit
+     */
+    RooArgSet *m_ParametersAfterFit;
 };
 
 #endif

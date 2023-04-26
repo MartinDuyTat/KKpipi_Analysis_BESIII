@@ -28,6 +28,12 @@ double cisiLikelihood::CalculateLogLikelihood(double BF_KKpipi,
   return std::accumulate(m_TagData.begin(), m_TagData.end(), 0.0, LikelihoodAdder);
 }
 
+void cisiLikelihood::LoadToyDataset(int ToyNumber) const {
+  for(const auto &TagData : m_TagData) {
+    TagData.LoadToyDataset(ToyNumber);
+  }
+}
+
 void cisiLikelihood::GenerateToy(double BF_KKpipi,
 				 const std::vector<double> &ci,
 				 const std::vector<double> &si,
@@ -92,6 +98,18 @@ void cisiLikelihood::PrintFinalKi(const std::vector<double> &Ri) const {
     std::cout << std::fixed << std::setprecision(2);
     std::cout << Kbari[i] << "\n";
   }
+}
+
+void cisiLikelihood::SavePredictedBinYields(std::ofstream &File,
+					    double BF_KKpipi,
+					    const std::vector<double> &ci,
+					    const std::vector<double> &si,
+					    const std::vector<double> &Ri,
+					    double DeltaKpi) const {
+  std::for_each(m_TagData.begin(),
+		m_TagData.end(),
+		[&] (const auto &a) {
+		  a.SavePredictedBinYields(File, BF_KKpipi, ci, si, Ri, DeltaKpi); });
 }
 
 /*std::pair<std::vector<double>, std::vector<double>>

@@ -31,6 +31,10 @@ class cisiFitter {
    * Run toy studies and save results to a TTree
    */
   void RunToys() const;
+  /**
+   * Save predicted yields to a file for each tag
+   */
+  void SavePredictedYields() const;
  private:
   /**
    * The ci and si likelihood

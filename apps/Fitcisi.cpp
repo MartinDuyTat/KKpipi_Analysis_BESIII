@@ -25,6 +25,10 @@ int main(int argc, char *argv[]) {
     std::cout << "Running ci and si toys...\n";
     Fitter.RunToys();
     std::cout << "Toy studies of ci and si are ready!\n";
+  } else if(RunMode == "DumpGeneratorYields") {
+    std::cout << "Dumping generator yields for toy studes...\n";
+    Fitter.SavePredictedYields();
+    std::cout << "Ready to do toys!\n";
   }
   return 0;
 }

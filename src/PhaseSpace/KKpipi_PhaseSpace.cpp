@@ -19,8 +19,8 @@ KKpipi_PhaseSpace::KKpipi_PhaseSpace(TTree *Tree,
 						         m_MomentaKalmanFit(16),
 						         m_AmplitudePhaseSpace(Bins),
                                                          m_KSKKBinning(nullptr) {
-  //m_AmplitudePhaseSpace.SetBinEdges({1.20923});
-  //m_AmplitudePhaseSpace.UseVariableBinWidths(true);
+  m_AmplitudePhaseSpace.SetBinEdges({1.20923});
+  m_AmplitudePhaseSpace.UseVariableBinWidths(true);
   if(TrueBins && !ReconstructedBins) {
     m_AmplitudePhaseSpace.SetKSVeto(0.477, 0.507);
   }

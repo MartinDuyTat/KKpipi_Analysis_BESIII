@@ -10,7 +10,9 @@
 #include<vector>
 #include<memory>
 #include<utility>
+#include<unordered_map>
 #include"TMatrixTSym.h"
+#include"Settings.h"
 
 struct AsymmetricUncertainty {
   /**
@@ -46,6 +48,7 @@ class RawBinnedDTYields {
    * Constructor that saves the yields, asymmetric uncertainties and correlation matrix
    * The constructor is protected because it shouldn't exist on its own
    * @param Yields The bin yields with asymmetric uncertainties
+   * @param CorrelationMatrix Correlation matrix of bin yields
    */
   RawBinnedDTYields(const std::vector<AsymmetricUncertainty> &Yields,
 		    const TMatrixTSym<double> &CorrelationMatrix);
@@ -67,7 +70,17 @@ class RawBinnedDTYields {
   std::pair<std::vector<AsymmetricUncertainty>, double>
   GetToyYields(const std::vector<double> &PredictedYields,
 	       bool SymmetricUncertainties) const;
+ protected:
+  /**
+   * Helper function to load the correlation matrix
+   */
+  TMatrixTSym<double> LoadCorrelationMatrix(const std::string &Tag,
+					    const Settings &settings) const;
  private:
+  /**
+   * Helper function to load the correlation matrix from its filename
+   */
+  TMatrixTSym<double> LoadCorrelationMatrix(const std::string &Filename) const;
   /**
    * The binned double tag yields with asymmetric uncertainties
    */

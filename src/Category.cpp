@@ -141,7 +141,7 @@ std::vector<std::string> Category::GetCategories() const {
   return CategoryStrings;
 }
 
-RooCategory* Category::GetCategoryVariable() {
+RooCategory* Category::GetCategoryVariable() const {
   return &m_CategoryVar;
 }
 

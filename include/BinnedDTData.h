@@ -11,6 +11,7 @@
 #include<string>
 #include<array>
 #include<string_view>
+#include<fstream>
 #include"Eigen/Dense"
 #include"TMatrixT.h"
 #include"RawBinnedDTYields.h"
@@ -65,6 +66,11 @@ class BinnedDTData {
     double DeltaKpi,
     const std::vector<AsymmetricUncertainty> &MeasuredYields) const;
   /**
+   * Load toy dataset
+   * @param ToyNumber The toy dataset number
+   */
+  void LoadToyDataset(int ToyNumber) const;
+  /**
    * Generate toy yields using hit and miss method
    * @param BF_KKpipi The KKpipi branching fraction
    * @param ci The ci parameters used in toy generation
@@ -105,6 +111,15 @@ class BinnedDTData {
 		       const std::vector<double> &si,
 		       const std::vector<double> &Ri,
 		       double DeltaKpi) const;
+  /**
+   * Dump the predicted yields of this tag in the file
+   */
+  void SavePredictedBinYields(std::ofstream &File,
+			      double BF_KKpipi,
+			      const std::vector<double> &ci,
+			      const std::vector<double> &si,
+			      const std::vector<double> &Ri,
+			      double DeltaKpi) const;
  private:
   /**
    * The name of this tag mode
@@ -113,7 +128,7 @@ class BinnedDTData {
   /**
    * The measured raw double tag yields
    */
-  std::unique_ptr<const RawBinnedDTYields> m_DTYields;
+  mutable std::unique_ptr<const RawBinnedDTYields> m_DTYields;
   /**
    * The object that predicts double tag yields
    */
@@ -135,6 +150,10 @@ class BinnedDTData {
    */
   const bool m_DisplayToyEfficiency;
   /**
+   * Reference to the settings
+   */
+  const Settings &m_Settings;
+  /**
    * Helper function that calculates the standard deviation from asymmetric uncertainties
    */
   double GetAsymmetricStd(const AsymmetricUncertainty &Yield,
@@ -150,10 +169,12 @@ class BinnedDTData {
    * Helper function that creates the correct raw yield object
    * @param Tag The tag mode
    * @param settings The settings file
+   * @param ToyNumber For toys, this labels toy number, otherwise set to -1
    */
   std::unique_ptr<const RawBinnedDTYields> GetRawDTYields(
     const std::string &Tag,
-    const Settings &settings) const;
+    const Settings &settings,
+    int ToyNumber = -1) const;
   /**
    * Helper function that creates the correct yield prediction object
    * @param Tag The tag mode

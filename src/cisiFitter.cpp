@@ -1,5 +1,6 @@
 // Martin Duy Tat 13th October 2022
 
+#include<fstream>
 #include"TFile.h"
 #include"TTree.h"
 #include"TRandom.h"
@@ -137,13 +138,16 @@ void cisiFitter::RunToys() const {
     }
     Ri.push_back(1.0);
     if(m_FitDeltaKpi) {
-      DeltaKpi = x[4*m_NumberBins + 1];
+      DeltaKpi = x[4*m_NumberBins];
     }
-    return m_cisiLikelihood.CalculateToyLogLikelihood(BF_KKpipi,
+    /*return m_cisiLikelihood.CalculateToyLogLikelihood(BF_KKpipi,
 						      ci, si, Ri,
-						      DeltaKpi);
+						      DeltaKpi);*/
+    return m_cisiLikelihood.CalculateLogLikelihood(BF_KKpipi,
+						   ci, si, Ri,
+						   DeltaKpi);
   };
-  std::size_t StatsMultiplier = m_Settings.getI("StatsMultiplier");
+  /*std::size_t StatsMultiplier = m_Settings.getI("StatsMultiplier");
   std::size_t NumberOfToysToSkip = m_Settings.getI("NumberOfToysToSkip");
   for(std::size_t i = 0; i < NumberOfToysToSkip; i++) {
     std::cout << "Skipped toy " << i << "\n";
@@ -153,16 +157,17 @@ void cisiFitter::RunToys() const {
 				  Generator_Ri,
 				  Generator_DeltaKpi,
 				  StatsMultiplier);
-  }
+  }*/
   std::size_t NumberToys = m_Settings.getI("NumberToys");
   for(std::size_t i = 0; i < NumberToys; i++) {
     std::cout << "Toy " << i << "\n";
-    cisiLikelihoodRef.GenerateToy(Generator_BF_KKpipi,
+    /*cisiLikelihoodRef.GenerateToy(Generator_BF_KKpipi,
 				  Generator_ci,
 				  Generator_si,
 				  Generator_Ri,
 				  Generator_DeltaKpi,
-				  StatsMultiplier);
+				  StatsMultiplier);*/
+    m_cisiLikelihood.LoadToyDataset(static_cast<int>(i));
     std::size_t NumberParameters = 4*m_NumberBins + 1;
     if(m_FitDeltaKpi) {
       NumberParameters++;
@@ -207,14 +212,35 @@ void cisiFitter::RunToys() const {
       //Kbari_pull[i] /= Kbari_err[i];
     }
     if(m_FitDeltaKpi) {
-      DeltaKpi_value = X[4*m_NumberBins + 1];
-      DeltaKpi_err = E[4*m_NumberBins + 1];
+      DeltaKpi_value = X[4*m_NumberBins];
+      DeltaKpi_err = E[4*m_NumberBins];
       DeltaKpi_pull = (DeltaKpi_value - Generator_DeltaKpi)/DeltaKpi_err;
     }
     Tree.Fill();
   }
+  File.cd();
   Tree.Write();
   File.Close();
+}
+
+void cisiFitter::SavePredictedYields() const {
+  const double Generator_BF_KKpipi = 0.00247;
+  const std::vector<double> Generator_ci = GetGeneratorcisi("c");
+  const std::vector<double> Generator_si = GetGeneratorcisi("s");
+  const std::vector<double> Generator_Ki = GetGeneratorcisi("K");
+  const std::vector<double> Generator_Kbari = GetGeneratorcisi("Kbar");
+  const std::vector<double> Generator_Ri =
+    Utilities::ConvertKiToRi(Generator_Ki, Generator_Kbari);
+  double Generator_DeltaKpi = m_Settings.getD("Generator_DeltaKpi");
+  const std::string Filename = m_Settings.get("PredictedYieldsFile");
+  std::ofstream File(Filename);
+  m_cisiLikelihood.SavePredictedBinYields(File,
+				       Generator_BF_KKpipi,
+				       Generator_ci,
+				       Generator_si,
+				       Generator_Ri,
+				       Generator_DeltaKpi);
+  File.close();
 }
 
 void cisiFitter::SetupMinimiser(ROOT::Minuit2::Minuit2Minimizer &Minimiser) const {
@@ -251,7 +277,7 @@ void cisiFitter::SetupMinimiser(ROOT::Minuit2::Minuit2Minimizer &Minimiser) cons
     Counter++;
   }
   if(m_FitDeltaKpi) {
-    Minimiser.SetVariable(4*m_NumberBins + 1, "DeltaKpi", 0.0, 10.0);
+    Minimiser.SetVariable(4*m_NumberBins, "DeltaKpi", 180.0, 10.0);
     Minimiser.SetVariableLimits(4*m_NumberBins, 0.0, 360.0);
   }
 }

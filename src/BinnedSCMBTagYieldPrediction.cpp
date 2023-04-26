@@ -41,12 +41,15 @@ std::vector<double> BinnedSCMBTagYieldPrediction::GetPredictedBinYields(
       const double Tagsi = m_Tag_Kicisi.Get_si(TagBin, m_TagMode);
       // D0 yield
       const double D0Yield = TagKbari*(Conj ? Kbari[j - 1] : Ki[j - 1]);
+      // Dbar0 yield
       const double Dbar0Yield = TagKi*(Conj ? Ki[j - 1] : Kbari[j - 1]);
+      // Interference term
       const double SqrtKK = TMath::Sqrt(TagKi*TagKbari
 				       *Ki[j - 1]*Kbari[j - 1]);
       const double Interference = -2.0*SqrtKK*(Tagci*ci[j - 1] +
                                                Tagsi*si[j - 1]*(Conj ? -1 : +1));
       const double Sign = m_TagMode == "KLpipi" ? -1 : +1;
+      // Combine everything
       const double UnnormalisedYield = D0Yield + Dbar0Yield + Sign*Interference;
       const double NormalisedYield = m_SingleTagYield*UnnormalisedYield*BF_KKpipi;
       BinYields(BinYields_index, 0) = NormalisedYield;

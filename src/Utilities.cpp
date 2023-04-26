@@ -179,7 +179,9 @@ namespace Utilities {
     if(GetTagType(Mode) == "Flavour") {
       return std::unique_ptr<KKpipi_PhaseSpace>{new KKpipi_vs_Flavour_PhaseSpace(Tree, NumberBins, Bin_rec, Bin_truth, KSKKBkg)};
     } else if(GetTagType(Mode) == "SCMB") {
-      bool KStoKLBackground = Mode.substr(0, 2) == "KL" && settings.get("TagMode").substr(0, 2) == "KS";
+      bool KStoKLBackground = Mode.substr(0, 2) == "KL" && 
+	                      settings.contains("TagMode") && 
+	                      settings.get("TagMode").substr(0, 2) == "KS";
       return std::unique_ptr<KKpipi_PhaseSpace>{new KKpipi_vs_K0hh_PhaseSpace(Tree, NumberBins, Bin_rec, Bin_truth, Mode, KSKKBkg, settings.contains("KKpipiPartReco") && settings.getB("KKpipiPartReco"), KStoKLBackground)};
     } else if(GetTagType(Mode) == "CP") {
       return std::unique_ptr<KKpipi_PhaseSpace>{new KKpipi_vs_CP_PhaseSpace(Tree, NumberBins, Bin_rec, Bin_truth, KSKKBkg)};
@@ -351,13 +353,13 @@ namespace Utilities {
     }
     std::vector<double> Ri;
     for(std::size_t i = 0; i < 2*N; i++) {
-      MergedKi.push_back(MergedKi[i]);
+      Ri.push_back(MergedKi[i]);
       if(i != 0) {
 	double Sum = 0;
 	for(std::size_t j = i; j < 2*N; j++) {
 	  Sum += MergedKi[j];
 	}
-	MergedKi[i] /= Sum;
+	Ri[i] /= Sum;
       }
     }
     return Ri;

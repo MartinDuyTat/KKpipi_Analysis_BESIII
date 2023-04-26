@@ -6,8 +6,12 @@
 #include<utility>
 #include"TMatrixTSym.h"
 #include"TRandom.h"
+#include"TFile.h"
+#include"TMatrixTSym.h"
 #include"TMath.h"
 #include"RawBinnedDTYields.h"
+#include"Settings.h"
+#include"Utilities.h"
 
 RawBinnedDTYields::RawBinnedDTYields(const std::vector<AsymmetricUncertainty> &Yields,
 				     const TMatrixTSym<double> &CorrelationMatrix):
@@ -95,4 +99,21 @@ std::pair<double, double> RawBinnedDTYields::GenerateYield(
     }
     return std::make_pair(GeneratedYield, GeneratedProbability);
   }
+}
+
+TMatrixTSym<double>
+RawBinnedDTYields::LoadCorrelationMatrix(const std::string &Tag,
+					    const Settings &settings) const {
+  const std::string Filename =
+    Utilities::ReplaceString(settings.get("RawYields_CorrMatrix"), "TAG", Tag);
+  return LoadCorrelationMatrix(Filename);
+}
+
+TMatrixTSym<double>
+RawBinnedDTYields::LoadCorrelationMatrix(const std::string &Filename) const {
+  TFile File(Filename.c_str());
+  TMatrixTSym<double> *CorrelationMatrix = nullptr;
+  File.GetObject("CorrelationMatrix", CorrelationMatrix);
+  File.Close();
+  return *CorrelationMatrix;
 }

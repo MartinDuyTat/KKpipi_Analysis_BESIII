@@ -38,9 +38,9 @@ class BinnedFitModel {
      */
     RooSimultaneous* GetPDF();
     /**
-     * Get the fraction of events inside the signal region
+     * Reset the signal yields to generator values
      */
-    double GetFractionInSignalRegion() const;
+    void SetGeneratorYields();
     /**
      * DoubleTagYield is a friend so that it can access the yield variables
      */

@@ -32,7 +32,7 @@ class BinnedDataLoader {
     /**
      * Get the category object
      */
-    Category* GetCategoryObject();
+    const Category& GetCategoryObject() const;
   private:
     /**
      * Create the RooDataSet with the correct category variable

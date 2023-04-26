@@ -18,21 +18,22 @@ class RawBinnedCPTagYields: public RawBinnedDTYields {
    * Constructor that parses the fitted double tag yields
    * @param Tag The name of the tag
    * @param settings The settings file
+   * @param ToyNumber For toys, this number labels which toy, otherwise set to -1
    */
-  RawBinnedCPTagYields(const std::string &Tag, const Settings &settings);
+  RawBinnedCPTagYields(const std::string &Tag,
+		       const Settings &settings,
+		       int ToyNumber = -1);
  private:
   /**
    * Helper function that parses the binned double tag yields from a file
    * @param Tag The tag mode
    * @param settings The settings file
+   * @param ToyNumber For toys, this number labels which toy, otherwise set to -1
    */
   std::vector<AsymmetricUncertainty>
-  ParseYields(const std::string &Tag, const Settings &settings) const;
-  /**
-   * Helper function to load the correlation matrix
-   */
-  TMatrixTSym<double> LoadCorrelationMatrix(const std::string &Tag,
-					    const Settings &settings) const;
+  ParseYields(const std::string &Tag,
+	      const Settings &settings,
+	      int ToyNumber) const;
 };
 
 #endif
