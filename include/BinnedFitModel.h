@@ -107,6 +107,10 @@ class BinnedFitModel {
      */
     std::map<std::string, RooRealVar*> m_Parameters;
     /**
+     * The signal yields that MINOS will run over
+     */
+    RooArgSet m_SignalYields;
+    /**
      * Smear the peaking backgrounds to estimate the systematic uncertainties
      */
     void SmearPeakingBackgrounds();

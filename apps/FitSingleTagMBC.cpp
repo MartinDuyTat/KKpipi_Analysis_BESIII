@@ -9,6 +9,7 @@
 #include"TFile.h"
 #include"TChain.h"
 #include"TTree.h"
+#include"TROOT.h"
 #include"SingleTagYield.h"
 #include"Utilities.h"
 #include"Settings.h"
@@ -32,6 +33,7 @@ int main(int argc, char *argv[]) {
   std::cout << "Trees ready\n";
   std::cout << "Setting up fit model...\n";
   TTree *ClonedMCTree = nullptr;
+  gROOT->cd();
   if(settings.getI("Events_in_MC") < 0 || settings.getI("Events_in_MC") > MCTree->GetEntries()) {
     ClonedMCTree = MCTree;
   } else {

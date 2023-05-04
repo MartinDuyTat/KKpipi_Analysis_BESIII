@@ -5,6 +5,7 @@
 #include"TTree.h"
 #include"TRandom.h"
 #include"TFile.h"
+#include"TROOT.h"
 #include"RooRealVar.h"
 #include"RooGaussian.h"
 #include"RooKeysPdf.h"
@@ -72,6 +73,7 @@ void BinnedFitModel::InitializeYields() {
       SignalName,
       Unique::create<RooRealVar*>(SignalName.c_str(), "",
 				  10.0, 0.0, 1000.0)});
+    m_SignalYields.add(*m_Yields.at(SignalName));
     for(int i = 0; i < PeakingBackgrounds; i++) {
       std::string Name = Mode + "_PeakingBackground";
       Name += std::to_string(i) + "_" + CategoryString;
@@ -146,6 +148,7 @@ void BinnedFitModel::InitializeSignalShape() {
   SignalMCChain.SetBranchStatus("*", 0);
   SignalMCChain.SetBranchStatus(m_Settings.get("FitVariable").c_str(), 1);
   TTree *ClonedMCChain = nullptr;
+  gROOT->cd();
   if(m_Settings.getI("Events_in_MC") < 0 ||
      m_Settings.getI("Events_in_MC") > SignalMCChain.GetEntries()) {
     ClonedMCChain = SignalMCChain.CloneTree();

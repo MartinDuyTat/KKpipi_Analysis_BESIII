@@ -62,12 +62,12 @@ void DoubleTagYield::DoFit() {
     nCPUs = 4;
   }
   auto Result = Model->fitTo(*DataSet, Save(), NumCPU(nCPUs),
-			     Strategy(2), Minos(true),
+			     Strategy(2), Minos(m_FitModel.m_SignalYields),
 			     Minimizer("Minuit2","migrad"));
   // Perform a second fit if necessary
   if(m_Settings.contains("SecondFit") && m_Settings.getB("SecondFit")) {
     Result = Model->fitTo(*DataSet, Save(), NumCPU(nCPUs),
-			  Strategy(2), Minos(true),
+			  Strategy(2), Minos(m_FitModel.m_SignalYields),
 			  Minimizer("Minuit2","migrad"));
   }
   Result->Print("V");
