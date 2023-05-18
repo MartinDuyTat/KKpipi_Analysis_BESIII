@@ -20,7 +20,7 @@ class BinnedFlavourTagYieldPrediction: public BinnedDTYieldPrediction {
    * @param settings The settings file
    */
   BinnedFlavourTagYieldPrediction(const std::string &Tag,
-			     const Settings &settings);
+				  const Settings &settings);
   /**
    * Default virtual destructor
    */
@@ -29,11 +29,7 @@ class BinnedFlavourTagYieldPrediction: public BinnedDTYieldPrediction {
    * Function that returns the predicted bin yield
    */
   virtual std::vector<double> GetPredictedBinYields(
-    double BF_KKpipi,
-    const std::vector<double> &ci,
-    const std::vector<double> &si,
-    const std::vector<double> &Ri,
-    double DeltaKpi) const override;
+    const cisiFitterParameters &Parameters) const override;
  private:
   /**
    * The ratio of DCS to CF amplitude, with uncertainty

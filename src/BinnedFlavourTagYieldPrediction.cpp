@@ -6,6 +6,7 @@
 #include"BinnedFlavourTagYieldPrediction.h"
 #include"Settings.h"
 #include"Utilities.h"
+#include"cisiFitterParameters.h"
 
 BinnedFlavourTagYieldPrediction::BinnedFlavourTagYieldPrediction(const std::string &Tag,
 						       const Settings &settings):
@@ -13,28 +14,26 @@ BinnedFlavourTagYieldPrediction::BinnedFlavourTagYieldPrediction(const std::stri
   m_rD(LoadCharmParameter(Tag, settings, "rD")),
   m_R(LoadCharmParameter(Tag, settings, "R")),
   m_DeltaD(LoadCharmParameter(Tag, settings, "deltaD")),
-  m_SinDeltaD(TMath::Sin(TMath::Pi()*m_DeltaD.first)/180.0),
-  m_CosDeltaD(TMath::Cos(TMath::Pi()*m_DeltaD.first)/180.0),
+  m_SinDeltaD(TMath::Sin(TMath::Pi()*m_DeltaD.first/180.0)),
+  m_CosDeltaD(TMath::Cos(TMath::Pi()*m_DeltaD.first/180.0)),
   m_FitDeltaKpi(Tag == "Kpi" && settings.getB("FitDeltaKpi")) {
 }
 
 std::vector<double> BinnedFlavourTagYieldPrediction::GetPredictedBinYields(
-  double BF_KKpipi,
-  const std::vector<double> &ci,
-  const std::vector<double> &si,
-  const std::vector<double> &Ri,
-  double DeltaKpi) const {
+  const cisiFitterParameters &Parameters) const {
   std::vector<double> Ki, Kbari;
-  Utilities::ConvertRiToKi(Ri, Ki, Kbari);
-  const std::size_t Size = ci.size();
+  Utilities::ConvertRiToKi(Parameters.m_Ri, Ki, Kbari);
+  const std::size_t Size = Parameters.m_ci.size();
   TMatrixT<double> BinYields(2*Size, 1);
-  double CosDeltaD, SinDeltaD;
+  double rDcosDeltaD, rDsinDeltaD, rDSq;
   if(m_FitDeltaKpi) {
-    CosDeltaD = TMath::Cos(TMath::Pi()*DeltaKpi/180.0);
-    SinDeltaD = TMath::Sin(TMath::Pi()*DeltaKpi/180.0);
+    rDcosDeltaD = Parameters.m_rDcosDeltaKpi;
+    rDsinDeltaD = Parameters.m_rDsinDeltaKpi;
+    rDSq = rDcosDeltaD*rDcosDeltaD + rDsinDeltaD*rDsinDeltaD;
   } else {
-    CosDeltaD = m_CosDeltaD;
-    SinDeltaD = m_SinDeltaD;
+    rDcosDeltaD = m_rD.first*m_CosDeltaD;
+    rDsinDeltaD = m_rD.first*m_SinDeltaD;
+    rDSq = m_rD.first*m_rD.first;
   }
   for(int Bin = -Size; Bin <= static_cast<int>(Size); Bin++) {
     if(Bin == 0) {
@@ -50,13 +49,15 @@ std::vector<double> BinnedFlavourTagYieldPrediction::GetPredictedBinYields(
       Kbar = Ki[i];
     }
     const double D0Yield = Kbar;
-    const double Dbar0Yield = K*m_rD.first*m_rD.first;
+    const double Dbar0Yield = K*rDSq;
     const double SqrtKK = TMath::Sqrt(K*Kbar);
     const int Sign = Bin > 0 ? +1 : -1;
-    const double PhaseTerm = ci[i]*CosDeltaD + Sign*si[i]*SinDeltaD;
-    const double Interference = -2.0*m_rD.first*m_R.first*SqrtKK*PhaseTerm;
+    const double PhaseTerm = Parameters.m_ci[i]*rDcosDeltaD
+                           + Parameters.m_si[i]*rDsinDeltaD*Sign;
+    const double Interference = -2.0*m_R.first*SqrtKK*PhaseTerm;
     const double UnnormalisedYield = D0Yield + Dbar0Yield + Interference;
-    const double NormalisedYield = m_SingleTagYield*UnnormalisedYield*BF_KKpipi;
+    const double NormalisedYield =
+      m_SingleTagYield*UnnormalisedYield*Parameters.m_BF_KKpipi;
     if(Bin < 0) {
       BinYields(Bin + Size, 0) = NormalisedYield;
     } else {

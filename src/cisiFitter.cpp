@@ -1,6 +1,8 @@
 // Martin Duy Tat 13th October 2022
 
 #include<fstream>
+#include<filesystem>
+#include<vector>
 #include"TFile.h"
 #include"TTree.h"
 #include"TRandom.h"
@@ -10,12 +12,15 @@
 #include"TAxis.h"
 #include"TLatex.h"
 #include"TLine.h"
+#include"TParameter.h"
+#include"TEllipse.h"
 #include"Minuit2/Minuit2Minimizer.h"
 #include"Math/Functor.h"
 #include"Settings.h"
 #include"cisiLikelihood.h"
 #include"cisiFitter.h"
 #include"Utilities.h"
+#include"cisiFitterParameters.h"
 
 cisiFitter::cisiFitter(const Settings &settings):
   m_cisiLikelihood(settings),
@@ -29,217 +34,73 @@ void cisiFitter::Minimise() const {
   Minimiser.SetPrintLevel(4);
   auto &cisiLikelihoodRef = m_cisiLikelihood;
   auto LikelihoodFunction = [=, &cisiLikelihoodRef] (const double *x) {
-    const double BF_KKpipi = x[0];
-    std::vector<double> ci, si, Ri;
-    double DeltaKpi = 0.0;
-    for(std::size_t i = 0; i < m_NumberBins; i++) {
-      ci.push_back(x[i + 0*m_NumberBins + 1]);
-      si.push_back(x[i + 1*m_NumberBins + 1]);
-    }
-    for(std::size_t i = 0; i < 2*m_NumberBins - 1; i++) {
-      Ri.push_back(x[i + 2*m_NumberBins + 1]);
-    }
-    Ri.push_back(1.0);
-    if(m_FitDeltaKpi) {
-      DeltaKpi = x[4*m_NumberBins];
-    }
-    return m_cisiLikelihood.CalculateLogLikelihood(BF_KKpipi,
-						   ci, si, Ri,
-						   DeltaKpi);
+    const cisiFitterParameters Parameters(x, m_NumberBins);
+    return m_cisiLikelihood.CalculateLogLikelihood(Parameters);
   };
-  std::size_t NumberParameters = 4*m_NumberBins;
-  if(m_FitDeltaKpi) {
-    NumberParameters++;
-  }
+  // Number of parameters in the fit:
+  // NBins ci
+  // NBins si
+  // 2*NBins - 1 R_i
+  // 2 DeltaKpi
+  // 1 BF of KKpipi
+  // 1 BF of KKpipi for KLpipi tag
+  const std::size_t NumberParameters = 4*m_NumberBins + 3;
   ROOT::Math::Functor fcn(LikelihoodFunction, NumberParameters);
   Minimiser.SetFunction(fcn);
   SetupMinimiser(Minimiser);
   Minimiser.Minimize();
-  const double *X = Minimiser.X();
-  std::vector<double> ci;
-  std::vector<double> si;
-  std::vector<double> Ri;
-  double DeltaKpi = 0.0;
-  for(std::size_t i = 0; i < m_NumberBins; i++) {
-    ci.push_back(X[i + 0*m_NumberBins + 1]);
-    si.push_back(X[i + 1*m_NumberBins + 1]);
+  const cisiFitterParameters Parameters(Minimiser.X(), m_NumberBins);
+  m_cisiLikelihood.PrintComparison(Parameters);
+  if(m_Settings.getB("PlotContours")) {
+    Plot_cisi(Minimiser, Parameters.m_ci, Parameters.m_si);
   }
-  for(std::size_t i = 0; i < 2*m_NumberBins - 1; i++) {
-    Ri.push_back(X[i + 2*m_NumberBins + 1]);
+  if(m_FitDeltaKpi && m_Settings.getB("PlotDeltaKpiContour")) {
+    Plot_DeltaKpi(Minimiser,
+		  Parameters.m_rDcosDeltaKpi,
+		  Parameters.m_rDsinDeltaKpi);
   }
-  Ri.push_back(1.0);
-  if(m_FitDeltaKpi) {
-    DeltaKpi = X[4*m_NumberBins];
-  }
-  m_cisiLikelihood.PrintComparison(X[0], ci, si, Ri, DeltaKpi);
-  Plot_cisi(Minimiser, ci, si);
+  SaveFitResults(Minimiser, m_Settings.get("FitResultsFile"));
 }
 
-void cisiFitter::RunToys() const {
-  gRandom->SetSeed(42);
-  const double Generator_BF_KKpipi = 0.00247;
-  double BF_KKpipi_value, BF_KKpipi_err, BF_KKpipi_pull;
-  int Status, CovStatus;
-  double LL;
-  const std::vector<double> Generator_ci = GetGeneratorcisi("c");
-  const std::vector<double> Generator_si = GetGeneratorcisi("s");
-  const std::vector<double> Generator_Ki = GetGeneratorcisi("K");
-  const std::vector<double> Generator_Kbari = GetGeneratorcisi("Kbar");
-  const std::vector<double> Generator_Ri =
-    Utilities::ConvertKiToRi(Generator_Ki, Generator_Kbari);
-  double Generator_DeltaKpi = m_Settings.getD("Generator_DeltaKpi");
-  std::vector<double> ci_value(m_NumberBins), si_value(m_NumberBins);
-  std::vector<double> ci_err(m_NumberBins), si_err(m_NumberBins);
-  std::vector<double> ci_pull(m_NumberBins), si_pull(m_NumberBins);
-  /*std::vector<double> Ki_value(m_NumberBins), Kbari_value(m_NumberBins);
-  std::vector<double> Ki_err(m_NumberBins), Kbari_err(m_NumberBins);
-  std::vector<double> Ki_pull(m_NumberBins), Kbari_pull(m_NumberBins);*/
-  double DeltaKpi_value, DeltaKpi_err, DeltaKpi_pull;
-  TFile File(m_Settings.get("ManyToysOutputFilename").c_str(), "RECREATE");
-  TTree Tree("cisiTree", "");
-  Tree.Branch("Status", &Status);
-  Tree.Branch("CovStatus", &CovStatus);
-  Tree.Branch("LL", &LL);
-  Tree.Branch("BF_KKpipi_value", &BF_KKpipi_value);
-  Tree.Branch("BF_KKpipi_err", &BF_KKpipi_err);
-  Tree.Branch("BF_KKpipi_pull", &BF_KKpipi_pull);
-  for(std::size_t i = 0; i < m_NumberBins; i++) {
-    Tree.Branch(("c" + std::to_string(i + 1) + "_value").c_str(), &ci_value[i]);
-    Tree.Branch(("s" + std::to_string(i + 1) + "_value").c_str(), &si_value[i]);
-    Tree.Branch(("c" + std::to_string(i + 1) + "_err").c_str(), &ci_err[i]);
-    Tree.Branch(("s" + std::to_string(i + 1) + "_err").c_str(), &si_err[i]);
-    Tree.Branch(("c" + std::to_string(i + 1) + "_pull").c_str(), &ci_pull[i]);
-    Tree.Branch(("s" + std::to_string(i + 1) + "_pull").c_str(), &si_pull[i]);
-    /*Tree.Branch(("K" + std::to_string(i + 1) + "_value").c_str(), &Ki_value[i]);
-    Tree.Branch(("Kbar" + std::to_string(i + 1) + "_value").c_str(), &Kbari_value[i]);
-    Tree.Branch(("K" + std::to_string(i + 1) + "_err").c_str(), &Ki_err[i]);
-    Tree.Branch(("Kbar" + std::to_string(i + 1) + "_err").c_str(), &Kbari_err[i]);
-    Tree.Branch(("K" + std::to_string(i + 1) + "_pull").c_str(), &Ki_pull[i]);
-    Tree.Branch(("Kbar" + std::to_string(i + 1) + "_pull").c_str(), &Kbari_pull[i]);*/
-  }
-  if(m_FitDeltaKpi) {
-    Tree.Branch("DeltaKpi_value", &DeltaKpi_value);
-    Tree.Branch("DeltaKpi_err", &DeltaKpi_err);
-    Tree.Branch("DeltaKpi_pull", &DeltaKpi_pull);
-  }
+void cisiFitter::RunToy(int ToyNumber) const {
+  int CovStatus = -1;
   ROOT::Minuit2::Minuit2Minimizer Minimiser;
-  Minimiser.SetPrintLevel(-1);
+  Minimiser.SetPrintLevel(4);
   auto &cisiLikelihoodRef = m_cisiLikelihood;
   auto LikelihoodFunction = [=, &cisiLikelihoodRef] (const double *x) {
-    const double BF_KKpipi = x[0];
-    std::vector<double> ci, si, Ri;
-    double DeltaKpi = 0.0;
-    for(std::size_t i = 0; i < m_NumberBins; i++) {
-      ci.push_back(x[i + 0*m_NumberBins + 1]);
-      si.push_back(x[i + 1*m_NumberBins + 1]);
-    }
-    for(std::size_t i = 0; i < 2*m_NumberBins - 1; i++) {
-      Ri.push_back(x[i + 2*m_NumberBins + 1]);
-    }
-    Ri.push_back(1.0);
-    if(m_FitDeltaKpi) {
-      DeltaKpi = x[4*m_NumberBins];
-    }
-    /*return m_cisiLikelihood.CalculateToyLogLikelihood(BF_KKpipi,
-						      ci, si, Ri,
-						      DeltaKpi);*/
-    return m_cisiLikelihood.CalculateLogLikelihood(BF_KKpipi,
-						   ci, si, Ri,
-						   DeltaKpi);
+    const cisiFitterParameters Parameters(x, m_NumberBins);
+    return m_cisiLikelihood.CalculateLogLikelihood(Parameters);
   };
-  /*std::size_t StatsMultiplier = m_Settings.getI("StatsMultiplier");
-  std::size_t NumberOfToysToSkip = m_Settings.getI("NumberOfToysToSkip");
-  for(std::size_t i = 0; i < NumberOfToysToSkip; i++) {
-    std::cout << "Skipped toy " << i << "\n";
-    cisiLikelihoodRef.GenerateToy(Generator_BF_KKpipi,
-				  Generator_ci,
-				  Generator_si,
-				  Generator_Ri,
-				  Generator_DeltaKpi,
-				  StatsMultiplier);
-  }*/
-  std::size_t NumberToys = m_Settings.getI("NumberToys");
-  for(std::size_t i = 0; i < NumberToys; i++) {
-    std::cout << "Toy " << i << "\n";
-    /*cisiLikelihoodRef.GenerateToy(Generator_BF_KKpipi,
-				  Generator_ci,
-				  Generator_si,
-				  Generator_Ri,
-				  Generator_DeltaKpi,
-				  StatsMultiplier);*/
-    m_cisiLikelihood.LoadToyDataset(static_cast<int>(i));
-    std::size_t NumberParameters = 4*m_NumberBins + 1;
-    if(m_FitDeltaKpi) {
-      NumberParameters++;
+  std::cout << "Toy " << ToyNumber << "\n";
+  m_cisiLikelihood.LoadToyDataset(static_cast<int>(ToyNumber));
+  const std::size_t NumberParameters = 4*m_NumberBins + 3;
+  ROOT::Math::Functor fcn(LikelihoodFunction, NumberParameters);
+  Minimiser.SetFunction(fcn);
+  SetupMinimiser(Minimiser);
+  std::size_t Counter = 0;
+  while(CovStatus != 3 && Counter < 5) {
+    if(Counter != 0) {
+      std::cout << "Fit did not converge, fitting again ";
+      std::cout << "(" << Counter << ")\n";
     }
-    ROOT::Math::Functor fcn(LikelihoodFunction, NumberParameters);
-    Minimiser.SetFunction(fcn);
-    SetupMinimiser(Minimiser);
     Minimiser.Minimize();
-    Status = Minimiser.Status();
     CovStatus = Minimiser.CovMatrixStatus();
-    LL = Minimiser.MinValue();
-    const double *X = Minimiser.X();
-    const double *E = Minimiser.Errors();
-    BF_KKpipi_value = X[0];
-    BF_KKpipi_err = E[0];
-    BF_KKpipi_pull = (BF_KKpipi_value - Generator_BF_KKpipi)/BF_KKpipi_err;
-    for(std::size_t i = 0; i < m_NumberBins; i++) {
-      ci_value[i] = X[i + 0*m_NumberBins + 1];
-      si_value[i] = X[i + 1*m_NumberBins + 1];
-      /*Ki_value[i] = X[i + 2*m_NumberBins + 1];
-      Kbari_value[i] = X[i + 3*m_NumberBins + 1];*/
-      ci_err[i] = E[i + 0*m_NumberBins + 1];
-      si_err[i] = E[i + 1*m_NumberBins + 1];
-      /*Ki_err[i] = E[i + 2*m_NumberBins + 1];
-      Kbari_err[i] = E[i + 3*m_NumberBins + 1];*/
-      double ErrorLow, ErrorHigh;
-      Minimiser.GetMinosError(i + 1 + 0*m_NumberBins, ErrorLow, ErrorHigh, 0);
-      ci_pull[i] = ci_value[i] - Generator_ci[i];
-      ci_pull[i] /= ci_pull[i] <= 0.0 ? ErrorHigh : -ErrorLow;
-      //ci_pull[i] /= ci_err[i];
-      Minimiser.GetMinosError(i + 1 + 1*m_NumberBins, ErrorLow, ErrorHigh, 0);
-      si_pull[i] = si_value[i] - Generator_si[i];
-      si_pull[i] /= si_pull[i] <= 0.0 ? ErrorHigh : -ErrorLow;
-      //si_pull[i] /= si_err[i];
-      /*Minimiser.GetMinosError(i + 1 + 2*m_NumberBins, ErrorLow, ErrorHigh, 0);
-      Ki_pull[i] = Ki_value[i] - Generator_Ki[i];
-      Ki_pull[i] /= Ki_pull[i] <= 0.0 ? ErrorHigh : -ErrorLow;*/
-      //Ki_pull[i] /= Ki_err[i];
-      /*Minimiser.GetMinosError(i + 1 + 3*m_NumberBins, ErrorLow, ErrorHigh, 0);
-      Kbari_pull[i] = Kbari_value[i] - Generator_Kbari[i];
-      Kbari_pull[i] /= Kbari_pull[i] <= 0.0 ? ErrorHigh : -ErrorLow;*/
-      //Kbari_pull[i] /= Kbari_err[i];
-    }
-    if(m_FitDeltaKpi) {
-      DeltaKpi_value = X[4*m_NumberBins];
-      DeltaKpi_err = E[4*m_NumberBins];
-      DeltaKpi_pull = (DeltaKpi_value - Generator_DeltaKpi)/DeltaKpi_err;
-    }
-    Tree.Fill();
+    Counter++;
   }
-  File.cd();
-  Tree.Write();
-  File.Close();
+  if(!std::filesystem::exists("ToyFitResults") ||
+     !std::filesystem::is_directory("ToyFitResults")) {
+    std::filesystem::create_directory("ToyFitResults");
+  }
+  const std::string Filename = "ToyFitResults/Toy"
+                             + std::to_string(ToyNumber) + ".root";
+  SaveFitResults(Minimiser, Filename);
 }
 
 void cisiFitter::SavePredictedYields() const {
-  const double Generator_BF_KKpipi = 0.00247;
-  const std::vector<double> Generator_ci = GetGeneratorcisi("c");
-  const std::vector<double> Generator_si = GetGeneratorcisi("s");
-  const std::vector<double> Generator_Ki = GetGeneratorcisi("K");
-  const std::vector<double> Generator_Kbari = GetGeneratorcisi("Kbar");
-  const std::vector<double> Generator_Ri =
-    Utilities::ConvertKiToRi(Generator_Ki, Generator_Kbari);
-  double Generator_DeltaKpi = m_Settings.getD("Generator_DeltaKpi");
   const std::string Filename = m_Settings.get("PredictedYieldsFile");
   std::ofstream File(Filename);
-  m_cisiLikelihood.SavePredictedBinYields(File,
-				       Generator_BF_KKpipi,
-				       Generator_ci,
-				       Generator_si,
-				       Generator_Ri,
-				       Generator_DeltaKpi);
+  const auto GeneratorParameters = GetGeneratorValues();
+  m_cisiLikelihood.SavePredictedBinYields(File, GeneratorParameters);
   File.close();
 }
 
@@ -250,14 +111,16 @@ void cisiFitter::SetupMinimiser(ROOT::Minuit2::Minuit2Minimizer &Minimiser) cons
   const double cMax = m_Settings.getD("c_max");
   for(std::size_t i = 1; i <= m_NumberBins; i++) {
     const std::string Name = "c" + std::to_string(i);
-    Minimiser.SetVariable(i, Name, 1.0, 1.0);
+    const double Initial = 0.0;
+    Minimiser.SetVariable(i, Name, Initial, 1.0);
     Minimiser.SetVariableLimits(i, cMin, cMax);
   }
   const double sMin = m_Settings.getD("s_min");
   const double sMax = m_Settings.getD("s_max");
   for(std::size_t i = 1; i <= m_NumberBins; i++) {
     const std::string Name = "s" + std::to_string(i);
-    Minimiser.SetVariable(i + m_NumberBins, Name, 0.0, 1.0);
+    const double Initial = 0.0;
+    Minimiser.SetVariable(i + m_NumberBins, Name, Initial, 1.0);
     Minimiser.SetVariableLimits(i + m_NumberBins, sMin, sMax);
     if(m_Settings.getB("Fix_si")) {
       Minimiser.FixVariable(i + m_NumberBins);
@@ -276,19 +139,47 @@ void cisiFitter::SetupMinimiser(ROOT::Minuit2::Minuit2Minimizer &Minimiser) cons
     Minimiser.SetVariableLimits(Counter, 0.0, 1.0);
     Counter++;
   }
-  if(m_FitDeltaKpi) {
-    Minimiser.SetVariable(4*m_NumberBins, "DeltaKpi", 180.0, 10.0);
-    Minimiser.SetVariableLimits(4*m_NumberBins, 0.0, 360.0);
+  Minimiser.SetVariable(4*m_NumberBins, "BF_KKpipi_KLpipi", 0.00247, 0.1);
+  Minimiser.SetVariableLimits(4*m_NumberBins, 0.001, 0.010);
+  if(m_Settings.get("TagModes").find("KLpipi") == std::string::npos) {
+    Minimiser.FixVariable(4*m_NumberBins);
+  }
+  Minimiser.SetVariable(4*m_NumberBins + 1, "rDcosDeltaKpi", 0.0, 0.05);
+  Minimiser.SetVariableLimits(4*m_NumberBins + 1, -0.3, 0.3);
+  Minimiser.SetVariable(4*m_NumberBins + 2, "rDsinDeltaKpi", 0.0, 0.05);
+  Minimiser.SetVariableLimits(4*m_NumberBins + 2, -0.5, 0.5);
+  if(!m_FitDeltaKpi) {
+    Minimiser.FixVariable(4*m_NumberBins + 1);
+    Minimiser.FixVariable(4*m_NumberBins + 2);
   }
 }
 
-std::vector<double> cisiFitter::GetGeneratorcisi(const std::string &c_or_s_or_K) const {
-  std::vector<double> cisi(m_NumberBins);
-  const std::string Prefix = "Generator_" + c_or_s_or_K;
+cisiFitterParameters cisiFitter::GetGeneratorValues() const {
+  std::vector<double> Values;
+  Values.push_back(m_Settings.getD("Generator_BF_KKpipi"));
   for(std::size_t Bin = 1; Bin <= m_NumberBins; Bin++) {
-    cisi[Bin - 1] = m_Settings.getD(Prefix + std::to_string(Bin));
+    Values.push_back(m_Settings.getD("Generator_c" + std::to_string(Bin)));
   }
-  return cisi;
+  for(std::size_t Bin = 1; Bin <= m_NumberBins; Bin++) {
+    Values.push_back(m_Settings.getD("Generator_s" + std::to_string(Bin)));
+  }
+  {
+    std::vector<double> Ki, Kbari;
+    for(std::size_t Bin = 1; Bin <= m_NumberBins; Bin++) {
+      Ki.push_back(m_Settings.getD("Generator_K" + std::to_string(Bin)));
+      Kbari.push_back(m_Settings.getD("Generator_Kbar" + std::to_string(Bin)));
+    }
+    const auto Ri = Utilities::ConvertKiToRi(Ki, Kbari);
+    Values.insert(Values.end(), Ri.begin(), Ri.end() - 1);
+  }
+  Values.push_back(m_Settings.getD("Generator_BF_KKpipi"));
+  {
+    const double DeltaKpi = m_Settings.getD("Generator_DeltaKpi");
+    const double rDKpi = m_Settings.getD("Generator_rDKpi");
+    Values.push_back(rDKpi*TMath::Cos(DeltaKpi*TMath::Pi()/180.0));
+    Values.push_back(rDKpi*TMath::Sin(DeltaKpi*TMath::Pi()/180.0));
+  }
+  return cisiFitterParameters(Values.data(), m_NumberBins);
 }
 
 void cisiFitter::Plot_cisi(ROOT::Minuit2::Minuit2Minimizer &Minimiser,
@@ -354,4 +245,99 @@ void cisiFitter::Plot_cisi(ROOT::Minuit2::Minuit2Minimizer &Minimiser,
     Contour.Draw("L SAME");
   }
   c.SaveAs("Contours_cisi.pdf");
+}
+
+void cisiFitter::Plot_DeltaKpi(ROOT::Minuit2::Minuit2Minimizer &Minimiser,
+			       double rDcosDeltaKpi,
+			       double rDsinDeltaKpi) const {
+  // Make canvas
+  TCanvas c("DeltaKpi_c", "", 900, 900);
+  // Draw fit results
+  TGraph Results(1, &rDcosDeltaKpi, &rDsinDeltaKpi);
+  const double Boundary = m_Settings.getD("DeltaKpiPlotBoundary");
+  Results.GetXaxis()->SetLimits(-Boundary, Boundary);
+  Results.GetYaxis()->SetRangeUser(-Boundary, Boundary);
+  Results.SetMarkerStyle(8);
+  Results.SetTitle(";r_{D}cos(#delta_{K#pi});r_{D}sin(#delta_{K#pi})");
+  Results.Draw("AP");
+  // Draw circle representing rD
+  TEllipse rDContour(0.0, 0.0, 0.05867, 0.05867);
+  //rDContour.SetFillColor(17);
+  rDContour.SetLineStyle(kDashed);
+  rDContour.SetLineWidth(3);
+  rDContour.Draw("SAME");
+  // Create and draw contour
+  const std::size_t Points = 101;
+  Minimiser.SetPrintLevel(-1);
+  std::vector<double> ErrorDefs{2.30, 6.18};
+  TGraph *Contour = nullptr;
+  for(double ErrorDef : ErrorDefs) {
+    Minimiser.SetErrorDef(ErrorDef);
+    std::vector<double> x(Points), y(Points);
+    unsigned int nPoints = Points - 1;
+    Minimiser.Contour(4*m_NumberBins + 1, 4*m_NumberBins + 2, nPoints,
+		      x.data(), y.data());
+    x.back() = x[0];
+    y.back() = y[0];
+    Contour = new TGraph(Points, x.data(), y.data());
+    Contour->SetLineWidth(3);
+    Contour->Draw("L SAME");
+  }
+  c.SaveAs("Contour_DeltaKpi.pdf");
+  delete Contour;
+}
+
+void cisiFitter::SaveFitResults(ROOT::Minuit2::Minuit2Minimizer &Minimiser,
+				const std::string &Filename) const {
+  std::cout << "Saving fit results...\n";
+  std::size_t NParameters = Minimiser.NDim();
+  TFile File(Filename.c_str(), "RECREATE");
+  {
+    TParameter<int> Status("Status", Minimiser.Status());
+    File.WriteObject(&Status, "Status");
+    TParameter<int> CovStatus("CovStatus", Minimiser.CovMatrixStatus());
+    File.WriteObject(&CovStatus, "CovStatus");
+    TParameter<double> LL("LL", Minimiser.MinValue());
+    File.WriteObject(&LL, "LL");
+  }
+  {
+    std::vector<std::string> VariableNames;
+    for(std::size_t i = 0; i < NParameters; i++) {
+      VariableNames.push_back(Minimiser.VariableName(i));
+    }
+    File.WriteObject(&VariableNames, "VariableNames");
+  }
+  {
+    const double *Values = Minimiser.X();
+    const std::vector<double> FitValues(Values, Values + NParameters);
+    File.WriteObject(&FitValues, "FitValues");
+  }
+  {
+    const double *Errors = Minimiser.Errors();
+    const std::vector<double> FitUncertainties(Errors, Errors + NParameters);
+    File.WriteObject(&FitUncertainties, "FitUncertainties");
+  }
+  {
+    Minimiser.SetPrintLevel(-1);
+    std::vector<double> PlusUncertainties(NParameters),
+                        MinusUncertainties(NParameters);
+    for(std::size_t i = 0; i < NParameters; i++) {
+      Minimiser.GetMinosError(i, MinusUncertainties[i], PlusUncertainties[i]);
+    }
+    File.WriteObject(&PlusUncertainties, "PlusUncertainties");
+    File.WriteObject(&MinusUncertainties, "MinusUncertainties");
+  }
+  {
+    std::vector<double> CovarianceMatrix, CorrelationMatrix;
+    for(std::size_t i = 0; i < NParameters; i++) {
+      for(std::size_t j = 0; j < NParameters; j++) {
+	CovarianceMatrix.push_back(Minimiser.CovMatrix(i, j));
+	CorrelationMatrix.push_back(Minimiser.Correlation(i, j));
+      }
+    }
+    File.WriteObject(&CovarianceMatrix, "CovMatrix");
+    File.WriteObject(&CorrelationMatrix, "CorrMatrix");
+  }
+  File.Close();
+  std::cout << "Fit results saved to " << Filename << "\n";
 }

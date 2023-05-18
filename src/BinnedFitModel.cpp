@@ -60,6 +60,7 @@ RooSimultaneous* BinnedFitModel::GetPDF() {
 
 void BinnedFitModel::InitializeYields() {
   std::string Mode = m_Settings.get("Mode");
+  m_SignalYields.setName((Mode + "_SignalYields").c_str());
   int PeakingBackgrounds =
     m_Settings["MBC_Shape"].getI(Mode + "_PeakingBackgrounds");
   for(const auto &CategoryString : m_Category.GetCategories()) {

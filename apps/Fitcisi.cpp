@@ -21,9 +21,13 @@ int main(int argc, char *argv[]) {
     std::cout << "Fitting ci and si...\n";
     Fitter.Minimise();
     std::cout << "ci and si have been measured!\n";
-  } else if(RunMode == "ManyToys") {
+  } else if(RunMode == "SingleToy") {
     std::cout << "Running ci and si toys...\n";
-    Fitter.RunToys();
+    int ToyNumber = settings.getI("ToyNumber");
+    if(ToyNumber < 0) {
+      return 0;
+    }
+    Fitter.RunToy(ToyNumber);
     std::cout << "Toy studies of ci and si are ready!\n";
   } else if(RunMode == "DumpGeneratorYields") {
     std::cout << "Dumping generator yields for toy studes...\n";

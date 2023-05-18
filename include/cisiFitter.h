@@ -24,13 +24,13 @@ class cisiFitter {
    */
   cisiFitter(const cisiFitter &fitter) = delete;
   /**
-   * Do the minimisation
+   * Do the minimisation, save results and plot contours
    */
   void Minimise() const;
   /**
-   * Run toy studies and save results to a TTree
+   * Run toy studies and save results
    */
-  void RunToys() const;
+  void RunToy(int ToyNumber) const;
   /**
    * Save predicted yields to a file for each tag
    */
@@ -57,10 +57,9 @@ class cisiFitter {
    */
   void SetupMinimiser(ROOT::Minuit2::Minuit2Minimizer &Minimiser) const;
   /**
-   * Helper function to load values of ci and si used for toy generation
-   * @param c_or_s_or_K String indicating if we want ci or si or Ki or Kbari
+   * Helper function to generator values for toy generation
    */
-  std::vector<double> GetGeneratorcisi(const std::string &c_or_s_or_K) const;
+  cisiFitterParameters GetGeneratorValues() const;
   /**
    * Function for drawing the contours of ci vs si
    * @param Minimiser The minimiser
@@ -70,6 +69,20 @@ class cisiFitter {
   void Plot_cisi(ROOT::Minuit2::Minuit2Minimizer &Minimiser,
 		 const std::vector<double> &ci,
 		 const std::vector<double> &si) const;
+  /**
+   * Function for drawing the \f$\delta_{K\pi}\f$ contour
+   * @param Minimiser The minimiser
+   */
+  void Plot_DeltaKpi(ROOT::Minuit2::Minuit2Minimizer &Minimiser,
+		     double rDcosDeltaKpi,
+		     double rDsinDeltaKpi) const;
+  /**
+   * Function that saves the fit results
+   * @param Minimiser The minimiser
+   * @param Filename The filename where results are saved
+   */
+  void SaveFitResults(ROOT::Minuit2::Minuit2Minimizer &Minimiser,
+		      const std::string &Filename) const;
 };
 
 #endif

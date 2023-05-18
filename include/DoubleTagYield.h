@@ -26,23 +26,6 @@ class DoubleTagYield {
      * Perform simultaneous fit to determine double tag yields
      */
     void DoFit();
-    /**
-     * Perform toy studies
-     */
-    void DoToyFits();
-    /**
-     * Perform systematics studies
-     */
-    void DoSystematicsFits();
-    /**
-     * Plot projections of each bin in the fit
-     */
-    void PlotProjections();
-    /**
-     * Save signal yields from fit
-     */
-    void SaveSignalYields(const std::string &Filename,
-			  RooFitResult *Result) const;
   private:
     /**
      * The fit variable
@@ -64,6 +47,27 @@ class DoubleTagYield {
      * The fit model
      */
     BinnedFitModel m_FitModel;
+    /**
+     * Save the full likelihood function
+     */
+    void SaveLikelihood(const std::string &Filaname, RooDataSet *DataSet);
+    /**
+     * Perform toy studies
+     */
+    void DoToyFits();
+    /**
+     * Perform systematics studies
+     */
+    void DoSystematicsFits();
+    /**
+     * Plot projections of each bin in the fit
+     */
+    void PlotProjections();
+    /**
+     * Save signal yields from fit
+     */
+    void SaveSignalYields(const std::string &Filename,
+			  RooFitResult *Result) const;
     /**
      * Helper function to find sideband yield with correctly reconstructed signal side and incorrect tag side reconstruction
      * Only use for fully reconstructed tags

@@ -11,6 +11,7 @@
 #include<string>
 #include"Settings.h"
 #include"BinnedDTYieldPrediction.h"
+#include"cisiFitterParameters.h"
 
 class BinnedCPTagYieldPrediction: public BinnedDTYieldPrediction {
  public:
@@ -29,11 +30,7 @@ class BinnedCPTagYieldPrediction: public BinnedDTYieldPrediction {
    * Function that returns the predicted bin yield
    */
   virtual std::vector<double> GetPredictedBinYields(
-    double BF_KKpipi,
-    const std::vector<double> &ci,
-    const std::vector<double> &si,
-    const std::vector<double> &Ri,
-    double DeltaKpi) const override;
+    const cisiFitterParameters &Parameters) const override;
  private:
   /**
    * The CP-even fraction of the tag

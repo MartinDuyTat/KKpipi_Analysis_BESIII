@@ -16,7 +16,8 @@
 #include"TMatrixT.h"
 #include"RawBinnedDTYields.h"
 #include"BinnedDTYieldPrediction.h"
-#include"FlavourTags/KiCombiner.h"
+#include"RawBinnedDTYieldLikelihood.h"
+#include"cisiFitterParameters.h"
 
 class BinnedDTData {
  public:
@@ -38,32 +39,16 @@ class BinnedDTData {
   BinnedDTData(BinnedDTData &&binnedDTData) = default;
   /**
    * Calculate the log likelihood from this tag
-   * @param BF_KKpipi The KKpipi branching fraction
-   * @param ci The ci parameters
-   * @param si The si parameters
-   * @param Ri The Ri parameters
-   * @param DeltaKpi The D0->Kpi strong phase
+   * @param Parameters The fit parameters
    */
-  double GetLogLikelihood(double BF_KKpipi,
-			  const std::vector<double> &ci,
-			  const std::vector<double> &si,
-			  const std::vector<double> &Ri,
-			  double DeltaKpi) const;
+  double GetLogLikelihood(const cisiFitterParameters &Parameters) const;
   /**
    * Calculate the log likelihood from this tag, using alternative yields
-   * @param BF_KKpipi The KKpipi branching fraction
-   * @param ci The ci parameters
-   * @param si The si parameters
-   * @param Ri The Ri parameters
-   * @param DeltaKpi The D0->Kpi strong phase
+   * @param Parameter The fit parameters
    * @param MeasuredYields The measured yields
    */
   double GetLogLikelihood(
-    double BF_KKpipi,
-    const std::vector<double> &ci,
-    const std::vector<double> &si,
-    const std::vector<double> &Ri,
-    double DeltaKpi,
+    const cisiFitterParameters &Parameters,
     const std::vector<AsymmetricUncertainty> &MeasuredYields) const;
   /**
    * Load toy dataset
@@ -71,64 +56,32 @@ class BinnedDTData {
    */
   void LoadToyDataset(int ToyNumber) const;
   /**
-   * Generate toy yields using hit and miss method
-   * @param BF_KKpipi The KKpipi branching fraction
-   * @param ci The ci parameters used in toy generation
-   * @param si The si parameters used in toy generation
-   * @param Ri The Ri parameters used in toy generation
-   * @param DeltaKpi The D0->Kpi strong phase used in toy generation
-   * @param StatsMultiplier The statistics multiplier
-   */
-  void GenerateToyYields(double BF_KKpipi,
-			 const std::vector<double> &ci,
-			 const std::vector<double> &si,
-			 const std::vector<double> &Ri,
-			 double DeltaKpi,
-			 std::size_t StatsMultiplier) const;
-  /**
-   * Calculate the log likelihood from this tag using the generated toy yields
-   * @param BF_KKpipi The KKpipi branching fraction
-   * @param ci The ci parameters
-   * @param si The si parameters
-   * @param Ri The Ri parameters
-   * @param DeltaKpi The D0->Kpi strong phase
-   */
-  double GetToyLogLikelihood(double BF_KKpipi,
-			     const std::vector<double> &ci,
-			     const std::vector<double> &si,
-			     const std::vector<double> &Ri,
-			     double DeltaKpi) const;
-  /**
    * Function that prints a comparison between predicted and measured yields
-   * @param BF_KKpipi The KKpipi branching fraction
-   * @param ci The ci parameters
-   * @param si The si parameters
-   * @param Ri The Ri parameters
-   * @param DeltaKpi The D0->Kpi strong phase
+   * @param Parameters The fit parameters
    */
-  void PrintComparison(double BF_KKpipi,
-		       const std::vector<double> &ci,
-		       const std::vector<double> &si,
-		       const std::vector<double> &Ri,
-		       double DeltaKpi) const;
+  void PrintComparison(const cisiFitterParameters &Parameters) const;
   /**
    * Dump the predicted yields of this tag in the file
    */
   void SavePredictedBinYields(std::ofstream &File,
-			      double BF_KKpipi,
-			      const std::vector<double> &ci,
-			      const std::vector<double> &si,
-			      const std::vector<double> &Ri,
-			      double DeltaKpi) const;
+			      const cisiFitterParameters &Parameters) const;
  private:
   /**
    * The name of this tag mode
    */
   const std::string m_TagMode;
   /**
+   * Flag that is true if the full likelihood of the yields is used
+   */
+  const bool m_FullLikelihood;
+  /**
    * The measured raw double tag yields
    */
   mutable std::unique_ptr<const RawBinnedDTYields> m_DTYields;
+  /**
+   * The full likelihood of the double tag yields
+   */
+  mutable std::unique_ptr<const RawBinnedDTYieldLikelihood> m_DTYieldLikelihood;
   /**
    * The object that predicts double tag yields
    */
@@ -141,14 +94,6 @@ class BinnedDTData {
    * Flag that is true if the uncertainties of the yields are symmetrized
    */
   const bool m_SymmetricUncertainties;
-  /**
-   * The constant to ensure that the Gaussian envelope covers the whole PDF
-   */
-  mutable double m_EnvelopeConstant;
-  /**
-   * Flag that is true if the toy generation efficiency is displayed
-   */
-  const bool m_DisplayToyEfficiency;
   /**
    * Reference to the settings
    */
@@ -172,6 +117,16 @@ class BinnedDTData {
    * @param ToyNumber For toys, this labels toy number, otherwise set to -1
    */
   std::unique_ptr<const RawBinnedDTYields> GetRawDTYields(
+    const std::string &Tag,
+    const Settings &settings,
+    int ToyNumber = -1) const;
+  /**
+   * Helper function that loads the full likelihood object
+   * @param Tag The tag mode
+   * @param settings The settings file
+   * @param ToyNumber For toys, this labels toy number, otherwise set to -1
+   */
+  std::unique_ptr<const RawBinnedDTYieldLikelihood> GetDTYieldLikelihood(
     const std::string &Tag,
     const Settings &settings,
     int ToyNumber = -1) const;
@@ -201,16 +156,6 @@ class BinnedDTData {
    */
   static constexpr std::array<std::string_view, 4> m_FlavourTags{{
     "Kpi", "Kpipi0", "Kpipipi", "KeNu"}};
-  /**
-   * Helper function to find the general Poisson parameter for a non-integer yield
-   * @param Yield The yield we want to find the Poisson parameter of
-   */
-  double FindPoissonParameter(double Yield) const;
-  /**
-   * Helper function to find the asymmetric Poisson uncertainties of a yield
-   * @param Yield The yield we want to find the asymmetric uncertainties of
-   */
-  std::pair<double, double> GetAsymmetricUncertainties(double Yield) const;
 };
 
 #endif

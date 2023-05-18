@@ -10,6 +10,7 @@
 #include<fstream>
 #include"Settings.h"
 #include"BinnedDTData.h"
+#include"cisiFitterParameters.h"
 
 class cisiLikelihood {
  public:
@@ -24,63 +25,19 @@ class cisiLikelihood {
   cisiLikelihood(const cisiLikelihood &Likelihood) = delete;
   /**
    * Function that returns the likelihood based on ci and si values
-   * @param BF_KKpipi The KKpipi branching fraction
-   * @param ci The cosine of the strong phases
-   * @param si The sine of the strong phases
-   * @param Ri The fractional bin yields with recursive parameterisation
-   * @param DeltaKpi The D0->Kpi strong phase
+   * @param Parameters The fit parameters
    */
-  double CalculateLogLikelihood(double BF_KKpipi,
-				const std::vector<double> &ci,
-				const std::vector<double> &si,
-				const std::vector<double> &Ri,
-				double DeltaKpi) const;
+  double CalculateLogLikelihood(const cisiFitterParameters &Parameters) const;
   /**
    * Load toy dataset
    * @param ToyNumber The toy dataset number
    */
   void LoadToyDataset(int ToyNumber) const;
   /**
-   * Generate toy datasets for all tags
-   * @param BF_KKpipi The KKpipi branching fraction
-   * @param ci The cosine of the strong phases used to generate toy
-   * @param si The sine of the strong phases used to generate toy
-   * @param Ri The fractional bin yields with recursive parameterisation
-   * @param DeltaKpi The D0->Kpi strong phase
-   * @param StatsMultiplier The statistics multiplier
-   */
-  void GenerateToy(double BF_KKpipi,
-		   const std::vector<double> &ci,
-		   const std::vector<double> &si,
-		   const std::vector<double> &Ri,
-		   double DeltaKpi,
-		   std::size_t StatsMultiplier = 1) const;
-  /**
-   * Function that returns the likelihood based on ci and si values with toy data
-   * @param BF_KKpipi The KKpipi branching fraction
-   * @param ci The cosine of the strong phases
-   * @param si The sine of the strong phases
-   * @param Ri The fractional bin yields with recursive parameterisation
-   * @param DeltaKpi The D0->Kpi strong phase
-   */
-  double CalculateToyLogLikelihood(double BF_KKpipi,
-				   const std::vector<double> &ci,
-				   const std::vector<double> &si,
-				   const std::vector<double> &Ri,
-				   double DeltaKpi) const;
-  /**
    * Function that prints a comparison between predicted and measured yields
-   * @param BF_KKpipi The KKpipi branching fraction
-   * @param ci The ci parameters
-   * @param si The si parameters
-   * @param Ri The fractional bin yields with recursive parameterisation
-   * @param DeltaKpi The D0->Kpi strong phasep
+   * @param Parameters The fit parameters
    */
-  void PrintComparison(double BF_KKpipi,
-		       const std::vector<double> &ci,
-		       const std::vector<double> &si,
-		       const std::vector<double> &Ri,
-		       double DeltaKpi) const;
+  void PrintComparison(const cisiFitterParameters &Parameters) const;
   /**
    * Function that prints the Ki
    */
@@ -89,11 +46,7 @@ class cisiLikelihood {
    * Dump the predicted yields for each tag in the file
    */
   void SavePredictedBinYields(std::ofstream &File,
-			      double BF_KKpipi,
-			      const std::vector<double> &ci,
-			      const std::vector<double> &si,
-			      const std::vector<double> &Ri,
-			      double DeltaKpi) const;
+			      const cisiFitterParameters &Parameters) const;
  private:
   /**
    * Vector of all the tags
@@ -104,11 +57,6 @@ class cisiLikelihood {
    * @param settings The settings file
    */
   std::vector<BinnedDTData> SetupTags(const Settings &settings) const;
-  /**
-   * Helper function that loads Ki and Kbari
-   */
-  /*std::pair<std::vector<double>, std::vector<double>>
-  GetKi(const Settings &settings) const;*/
 };
 
 #endif

@@ -50,18 +50,33 @@ void KKpipi_vs_K0hh_PhaseSpace::SetK0hhBranchAddresses(TTree *Tree) {
   Tree->SetBranchAddress(("Tag" + hName + "Pluspy").c_str(), &m_hPlus_P[1]);
   Tree->SetBranchAddress(("Tag" + hName + "Pluspz").c_str(), &m_hPlus_P[2]);
   Tree->SetBranchAddress(("Tag" + hName + "Plusenergy").c_str(), &m_hPlus_P[3]);
-  Tree->SetBranchAddress(("Tag" + hName + "PluspxKalmanFit").c_str(), &m_hPlus_P_KalmanFit[0]);
-  Tree->SetBranchAddress(("Tag" + hName + "PluspyKalmanFit").c_str(), &m_hPlus_P_KalmanFit[1]);
-  Tree->SetBranchAddress(("Tag" + hName + "PluspzKalmanFit").c_str(), &m_hPlus_P_KalmanFit[2]);
-  Tree->SetBranchAddress(("Tag" + hName + "PlusenergyKalmanFit").c_str(), &m_hPlus_P_KalmanFit[3]);
+  // Currently a bug in the BOSS code for KSKK, fix this later
+  if(m_hhMode == "pipi") {
+    Tree->SetBranchAddress(("Tag" + hName + "PluspxKalmanFit").c_str(), &m_hPlus_P_KalmanFit[0]);
+    Tree->SetBranchAddress(("Tag" + hName + "PluspyKalmanFit").c_str(), &m_hPlus_P_KalmanFit[1]);
+    Tree->SetBranchAddress(("Tag" + hName + "PluspzKalmanFit").c_str(), &m_hPlus_P_KalmanFit[2]);
+    Tree->SetBranchAddress(("Tag" + hName + "PlusenergyKalmanFit").c_str(), &m_hPlus_P_KalmanFit[3]);
+  } else {
+    Tree->SetBranchAddress("PiPluspxKalmanFit", &m_hPlus_P_KalmanFit[0]);
+    Tree->SetBranchAddress("PiPluspyKalmanFit", &m_hPlus_P_KalmanFit[1]);
+    Tree->SetBranchAddress("PiPluspzKalmanFit", &m_hPlus_P_KalmanFit[2]);
+    Tree->SetBranchAddress("PiPlusenergyKalmanFit", &m_hPlus_P_KalmanFit[3]);
+  }
   Tree->SetBranchAddress(("Tag" + hName + "Minuspx").c_str(), &m_hMinus_P[0]);
   Tree->SetBranchAddress(("Tag" + hName + "Minuspy").c_str(), &m_hMinus_P[1]);
   Tree->SetBranchAddress(("Tag" + hName + "Minuspz").c_str(), &m_hMinus_P[2]);
   Tree->SetBranchAddress(("Tag" + hName + "Minusenergy").c_str(), &m_hMinus_P[3]);
-  Tree->SetBranchAddress(("Tag" + hName + "MinuspxKalmanFit").c_str(), &m_hMinus_P_KalmanFit[0]);
-  Tree->SetBranchAddress(("Tag" + hName + "MinuspyKalmanFit").c_str(), &m_hMinus_P_KalmanFit[1]);
-  Tree->SetBranchAddress(("Tag" + hName + "MinuspzKalmanFit").c_str(), &m_hMinus_P_KalmanFit[2]);
-  Tree->SetBranchAddress(("Tag" + hName + "MinusenergyKalmanFit").c_str(), &m_hMinus_P_KalmanFit[3]);
+  if(m_hhMode == "pipi") {
+    Tree->SetBranchAddress(("Tag" + hName + "MinuspxKalmanFit").c_str(), &m_hMinus_P_KalmanFit[0]);
+    Tree->SetBranchAddress(("Tag" + hName + "MinuspyKalmanFit").c_str(), &m_hMinus_P_KalmanFit[1]);
+    Tree->SetBranchAddress(("Tag" + hName + "MinuspzKalmanFit").c_str(), &m_hMinus_P_KalmanFit[2]);
+    Tree->SetBranchAddress(("Tag" + hName + "MinusenergyKalmanFit").c_str(), &m_hMinus_P_KalmanFit[3]);
+  } else {
+    Tree->SetBranchAddress("PiMinuspxKalmanFit", &m_hMinus_P_KalmanFit[0]);
+    Tree->SetBranchAddress("PiMinuspyKalmanFit", &m_hMinus_P_KalmanFit[1]);
+    Tree->SetBranchAddress("PiMinuspzKalmanFit", &m_hMinus_P_KalmanFit[2]);
+    Tree->SetBranchAddress("PiMinusenergyKalmanFit", &m_hMinus_P_KalmanFit[3]);
+  }
   Tree->SetBranchAddress(("Tag" + m_K0Mode + "px").c_str(), &m_K0_P[0]);
   Tree->SetBranchAddress(("Tag" + m_K0Mode + "py").c_str(), &m_K0_P[1]);
   Tree->SetBranchAddress(("Tag" + m_K0Mode + "pz").c_str(), &m_K0_P[2]); // bug to be fixed in BOSS

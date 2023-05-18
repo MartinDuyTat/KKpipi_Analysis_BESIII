@@ -6,6 +6,7 @@
 #include"BinnedSCMBTagYieldPrediction.h"
 #include"Settings.h"
 #include"Utilities.h"
+#include"cisiFitterParameters.h"
 
 BinnedSCMBTagYieldPrediction::BinnedSCMBTagYieldPrediction(
   const std::string &Tag,
@@ -16,17 +17,15 @@ BinnedSCMBTagYieldPrediction::BinnedSCMBTagYieldPrediction(
 }
 
 std::vector<double> BinnedSCMBTagYieldPrediction::GetPredictedBinYields(
-  double BF_KKpipi,
-  const std::vector<double> &ci,
-  const std::vector<double> &si,
-  const std::vector<double> &Ri,
-  double) const {
+  const cisiFitterParameters &Parameters) const {
   std::vector<double> Ki, Kbari;
-  Utilities::ConvertRiToKi(Ri, Ki, Kbari);
-  const std::size_t Size = ci.size();
+  Utilities::ConvertRiToKi(Parameters.m_Ri, Ki, Kbari);
+  const std::size_t Size = Parameters.m_ci.size();
   const std::size_t TotalSize = 8*2*Size;
   TMatrixT<double> BinYields(TotalSize, 1);
   std::size_t BinYields_index = 0;
+  const double BF = m_TagMode == "KLpipi" ? Parameters.m_BF_KKpipi_KLpipi
+                                          : Parameters.m_BF_KKpipi;
   for(std::size_t TagBin = 1; TagBin <= 8; TagBin++) {
     for(int SignalBin = -Size; SignalBin <= static_cast<int>(Size); SignalBin++) {
       if(SignalBin == 0) {
@@ -46,12 +45,13 @@ std::vector<double> BinnedSCMBTagYieldPrediction::GetPredictedBinYields(
       // Interference term
       const double SqrtKK = TMath::Sqrt(TagKi*TagKbari
 				       *Ki[j - 1]*Kbari[j - 1]);
-      const double Interference = -2.0*SqrtKK*(Tagci*ci[j - 1] +
-                                               Tagsi*si[j - 1]*(Conj ? -1 : +1));
+      const double Interference =
+        -2.0*SqrtKK*(Tagci*Parameters.m_ci[j - 1] +
+		     Tagsi*Parameters.m_si[j - 1]*(Conj ? -1 : +1));
       const double Sign = m_TagMode == "KLpipi" ? -1 : +1;
       // Combine everything
       const double UnnormalisedYield = D0Yield + Dbar0Yield + Sign*Interference;
-      const double NormalisedYield = m_SingleTagYield*UnnormalisedYield*BF_KKpipi;
+      const double NormalisedYield = m_SingleTagYield*UnnormalisedYield*BF;
       BinYields(BinYields_index, 0) = NormalisedYield;
       BinYields_index++;
     }

@@ -10,6 +10,7 @@
 #include<string>
 #include"TMatrixT.h"
 #include"Settings.h"
+#include"cisiFitterParameters.h"
 
 class BinnedDTYieldPrediction {
  public:
@@ -25,11 +26,7 @@ class BinnedDTYieldPrediction {
    * Function that returns the predicted bin yield
    */
   virtual std::vector<double> GetPredictedBinYields(
-    double BF_KKpipi,
-    const std::vector<double> &ci,
-    const std::vector<double> &si,
-    const std::vector<double> &Ri,
-    double DeltaKpi) const = 0;
+    const cisiFitterParameters &Parameters) const = 0;
  protected:
   /**
    * The single tag yield of this tag, after efficiency correction

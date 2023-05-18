@@ -12,18 +12,16 @@
 #include"cisiLikelihood.h"
 #include"BinnedDTData.h"
 #include"Utilities.h"
+#include"cisiFitterParameters.h"
 
 cisiLikelihood::cisiLikelihood(const Settings &settings):
   m_TagData(SetupTags(settings)) {
 }
 
-double cisiLikelihood::CalculateLogLikelihood(double BF_KKpipi,
-					      const std::vector<double> &ci,
-					      const std::vector<double> &si,
-					      const std::vector<double> &Ri,
-					      double DeltaKpi) const {
+double cisiLikelihood::CalculateLogLikelihood(
+  const cisiFitterParameters &Parameters) const {
   auto LikelihoodAdder = [&] (double a, const BinnedDTData &b) {
-    return a + b.GetLogLikelihood(BF_KKpipi, ci, si, Ri, DeltaKpi);
+    return a + b.GetLogLikelihood(Parameters);
   };
   return std::accumulate(m_TagData.begin(), m_TagData.end(), 0.0, LikelihoodAdder);
 }
@@ -32,32 +30,6 @@ void cisiLikelihood::LoadToyDataset(int ToyNumber) const {
   for(const auto &TagData : m_TagData) {
     TagData.LoadToyDataset(ToyNumber);
   }
-}
-
-void cisiLikelihood::GenerateToy(double BF_KKpipi,
-				 const std::vector<double> &ci,
-				 const std::vector<double> &si,
-				 const std::vector<double> &Ri,
-				 double DeltaKpi,
-				 std::size_t StatsMultiplier) const {
-  for(const auto &TagData : m_TagData) {
-    TagData.GenerateToyYields(BF_KKpipi,
-			      ci, si, Ri,
-			      DeltaKpi,
-			      StatsMultiplier);
-  }
-}
-
-double cisiLikelihood::CalculateToyLogLikelihood(
-  double BF_KKpipi,
-  const std::vector<double> &ci,
-  const std::vector<double> &si,
-  const std::vector<double> &Ri,
-  double DeltaKpi) const {
-  auto LikelihoodAdder = [&] (double a, const BinnedDTData &b) {
-    return a + b.GetToyLogLikelihood(BF_KKpipi, ci, si, Ri, DeltaKpi);
-  };
-  return std::accumulate(m_TagData.begin(), m_TagData.end(), 0.0, LikelihoodAdder);
 }
 
 std::vector<BinnedDTData> cisiLikelihood::SetupTags(const Settings &settings) const {
@@ -73,16 +45,12 @@ std::vector<BinnedDTData> cisiLikelihood::SetupTags(const Settings &settings) co
   return TagData;
 }
 
-void cisiLikelihood::PrintComparison(double BF_KKpipi,
-				     const std::vector<double> &ci,
-				     const std::vector<double> &si,
-				     const std::vector<double> &Ri,
-				     double DeltaKpi) const {
+void cisiLikelihood::PrintComparison(const cisiFitterParameters &Parameters) const {
   std::for_each(m_TagData.begin(),
 		m_TagData.end(),
 		[&] (const auto &a) {
-		  a.PrintComparison(BF_KKpipi, ci, si, Ri, DeltaKpi); });
-  PrintFinalKi(Ri);
+		  a.PrintComparison(Parameters); });
+  PrintFinalKi(Parameters.m_Ri);
 }			     
 
 void cisiLikelihood::PrintFinalKi(const std::vector<double> &Ri) const {
@@ -100,33 +68,11 @@ void cisiLikelihood::PrintFinalKi(const std::vector<double> &Ri) const {
   }
 }
 
-void cisiLikelihood::SavePredictedBinYields(std::ofstream &File,
-					    double BF_KKpipi,
-					    const std::vector<double> &ci,
-					    const std::vector<double> &si,
-					    const std::vector<double> &Ri,
-					    double DeltaKpi) const {
+void cisiLikelihood::SavePredictedBinYields(
+  std::ofstream &File,
+  const cisiFitterParameters &Parameters) const {
   std::for_each(m_TagData.begin(),
 		m_TagData.end(),
 		[&] (const auto &a) {
-		  a.SavePredictedBinYields(File, BF_KKpipi, ci, si, Ri, DeltaKpi); });
+		  a.SavePredictedBinYields(File, Parameters); });
 }
-
-/*std::pair<std::vector<double>, std::vector<double>>
-cisiLikelihood::GetKi(const Settings &settings) const {
-  int NumberBins = settings["BinningScheme"].getI("NumberBins");
-  std::vector<double> Ki, Kbari;
-  for(int Bin = 1; Bin <= NumberBins; Bin++) {
-    const std::string KiName = "KKpipi_Ki_SignalBinP" + std::to_string(Bin);
-    const std::string KbariName = "KKpipi_Ki_SignalBinM" + std::to_string(Bin);
-    Ki.push_back(settings["FractionalYields"].getD(KiName));
-    Kbari.push_back(settings["FractionalYields"].getD(KbariName));
-  }
-  const double Sum = std::accumulate(Ki.begin(), Ki.end(), 0.0)
-                   + std::accumulate(Kbari.begin(), Kbari.end(), 0.0);
-  std::transform(Ki.begin(), Ki.end(), Ki.begin(),
-		 [=] (double a) {return a/Sum;});
-  std::transform(Kbari.begin(), Kbari.end(), Kbari.begin(),
-		 [=] (double a) {return a/Sum;});
-  return std::make_pair(Ki, Kbari);
-}*/

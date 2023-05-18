@@ -4,6 +4,8 @@
 #include<iomanip>
 #include<string>
 #include<vector>
+#include<stdexcept>
+#include<filesystem>
 #include"TTree.h"
 #include"TPad.h"
 #include"TCanvas.h"
@@ -21,6 +23,7 @@
 #include"RooHist.h"
 #include"RooMsgService.h"
 #include"RooHelpers.h"
+#include"RooRandom.h"
 #include"RooStats/SPlot.h"
 #include"RooStats/RooStatsUtils.h"
 #include"DoubleTagYield.h"
@@ -46,7 +49,7 @@ DoubleTagYield::DoubleTagYield(const Settings &settings, TTree *Tree):
     RooMsgService::instance().getStream(i).removeTopic(RooFit::Minimization);
     RooMsgService::instance().getStream(i).removeTopic(RooFit::Plotting);
   }
-  m_SignalMBC.setBins(500, "cache");
+  m_SignalMBC.setBins(1000, "cache");
 }
 
 void DoubleTagYield::DoFit() {
@@ -72,8 +75,16 @@ void DoubleTagYield::DoFit() {
   }
   Result->Print("V");
   m_ParametersAfterFit = Parameters->snapshot();
-  PlotProjections();
-  SaveSignalYields(m_Settings.get("FittedSignalYieldsFile"), Result);
+  if(!m_Settings.getB("ToyFits")) {
+    PlotProjections();
+    SaveSignalYields(m_Settings.get("FittedSignalYieldsFile"), Result);
+  }
+  // Save likelihood
+  if(m_Settings.getB("SaveLikelihood")) {
+    std::string Filename = m_Settings.get("FittedSignalYieldsFile");
+    Filename = Utilities::ReplaceString(Filename, ".txt", ".root");
+    SaveLikelihood(Filename, DataSet);
+  }
   // Smear peaking backgrounds for systematics studies
   if(m_Settings.getB("YieldSystematics")) {
     DoSystematicsFits();
@@ -89,6 +100,16 @@ void DoubleTagYield::DoFit() {
   }
 }
 
+void DoubleTagYield::SaveLikelihood(const std::string &Filename,
+				    RooDataSet *DataSet) {
+  RooSimultaneous *Model = m_FitModel.GetPDF();
+  TFile File(Filename.c_str(), "RECREATE");
+  auto NLL = Model->createNLL(*DataSet, BatchMode(true));
+  NLL->Write("Likelihood");
+  m_FitModel.m_SignalYields.Write("SignalYields");
+  File.Close();
+}
+
 void DoubleTagYield::DoToyFits() {
   RooSimultaneous *Model = m_FitModel.GetPDF();
   RooArgSet *Parameters = Model->getParameters(m_SignalMBC);
@@ -97,24 +118,46 @@ void DoubleTagYield::DoToyFits() {
   if(CatObject.GetCategories().size() > 1) {
     nCPUs = 4;
   }
-  int NumberToys = m_Settings.getI("NumberToys");
+  int NumberToysPerJob = m_Settings.getI("NumberToysPerJob");
+  int JobNumber = m_Settings.getI("JobNumber");
+  if(JobNumber < 0) {
+    throw std::invalid_argument("Job number cannot be negative");
+  }
+  int Seed = m_Settings.getI("Seed");
+  RooRandom::randomGenerator()->SetSeed(Seed + JobNumber);
+  if(!std::filesystem::exists("ToyFitResults") ||
+     !std::filesystem::is_directory("ToyFitResults")) {
+    std::filesystem::create_directory("ToyFitResults");
+  }
   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::ERROR);
-  for(int i = 0; i < NumberToys; i++) {
-    std::cout << "Running toy " << i << "...\n";
+  for(int i = 0; i < NumberToysPerJob; i++) {
+    std::cout << "Running job " << JobNumber << ", toy " << i << "...\n";
     *Parameters = *m_ParametersAfterFit;
     m_FitModel.SetGeneratorYields();
-    gRandom->SetSeed(m_Settings.getI("Seed"));
     auto ToyDataset = Model->generate(RooArgSet(m_SignalMBC,
 						*CatObject.GetCategoryVariable()),
 				      Extended());
-    auto Result = Model->fitTo(*ToyDataset, Save(), NumCPU(nCPUs),
-			       Strategy(2), Minos(true),
-			       PrintLevel(-1),
-			       Minimizer("Minuit2","migrad"));
+    int CovQual = -1;
+    RooFitResult *Result = nullptr;
+    std::size_t Counter = 0;
+    while(CovQual != 3 && Counter < 20) {
+      if(Counter != 0) {
+	std::cout << "Covariance matrix not valid, fitting again";
+	std::cout << "(" << Counter << ")\n";
+      }
+      Result = Model->fitTo(*ToyDataset, Save(), NumCPU(nCPUs),
+			    Strategy(2), Minos(m_FitModel.m_SignalYields),
+			    PrintLevel(-1),
+			    Minimizer("Minuit2","migrad"));
+      CovQual = Result->covQual();
+      Counter++;
+    }
     std::string Filename = "ToyFitResults/Toy";
-    Filename += std::to_string(i) + ".txt";
+    Filename += std::to_string(JobNumber*NumberToysPerJob + i) + ".txt";
     SaveSignalYields(Filename, Result);
-    std::cout << "Toy " << i << " done!\n";
+    Filename = Utilities::ReplaceString(Filename, ".txt", ".root");
+    SaveLikelihood(Filename, ToyDataset);
+    std::cout << "Job " << JobNumber << ", toy " << i << " done!\n";
   }
 }
 
