@@ -27,8 +27,9 @@ std::vector<double> BinnedCPTagYieldPrediction::GetPredictedBinYields(
     const double SqrtKK = TMath::Sqrt(Ki[i]*Kbari[i]);
     const double Interference = -2.0*SqrtKK*(2.0*m_FPlus - 1.0)*Parameters.m_ci[i];
     const double UnnormalisedYield = D0Yield + Dbar0Yield + Interference;
+    const double STYield = m_SingleTagYield/(1.0 - (2.0*m_FPlus - 1.0)*m_y);
     const double NormalisedYield =
-      m_SingleTagYield*UnnormalisedYield*Parameters.m_BF_KKpipi;
+      STYield*UnnormalisedYield*Parameters.m_BF_KKpipi;
     BinYields(i, 0) = NormalisedYield;
   }
   const auto EffMatrix = (1.0 - m_FPlus)*m_EfficiencyMatrix_CPEven

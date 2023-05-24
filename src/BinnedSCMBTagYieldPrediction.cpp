@@ -13,7 +13,8 @@ BinnedSCMBTagYieldPrediction::BinnedSCMBTagYieldPrediction(
   const Settings &settings):
   BinnedDTYieldPrediction(Tag, settings),
   m_TagMode(Tag),
-  m_Tag_Kicisi(settings) {
+  m_Tag_Kicisi(settings),
+  m_FPlus(settings["FPlus_TagModes"].getD(Tag)) {
 }
 
 std::vector<double> BinnedSCMBTagYieldPrediction::GetPredictedBinYields(
@@ -51,7 +52,8 @@ std::vector<double> BinnedSCMBTagYieldPrediction::GetPredictedBinYields(
       const double Sign = m_TagMode == "KLpipi" ? -1 : +1;
       // Combine everything
       const double UnnormalisedYield = D0Yield + Dbar0Yield + Sign*Interference;
-      const double NormalisedYield = m_SingleTagYield*UnnormalisedYield*BF;
+      const double STYield = m_SingleTagYield/(1.0 - (2.0*m_FPlus - 1.0)*m_y);
+      const double NormalisedYield = STYield*UnnormalisedYield*BF;
       BinYields(BinYields_index, 0) = NormalisedYield;
       BinYields_index++;
     }

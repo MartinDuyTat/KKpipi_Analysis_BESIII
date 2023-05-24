@@ -48,6 +48,10 @@ class BinnedDTYieldPrediction {
    * The efficiency matrix with K0pipi reweighting
    */
   const TMatrixT<double> m_EfficiencyMatrix_K0pipi;
+  /**
+   * The charm mixing parameter y
+   */
+  const double m_y;
  private:
   /**
    * Helper function to get the single tag yield
