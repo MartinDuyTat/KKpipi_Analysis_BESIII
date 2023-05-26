@@ -3,6 +3,7 @@
 #include<vector>
 #include<string>
 #include"TMath.h"
+#include"TRandom.h"
 #include"BinnedCPTagYieldPrediction.h"
 #include"Settings.h"
 #include"Utilities.h"
@@ -11,7 +12,7 @@
 BinnedCPTagYieldPrediction::BinnedCPTagYieldPrediction(const std::string &Tag,
 						       const Settings &settings):
   BinnedDTYieldPrediction(Tag, settings),
-  m_FPlus(settings["FPlus_TagModes"].getD(Tag)) {
+  m_FPlus(GetFPlus(Tag, settings)) {
 }
 
 std::vector<double> BinnedCPTagYieldPrediction::GetPredictedBinYields(
@@ -40,4 +41,16 @@ std::vector<double> BinnedCPTagYieldPrediction::GetPredictedBinYields(
     FinalBinYields[i] = EffCorrBinYields(i, 0);
   }
   return FinalBinYields;
+}
+
+double BinnedCPTagYieldPrediction::GetFPlus(const std::string &Tag,
+					    const Settings &settings) const {
+  double FPlus = settings["FPlus_TagModes"].getD(Tag);
+  if(settings.get("Systematics") == "ExternalStrongPhases") {
+    if(settings["FPlus_TagModes"].contains(Tag + "_err")) {
+      const double FPlus_err = settings["FPlus_TagModes"].getD(Tag + "_err");
+      FPlus += gRandom->Gaus(0.0, FPlus_err);
+    }
+  }
+  return FPlus;
 }

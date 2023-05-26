@@ -3,8 +3,15 @@
 #include<stdexcept>
 #include<vector>
 #include<string>
+#include<fstream>
+#include<sstream>
+#include"TRandom.h"
+#include"TMatrixDSym.h"
 #include"cisiK0pipi.h"
 #include"Settings.h"
+#include"CholeskySmearing.h"
+
+cisiK0pipi* cisiK0pipi::m_Instance = nullptr;
 
 cisiK0pipi::cisiK0pipi(const Settings &settings):
   m_Ki_KSpipi(InitialiseKi(settings, "KSpipi")),
@@ -13,13 +20,19 @@ cisiK0pipi::cisiK0pipi(const Settings &settings):
   m_cisi(Initialisecisi(settings)) {
 }
 
-std::vector<std::pair<double, double>>
-cisiK0pipi::InitialiseKi(const Settings &settings,
-			 const std::string &TagMode) {
+cisiK0pipi* cisiK0pipi::Initialise(const Settings &settings) {
+  if(!m_Instance) {
+    m_Instance = new cisiK0pipi(settings);
+  }
+  return m_Instance;
+}
+
+std::vector<double> cisiK0pipi::InitialiseKi(const Settings &settings,
+					     const std::string &TagMode) {
   if(TagMode != "KSpipi" && TagMode != "KLpipi") {
     throw std::invalid_argument(TagMode + " tag mode is not KSpipi or KLpipi");
   }
-  std::vector<std::pair<double, double>> KiKbari(16);
+  std::vector<double> KiKbari(16);
   for(std::size_t i = 1; i <= 8; i++) {
     const std::string pName = TagMode + "_K_p" + std::to_string(i);
     const std::string mName = TagMode + "_K_m" + std::to_string(i);
@@ -28,14 +41,18 @@ cisiK0pipi::InitialiseKi(const Settings &settings,
     const double Ki_err = settings[TagModeBinning]["Ki"].getD(pName + "_err");
     const double Kbari = settings[TagModeBinning]["Ki"].getD(mName);
     const double Kbari_err = settings[TagModeBinning]["Ki"].getD(mName + "_err");
-    KiKbari[i - 1] = std::make_pair(Ki, Ki_err);
-    KiKbari[i - 1 + 8] = std::make_pair(Kbari, Kbari_err);
+    KiKbari[i - 1] = Ki;
+    KiKbari[i - 1 + 8] = Kbari;
+    if(settings.get("Systematics") == "ExternalStrongPhases") {
+      KiKbari[i - 1] += gRandom->Gaus(0.0, Ki_err);
+      KiKbari[i - 1 + 8] += gRandom->Gaus(0.0, Kbari_err);
+    } 
   }
   return KiKbari;
 }
 
 std::vector<double> cisiK0pipi::Initialisecisi(const Settings &settings) {
-  std::vector<double> cisi(32);
+  std::vector<double> cisi(32), cisi_err(32);
   const std::vector<std::string> TagModes{"KSpipi", "KLpipi"};
   const std::vector<std::string> c_or_s{"c", "s"};
   for(std::size_t i = 0; i < 2; i++) {
@@ -46,33 +63,41 @@ std::vector<double> cisiK0pipi::Initialisecisi(const Settings &settings) {
 	const std::string TagBinning = TagModes[i] + "_BinningScheme";
 	const double ci_or_si = settings[TagBinning]["cisi"].getD(Name);
 	cisi[Bin - 1 + j*8 + i*16] = ci_or_si;
-	//double cisi_err = settings[TagBinning]["cisi"].getD(Name + "_err");
+	const double Error = settings[TagBinning]["cisi"].getD(Name + "_err");
+        cisi_err[Bin - 1 + j*8 + i*16] = Error;
       }
     }
   }
-  /*auto CorrMatrix = ParseCorrelationMatrix(settings);
-  TMatrixDSym CovMatrix(32);
-  for(int i = 0; i < 32; i++) {
-    for(int j = 0; j < 32; j++) {
-      CovMatrix(i, j) = CorrMatrix(i, j)*cisi_Sigma[i]*cisi_Sigma[j];
+  if(settings.get("Systematics") == "ExternalStrongPhases") {
+    auto CorrMatrix = ParseCorrelationMatrix(settings);
+    TMatrixDSym CovMatrix(32);
+    for(int i = 0; i < 32; i++) {
+      for(int j = 0; j < 32; j++) {
+	CovMatrix(i, j) = CorrMatrix(i, j)*cisi_err[i]*cisi_err[j];
+      }
     }
-  }*/
+    CholeskySmearing SmearingTool(CovMatrix);
+    SmearingTool.Smear();
+    for(std::size_t i = 0; i < 32; i++) {
+      cisi[i] += SmearingTool.GetSmearing(i);
+    }
+  }
   return cisi;
 }
 
 double cisiK0pipi::Get_Ki(std::size_t Bin, const std::string &TagMode) const {
   if(TagMode == "KLpipi") {
-    return m_Ki_KLpipi[Bin - 1].first;
+    return m_Ki_KLpipi[Bin - 1];
   } else {
-    return m_Ki_KSpipi[Bin - 1].first;
+    return m_Ki_KSpipi[Bin - 1];
   }
 }
 
 double cisiK0pipi::Get_Kbari(std::size_t Bin, const std::string &TagMode) const {
   if(TagMode == "KLpipi") {
-    return m_Ki_KLpipi[Bin - 1 + 8].first;
+    return m_Ki_KLpipi[Bin - 1 + 8];
   } else {
-    return m_Ki_KSpipi[Bin - 1 + 8].first;
+    return m_Ki_KSpipi[Bin - 1 + 8];
   }
 }
 
@@ -86,7 +111,7 @@ double cisiK0pipi::Get_si(std::size_t Bin, const std::string &TagMode) const {
   return m_cisi[Index];
 }
 
-/*TMatrixT<double> cisiK0pipi::ParseCorrelationMatrix(const Settings &settings) const {
+TMatrixT<double> cisiK0pipi::ParseCorrelationMatrix(const Settings &settings) const {
   TMatrixT<double> CorrMatrix(32, 32);
   std::ifstream CorrFile(settings.get("KSpipi_KLpipi_cisi_Correlation"));
   for(int i = 0; i < 32; i++) {
@@ -106,4 +131,4 @@ double cisiK0pipi::Get_si(std::size_t Bin, const std::string &TagMode) const {
   }
   CorrFile.close();
   return CorrMatrix;
-}*/
+}

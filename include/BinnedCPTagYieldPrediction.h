@@ -36,6 +36,10 @@ class BinnedCPTagYieldPrediction: public BinnedDTYieldPrediction {
    * The CP-even fraction of the tag
    */
   const double m_FPlus;
+  /**
+   * Helper function to load F+
+   */
+  double GetFPlus(const std::string &Tag, const Settings &settings) const;
 };
 
 #endif

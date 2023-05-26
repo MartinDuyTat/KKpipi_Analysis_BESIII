@@ -13,7 +13,7 @@ BinnedSCMBTagYieldPrediction::BinnedSCMBTagYieldPrediction(
   const Settings &settings):
   BinnedDTYieldPrediction(Tag, settings),
   m_TagMode(Tag),
-  m_Tag_Kicisi(settings),
+  m_Tag_Kicisi(cisiK0pipi::Initialise(settings)),
   m_FPlus(settings["FPlus_TagModes"].getD(Tag)) {
 }
 
@@ -35,10 +35,10 @@ std::vector<double> BinnedSCMBTagYieldPrediction::GetPredictedBinYields(
       const size_t j = TMath::Abs(SignalBin);
       const bool Conj = SignalBin < 0;
       // Get the Ki, ci and si information on the tag side
-      const double TagKi = m_Tag_Kicisi.Get_Ki(TagBin, m_TagMode);
-      const double TagKbari = m_Tag_Kicisi.Get_Kbari(TagBin, m_TagMode);
-      const double Tagci = m_Tag_Kicisi.Get_ci(TagBin, m_TagMode);
-      const double Tagsi = m_Tag_Kicisi.Get_si(TagBin, m_TagMode);
+      const double TagKi = m_Tag_Kicisi->Get_Ki(TagBin, m_TagMode);
+      const double TagKbari = m_Tag_Kicisi->Get_Kbari(TagBin, m_TagMode);
+      const double Tagci = m_Tag_Kicisi->Get_ci(TagBin, m_TagMode);
+      const double Tagsi = m_Tag_Kicisi->Get_si(TagBin, m_TagMode);
       // D0 yield
       const double D0Yield = TagKbari*(Conj ? Kbari[j - 1] : Ki[j - 1]);
       // Dbar0 yield

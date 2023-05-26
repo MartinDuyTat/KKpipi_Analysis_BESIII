@@ -4,6 +4,7 @@
 #include<string>
 #include"TFile.h"
 #include"TMatrixT.h"
+#include"TRandom.h"
 #include"BinnedDTYieldPrediction.h"
 #include"Settings.h"
 #include"Utilities.h"
@@ -24,9 +25,30 @@ double BinnedDTYieldPrediction::GetSTYield(const std::string &Tag,
     Utilities::ReplaceString(settings.get("ST_Yield"), "TAG", Tag);
   const auto ParsedSTYields = Utilities::ParseFile(STYieldFilename);
   const std::string YieldName(Tag + "_SingleTag_Yield");
+  double YieldSmear = 0.0;
+  if(settings.get("Systematics") == "STYield") {
+    if(Tag != "KLpi0" && Tag != "KeNu") {
+      const double STYield_err = ParsedSTYields.at(YieldName + "_err");
+      YieldSmear = gRandom->Gaus(0.0, STYield_err);
+    }
+  } else if(settings.get("Systematics") == "KLpi0STYield") {
+    if(Tag == "KLpi0") {
+      const double STYield_err = ParsedSTYields.at(YieldName + "_err");
+      YieldSmear = gRandom->Gaus(0.0, STYield_err);
+    }
+  } else if(settings.get("Systematics") == "KeNuSTYield") {
+    if(Tag == "KeNu") {
+      const double STYield_err = ParsedSTYields.at(YieldName + "_err");
+      YieldSmear = gRandom->Gaus(0.0, STYield_err);
+    }
+  }
   const std::string EffName = Tag + "_SingleTagEfficiency";
-  const double Efficiency = settings["ST_Efficiency"].getD(EffName);
-  return ParsedSTYields.at(YieldName)/Efficiency;
+  double Efficiency = settings["ST_Efficiency"].getD(EffName);
+  if(settings.get("Systematics") == "Efficiency") {
+    const double Eff_err = settings["ST_Efficiency"].getD(EffName + "_err");
+    Efficiency += gRandom->Gaus(0.0, Eff_err);
+  }
+  return (ParsedSTYields.at(YieldName) + YieldSmear)/Efficiency;
 }
 
 TMatrixT<double> BinnedDTYieldPrediction::GetEffMatrix(
@@ -38,16 +60,20 @@ TMatrixT<double> BinnedDTYieldPrediction::GetEffMatrix(
   TFile EffMatrixFile(Filename.c_str(), "READ");
   TMatrixT<double> *EffMatrix = nullptr;
   EffMatrixFile.GetObject(EffMatrixName.c_str(), EffMatrix);
-  /*if(Smearing && m_Settings.get("Systematics") == "Efficiency") {
+  if(settings.get("Systematics") == "Efficiency") {
     TMatrixT<double> *EffMatrix_err = nullptr;
-    EffMatrixFile.GetObject("EffMatrix_err", EffMatrix_err);
+    EffMatrixFile.GetObject((EffMatrixName + "_err").c_str(), EffMatrix_err);
     for(int i = 0; i < EffMatrix->GetNrows(); i++) {
       for(int j = 0; j < EffMatrix->GetNcols(); j++) {
-	(*EffMatrix)(i, j) += gRandom->Gaus(0.0, (*EffMatrix_err)(i, j));
+	if((*EffMatrix_err)(i, j) != 0.0) {
+	  (*EffMatrix)(i, j) += gRandom->Gaus(0.0, (*EffMatrix_err)(i, j));
+	  if((*EffMatrix)(i, j) < 0.0) {
+	    (*EffMatrix)(i, j) = 0.0;
+	  }
+	}
       }
     }
-  }*/
+  }
   EffMatrixFile.Close();
-  //EffMatrix->Invert();
   return *EffMatrix;
 }

@@ -41,7 +41,7 @@ class BinnedSCMBTagYieldPrediction: public BinnedDTYieldPrediction {
   /**
    * The Ki, ci and si of the tag mode
    */
-  const cisiK0pipi m_Tag_Kicisi;
+  cisiK0pipi* m_Tag_Kicisi;
   /**
    * The CP-even fraction of the tag
    */

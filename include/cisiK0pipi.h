@@ -5,15 +5,15 @@
  */
 
 #include<vector>
-#include<utility>
+#include"TMatrixT.h"
 #include"Settings.h"
 
 class cisiK0pipi {
  public:
   /**
-   * Constructor that initialises all the parameters
+   * Get the object, if it doesn't exist create it
    */
-  cisiK0pipi(const Settings &settings);
+  static cisiK0pipi* Initialise(const Settings &settings);
   /**
    * Get Ki in bin i
    */
@@ -32,12 +32,17 @@ class cisiK0pipi {
   double Get_si(std::size_t Bin, const std::string &TagMode) const;
  private:
   /**
+   * Constructor that initialises all the parameters
+   * It's private to avoid multiple instances
+   */
+  cisiK0pipi(const Settings &settings);
+  /**
    * Initialise Ki
    * @param settings Settings containing paths to parameters
    * @param TagMode Tag mode
    * @return Ki parameters and their uncertainties
    */
-  std::vector<std::pair<double, double>> InitialiseKi(const Settings &settings,
+  std::vector<double> InitialiseKi(const Settings &settings,
 						      const std::string &TagMode);
   /**
    * Initialise ci and si
@@ -48,15 +53,19 @@ class cisiK0pipi {
    * Parse correlation matrix
    * @param settings Settings containing paths to parameters
    */
-  //TMatrixT<double> ParseCorrelationMatrix(const Settings &settings) const;
+  TMatrixT<double> ParseCorrelationMatrix(const Settings &settings) const;
+  /**
+   * The object itself
+   */
+  static cisiK0pipi *m_Instance;
   /**
    * Ki parameters for KSpipi
    */
-  const std::vector<std::pair<double, double>> m_Ki_KSpipi;
+  const std::vector<double> m_Ki_KSpipi;
   /**
    * Ki parameters for KLpipi
    */
-  const std::vector<std::pair<double, double>> m_Ki_KLpipi;
+  const std::vector<double> m_Ki_KLpipi;
   /**
    * ci and si parameters
    */

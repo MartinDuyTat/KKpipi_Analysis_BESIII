@@ -59,7 +59,18 @@ void cisiFitter::Minimise() const {
 		  Parameters.m_rDcosDeltaKpi,
 		  Parameters.m_rDsinDeltaKpi);
   }
-  SaveFitResults(Minimiser, m_Settings.get("FitResultsFile"));
+  std::string ResultsFile;
+  if(m_Settings.get("Systematics") == "None") {
+    ResultsFile = m_Settings.get("FitResultsFile");
+  } else {
+    std::string SystDir = m_Settings.get("Systematics") + "Systematics";
+    if(!std::filesystem::exists(SystDir) ||
+       !std::filesystem::is_directory(SystDir)) {
+      std::filesystem::create_directory(SystDir);
+    }
+    ResultsFile = SystDir + "/Fit" + m_Settings.getI("SystSeed") + ".root";
+  }
+  SaveFitResults(Minimiser, ResultsFile);
 }
 
 void cisiFitter::RunToy(int ToyNumber) const {

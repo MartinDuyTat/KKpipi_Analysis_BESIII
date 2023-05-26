@@ -8,6 +8,7 @@
 #include<utility>
 #include<iostream>
 #include<iomanip>
+#include"TRandom.h"
 #include"Settings.h"
 #include"cisiLikelihood.h"
 #include"BinnedDTData.h"
@@ -33,6 +34,9 @@ void cisiLikelihood::LoadToyDataset(int ToyNumber) const {
 }
 
 std::vector<BinnedDTData> cisiLikelihood::SetupTags(const Settings &settings) const {
+  if(settings.get("Systematics") != "None") {
+    gRandom->SetSeed(settings.getI("SystSeed") + 1);
+  }
   const std::vector<std::string> TagModes = 
     Utilities::ConvertStringToVector(settings.get("TagModes"));
   std::vector<BinnedDTData> TagData;
