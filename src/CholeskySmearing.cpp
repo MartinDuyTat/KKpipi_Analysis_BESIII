@@ -6,8 +6,9 @@
 #include"TDecompChol.h"
 #include"CholeskySmearing.h"
 
-CholeskySmearing::CholeskySmearing(const TMatrixT<double> &CovMatrix): m_CholeskyMatrix(GetCholeskyDecomposition(CovMatrix)),
-								       m_Smearings(CovMatrix.GetNrows(), 1) {
+CholeskySmearing::CholeskySmearing(const TMatrixT<double> &CovMatrix):
+  m_CholeskyMatrix(GetCholeskyDecomposition(CovMatrix)),
+  m_Smearings(CovMatrix.GetNrows(), 1) {
   if(CovMatrix.GetNrows() != CovMatrix.GetNcols()) {
     throw std::range_error("Covariance matrix is not square");
   }
@@ -28,7 +29,8 @@ TMatrixT<double> CholeskySmearing::GetSmearings() const {
   return m_Smearings;
 }
 
-TMatrixT<double> CholeskySmearing::GetCholeskyDecomposition(const TMatrixT<double> &CovMatrix) const {
+TMatrixT<double> CholeskySmearing::GetCholeskyDecomposition(
+  const TMatrixT<double> &CovMatrix) const {
   TDecompChol CholeskyDecomposition(CovMatrix);
   bool Success = CholeskyDecomposition.Decompose();
   if(!Success) {

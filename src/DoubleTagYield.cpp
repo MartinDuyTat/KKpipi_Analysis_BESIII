@@ -162,76 +162,60 @@ void DoubleTagYield::DoToyFits() {
 }
 
 void DoubleTagYield::DoSystematicsFits() {
-  std::ofstream OutputFile(m_Settings.get("FittedSignalYieldsFile"),
-			   std::ios_base::app);
-  OutputFile << "\n* Systematic uncertainties\n\n";
   std::vector<std::string> Categories =
     m_DataLoader.GetCategoryObject().GetCategories();
-  std::map<std::string, double> SystError;
-  TMatrixT<double> SystCovMatrix(Categories.size(), Categories.size());
   int PeakingBackgrounds =
     m_Settings["MBC_Shape"].getI(m_Settings.get("Mode") + "_PeakingBackgrounds");
-  if(PeakingBackgrounds > 0) {
-    std::map<std::string, std::vector<double>> FittedYields;
-    for(const auto &Category : Categories) {
-      FittedYields.insert({Category, std::vector<double>()});
-    }
-    gRandom->SetSeed(m_Settings.getI("Seed"));
-    m_FitModel.PrepareSmearing();
-    int SuccessfulFits = 0;
-    RooDataSet *DataSet = m_DataLoader.GetDataSet();
-    RooSimultaneous *Model = m_FitModel.GetPDF();
-    RooArgSet *Parameters = Model->getParameters(m_SignalMBC);
-    int nCPUs = 1;
-    if(Categories.size() > 1) {
-      nCPUs = 4;
-    }
-    for(int i = 0; i < m_Settings.getI("NumberRuns"); i++) {
-      std::cout << "Starting systematics fit number: " << i << "\n";
-      *Parameters = *m_InitialParameters;
-      m_FitModel.SmearPeakingBackgrounds();
-      auto Result = Model->fitTo(*DataSet, Strategy(2), Save(), NumCPU(nCPUs));
-      Result->Print("V");
-      if(Result->status() == 0 && Result->covQual() == 3) {
-	SuccessfulFits++;
-      } else {
-	continue;
-      }
-      for(const auto &Category : Categories) {
-	double Yield = m_FitModel.m_Yields[Category + "_SignalYield"]->getVal();
-	FittedYields[Category].push_back(Yield);
-      }
-    }
-    std::cout << "Number of successfull fits: " << SuccessfulFits << "\n";
-    for(const auto &Category : Categories) {
-      SystError[Category] = TMath::RMS(FittedYields[Category].begin(),
-				       FittedYields[Category].end());
-    }
-    auto CategoryObj = m_DataLoader.GetCategoryObject();
-    for(const auto &Category_x : Categories) {
-      for(const auto &Category_y : Categories) {
-	double Covariance = Utilities::Covariance(FittedYields[Category_x],
-						  FittedYields[Category_y]);
-	int index_x = CategoryObj.GetCategoryIndex(Category_x);
-	int index_y = CategoryObj.GetCategoryIndex(Category_y);
-	SystCovMatrix(index_x, index_y) = Covariance;
-      }
-    }
-  } else {
-    for(const auto &Category : Categories) {
-      SystError[Category] = 0.0;
-    }
+  if(PeakingBackgrounds <= 0) {
+    throw std::runtime_error("Cannot do systematics with no peaking backgrounds");
   }
-  for(const auto &Category : Categories) {
-    std::string YieldName = Category + "_SignalYield_PeakingBackgrounds";
-    OutputFile << YieldName << "_syst_err " << SystError[Category] << "\n";
-  }
-  OutputFile.close();
+  int nCPUs = 1;
   if(Categories.size() > 1) {
-    TFile SystCovMatrixFile("PeakingBackground_CovMatrix.root", "RECREATE");
-    SystCovMatrixFile.cd();
-    SystCovMatrix.Write("CovMatrix");
-    SystCovMatrixFile.Close();
+    nCPUs = 4;
+  }
+  int NumberToysPerJob = m_Settings.getI("NumberToysPerJob");
+  int JobNumber = m_Settings.getI("JobNumber");
+  if(JobNumber < 0) {
+    throw std::invalid_argument("Job number cannot be negative");
+  }
+  int Seed = m_Settings.getI("Seed");
+  gRandom->SetSeed(Seed + JobNumber);
+  if(!std::filesystem::exists("PeakingBackgroundFitResults") ||
+     !std::filesystem::is_directory("PeakingBackgroundFitResults")) {
+    std::filesystem::create_directory("PeakingBackgroundFitResults");
+  }
+  RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::ERROR);
+  RooDataSet *DataSet = m_DataLoader.GetDataSet();
+  RooSimultaneous *Model = m_FitModel.GetPDF();
+  RooArgSet *Parameters = Model->getParameters(m_SignalMBC);
+  m_FitModel.PrepareSmearing();
+  for(int i = 0; i < NumberToysPerJob; i++) {
+    std::cout << "Running job " << JobNumber << ", toy " << i << "...\n";
+    *Parameters = *m_InitialParameters;
+    std::cout << "Starting systematics job : " << JobNumber;
+    std::cout << ", fit " << i << "\n";
+    m_FitModel.SmearPeakingBackgrounds();
+    int CovQual = -1;
+    RooFitResult *Result = nullptr;
+    std::size_t Counter = 0;
+    while(CovQual != 3 && Counter < 20) {
+      if(Counter != 0) {
+	std::cout << "Covariance matrix not valid, fitting again";
+	std::cout << "(" << Counter << ")\n";
+      }
+      Result = Model->fitTo(*Dataset, Save(), NumCPU(nCPUs),
+			    Strategy(2), Minos(m_FitModel.m_SignalYields),
+			    PrintLevel(-1),
+			    Minimizer("Minuit2","migrad"));
+      CovQual = Result->covQual();
+      Counter++;
+    }
+    std::string Filename = "PeakingBackgroundFitResults/Fit";
+    Filename += std::to_string(JobNumber*NumberToysPerJob + i) + ".txt";
+    SaveSignalYields(Filename, Result);
+    Filename = Utilities::ReplaceString(Filename, ".txt", ".root");
+    SaveLikelihood(Filename, ToyDataset);
+    std::cout << "Job " << JobNumber << ", fit " << i << " done!\n";
   }
 }
 

@@ -257,8 +257,7 @@ void BinnedFitModel::PrepareSmearing() {
     m_Settings["MBC_Shape"].getI(Mode + "_PeakingBackgrounds");
   for(int i = 0; i < PeakingBackgrounds; i++) {
     std::string Name(Mode + "_PeakingBackground" + std::to_string(i));
-    if(m_Settings["MBC_Shape"].contains(Name + "_Correlated") &&
-       m_Settings["MBC_Shape"].getB(Name + "_Correlated")) {
+    if(m_Settings["MBC_Shape"].getB(Name + "_Correlated")) {
       std::cout << Mode << " peaking background " << i;
       std::cout << ": Will use Cholesky decomposition\n";
       std::string Filename = Name + "_BackgroundToSignalRatio_CovMatrix.root";
