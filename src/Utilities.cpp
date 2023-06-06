@@ -196,7 +196,7 @@ namespace Utilities {
     } else if(Mode == "KSpipi" || Mode == "KSKK" || Mode == "KLpipi" || Mode == "KLKK") {
       return "SCMB";
     } else {
-      const std::vector<std::string> CPModes{"KK", "pipi", "KSpi0pi0", "pipipi0", "KLpi0", "KSpi0", "KSeta", "KSetaPrimepipieta", "KSetaPrimerhogamma", "KSpipipi0", "KLpi0pi0"};
+      const std::vector<std::string> CPModes{"KK", "KKPartReco", "pipi", "KSpi0pi0", "pipipi0", "KLpi0", "KSpi0", "KSpi0PartReco", "KSeta", "KSetaPrimepipieta", "KSetaPrimerhogamma", "KSpipipi0", "KLpi0pi0"};
       if(std::find(CPModes.begin(), CPModes.end(), Mode) != CPModes.end()) {
 	return "CP";
       } else {

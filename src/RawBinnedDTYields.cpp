@@ -4,6 +4,7 @@
 #include<memory>
 #include<stdexcept>
 #include<utility>
+#include<filesystem>
 #include"TMatrixTSym.h"
 #include"TRandom.h"
 #include"TFile.h"
@@ -116,4 +117,34 @@ RawBinnedDTYields::LoadCorrelationMatrix(const std::string &Filename) const {
   File.GetObject("CorrelationMatrix", CorrelationMatrix);
   File.Close();
   return *CorrelationMatrix;
+}
+
+std::string RawBinnedDTYields::GetFilename(const std::string &Tag,
+					   const Settings &settings,
+					   int ToyNumber) {
+  std::string DTYieldFilename;
+  if(ToyNumber > 0) {
+    DTYieldFilename =
+      Utilities::ReplaceString(settings.get("DT_ToyYieldDir"), "TAG", Tag);
+    DTYieldFilename += "/Toy" + std::to_string(ToyNumber) + ".txt";
+  } else {
+    if(settings.get("Systematics") == "PeakingBackgrounds") {
+      DTYieldFilename =
+	Utilities::ReplaceString(settings.get("DT_PeakingYieldDir"), "TAG", Tag);
+      if(std::filesystem::exists(DTYieldFilename)) {
+	int FitNumber = settings.getI("FitNumber");
+	if(FitNumber < 0) {
+	  throw std::invalid_argument("FitNumber must be positive");
+	}
+	DTYieldFilename += "/Fit" + std::to_string(FitNumber) + ".txt";
+      } else {
+	DTYieldFilename =
+	  Utilities::ReplaceString(settings.get("DT_Yield"), "TAG", Tag);
+      }
+    } else {
+      DTYieldFilename =
+	Utilities::ReplaceString(settings.get("DT_Yield"), "TAG", Tag);
+    }
+  }
+  return DTYieldFilename;
 }

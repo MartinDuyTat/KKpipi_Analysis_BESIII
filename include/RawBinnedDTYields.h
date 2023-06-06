@@ -13,6 +13,7 @@
 #include<unordered_map>
 #include"TMatrixTSym.h"
 #include"Settings.h"
+#include"RawBinnedDTYieldLikelihood.h"
 
 struct AsymmetricUncertainty {
   /**
@@ -43,6 +44,10 @@ class RawBinnedDTYields {
    * We don't need the move constructor
    */
   RawBinnedDTYields(RawBinnedDTYields &&DTYields) = delete;
+  /**
+   * RawBinnedDTYieldLikelihood needs access to GetFilename()
+   */
+  friend RawBinnedDTYieldLikelihood;
  protected:
   /**
    * Constructor that saves the yields, asymmetric uncertainties and correlation matrix
@@ -70,6 +75,12 @@ class RawBinnedDTYields {
   std::pair<std::vector<AsymmetricUncertainty>, double>
   GetToyYields(const std::vector<double> &PredictedYields,
 	       bool SymmetricUncertainties) const;
+  /**
+   * Helper function to determine the filename to load the yields from
+   */
+  static std::string GetFilename(const std::string &Tag,
+				 const Settings &settings,
+				 int ToyNumber);
  protected:
   /**
    * Helper function to load the correlation matrix

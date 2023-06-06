@@ -41,6 +41,14 @@ double BinnedDTYieldPrediction::GetSTYield(const std::string &Tag,
       const double STYield_err = ParsedSTYields.at(YieldName + "_err");
       YieldSmear = gRandom->Gaus(0.0, STYield_err);
     }
+  } else if(settings.get("Systematics") == "PeakingBackgrounds") {
+    const auto SystematicsYieldName = YieldName + "_PeakingBackgrounds_syst_err";
+    if(ParsedSTYields.find(SystematicsYieldName) != ParsedSTYields.end()) {
+      const double STPeakingBackground_err =
+	ParsedSTYields.at(SystematicsYieldName);
+      YieldSmear = gRandom->Gaus(0.0, STPeakingBackground_err);
+      std::cout << YieldSmear << "\n";
+    }
   }
   const std::string EffName = Tag + "_SingleTagEfficiency";
   double Efficiency = settings["ST_Efficiency"].getD(EffName);

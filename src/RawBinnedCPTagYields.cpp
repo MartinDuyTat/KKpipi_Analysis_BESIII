@@ -19,15 +19,7 @@ RawBinnedCPTagYields::ParseYields(const std::string &Tag,
 				  const Settings &settings,
 				  int ToyNumber) const {
   std::vector<AsymmetricUncertainty> Yields;
-  std::string DTYieldFilename;
-  if(ToyNumber > 0) {
-    DTYieldFilename =
-      Utilities::ReplaceString(settings.get("DT_ToyYieldDir"), "TAG", Tag);
-    DTYieldFilename += "/Toy" + std::to_string(ToyNumber) + ".txt";
-  } else {
-    DTYieldFilename =
-      Utilities::ReplaceString(settings.get("DT_Yield"), "TAG", Tag);
-  }
+  const auto DTYieldFilename = GetFilename(Tag, settings, ToyNumber);
   const auto ParsedDTYields = Utilities::ParseFile(DTYieldFilename);
   const std::string YieldNamePrefix("DoubleTag_CP_KKpipi_vs_" + Tag);
   std::size_t NumberBins = settings["BinningScheme"].getI("NumberBins");

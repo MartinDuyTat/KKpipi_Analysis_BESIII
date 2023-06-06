@@ -68,7 +68,13 @@ void cisiFitter::Minimise() const {
        !std::filesystem::is_directory(SystDir)) {
       std::filesystem::create_directory(SystDir);
     }
-    ResultsFile = SystDir + "/Fit" + m_Settings.getI("SystSeed") + ".root";
+    int FitNumber;
+    if(m_Settings.get("Systematics") == "PeakingBackgrounds") {
+      FitNumber = m_Settings.getI("FitNumber");
+    } else {
+      FitNumber = m_Settings.getI("SystSeed");
+    }
+    ResultsFile = SystDir + "/Fit" + std::to_string(FitNumber) + ".root";
   }
   SaveFitResults(Minimiser, ResultsFile);
 }

@@ -7,6 +7,7 @@
 #include"RooArgSet.h"
 #include"RooMsgService.h"
 #include"RawBinnedDTYieldLikelihood.h"
+#include"RawBinnedDTYields.h"
 #include"Settings.h"
 #include"Utilities.h"
 
@@ -49,17 +50,8 @@ RooNLLVar* RawBinnedDTYieldLikelihood::GetFullLikelihood(
     RooMsgService::instance().getStream(i).removeTopic(RooFit::Caching);
     RooMsgService::instance().getStream(i).removeTopic(RooFit::Fitting);
   }
-  std::string DTYieldFilename;
-  if(ToyNumber > 0) {
-    DTYieldFilename =
-      Utilities::ReplaceString(settings.get("DT_ToyYieldDir"), "TAG", Tag);
-    DTYieldFilename += "/Toy" + std::to_string(ToyNumber) + ".root";
-  } else {
-    DTYieldFilename =
-      Utilities::ReplaceString(settings.get("DT_Yield"), "TAG", Tag);
-    DTYieldFilename =
-      Utilities::ReplaceString(DTYieldFilename, ".txt", ".root");
-  }
+  auto DTYieldFilename = RawBinnedDTYields::GetFilename(Tag, settings, ToyNumber);
+  DTYieldFilename = Utilities::ReplaceString(DTYieldFilename, ".txt", ".root");
   TFile File(DTYieldFilename.c_str(), "READ");
   RooNLLVar *FullLikelihood = nullptr;
   File.GetObject("Likelihood", FullLikelihood);

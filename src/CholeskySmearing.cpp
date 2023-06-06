@@ -31,6 +31,22 @@ TMatrixT<double> CholeskySmearing::GetSmearings() const {
 
 TMatrixT<double> CholeskySmearing::GetCholeskyDecomposition(
   const TMatrixT<double> &CovMatrix) const {
+  bool AllEntriesZero = true;
+  for(int i = 0; i < CovMatrix.GetNrows(); i++) {
+    if(!AllEntriesZero) {
+      break;
+    }
+    for(int j = 0; j < CovMatrix.GetNcols(); j++) {
+      if(CovMatrix(i, j) != 0.0) {
+	AllEntriesZero = false;
+	break;
+      }
+    }
+  }
+  if(AllEntriesZero) {
+    // If the covariance matrix is identical to zero, do zero smearing
+    return CovMatrix;
+  }
   TDecompChol CholeskyDecomposition(CovMatrix);
   bool Success = CholeskyDecomposition.Decompose();
   if(!Success) {

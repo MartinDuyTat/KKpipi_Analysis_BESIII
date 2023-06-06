@@ -83,7 +83,9 @@ void BinnedDTData::PrintComparison(const cisiFitterParameters &Parameters) const
   const auto PredictedYields =
     m_DTPredictions->GetPredictedBinYields(Parameters);
   const auto MeasuredYields = m_DTYields->GetDoubleTagYields();
+  const double LL = GetLogLikelihood(Parameters, MeasuredYields);
   std::cout << "Fitted and predicted yield comparison for " << m_TagMode << ":\n";
+  std::cout << "Log-likelihood = " << LL << "\n";
   std::cout << std::left << std::setw(10) << "Fitted";
   std::cout << std::left << std::setw(10) << "+ Error";
   std::cout << std::left << std::setw(10) << "- Error";

@@ -266,12 +266,14 @@ void BinnedFitModel::PrepareSmearing() {
       BkgSigRatioFile.GetObject("CovMatrix", BkgSigRatioCovMatrix);
       m_CholeskyDecompositions.insert({Name + "_BackgroundToSignalRatio",
 	                               CholeskySmearing(*BkgSigRatioCovMatrix)});
-      Filename = Name + "_QuantumCorrelationFactor_CovMatrix.root";
-      TFile QCFactorFile(Filename.c_str(), "READ");
-      TMatrixT<double> *QCFactorCovMatrix = nullptr;
-      QCFactorFile.GetObject("CovMatrix", QCFactorCovMatrix);
-      m_CholeskyDecompositions.insert({Name + "_QuantumCorrelationFactor",
-                                       CholeskySmearing(*QCFactorCovMatrix)});
+      if(Utilities::GetTagType(Mode) != "Flavour") {
+	Filename = Name + "_QuantumCorrelationFactor_CovMatrix.root";
+	TFile QCFactorFile(Filename.c_str(), "READ");
+	TMatrixT<double> *QCFactorCovMatrix = nullptr;
+	QCFactorFile.GetObject("CovMatrix", QCFactorCovMatrix);
+	m_CholeskyDecompositions.insert({Name + "_QuantumCorrelationFactor",
+                              	         CholeskySmearing(*QCFactorCovMatrix)});
+      }
     }
   }
 }
@@ -303,7 +305,7 @@ void BinnedFitModel::SmearPeakingBackgrounds() {
 	auto YieldVar =
 	  static_cast<RooFormulaVar*>(m_Yields[PeakingYieldName]);
 	double BackgroundSignalRatio =
-	  m_Settings["MBC_Shape"].getD(Name + "_BackgroundToSignalRatio");
+	  m_Settings["BackgroundToSignalRatio"].getD(Name + "_BackgroundToSignalRatio");
 	if(Correlated) {
 	  // If peaking background is correlated, get smearing from Cholesky decomposition
 	  int CategoryIndex = m_Category.GetCategoryIndex(Category);
@@ -326,7 +328,7 @@ void BinnedFitModel::SmearPeakingBackgrounds() {
 	// Repeat the same with the quantum correlation factors
 	if(m_Settings["MBC_Shape"].contains(Name + "_QuantumCorrelationFactor")) {
 	  double QCFactor =
-	    m_Settings["MBC_Shape"].getD(Name + "_QuantumCorrelationFactor");
+	    m_Settings["QuantumCorrelationFactor"].getD(Name + "_QuantumCorrelationFactor");
 	  if(Correlated) {
 	    std::string BkgQCName = BackgroundName + "_QuantumCorrelationFactor";
 	    int CategoryIndex = m_Category.GetCategoryIndex(Category);

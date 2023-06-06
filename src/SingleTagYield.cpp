@@ -42,12 +42,14 @@
 #include"RooShapes/DoubleCrystalBall_Shape.h"
 #include"RooShapes/CrystalBall_Shape.h"
 
-SingleTagYield::SingleTagYield(TTree *DataTree, TTree *MCSignalTree, const Settings &settings):
-                               m_DataTree(DataTree),
-			       m_MCSignalTree(MCSignalTree),
-			       m_Settings(settings),
-			       m_MBC("MBC", "", 1.83, 1.8865),
-                               m_LuminosityWeight("LuminosityWeight", "", 1.0, 0.0, 10.0) {
+SingleTagYield::SingleTagYield(TTree *DataTree,
+			       TTree *MCSignalTree,
+			       const Settings &settings):
+  m_DataTree(DataTree),
+  m_MCSignalTree(MCSignalTree),
+  m_Settings(settings),
+  m_MBC("MBC", "", 1.83, 1.8865),
+  m_LuminosityWeight("LuminosityWeight", "", 1.0, 0.0, 10.0) {
   m_DataTree->SetBranchStatus("*", 0);
   m_DataTree->SetBranchStatus("MBC", 1);
   m_DataTree->SetBranchStatus("LuminosityWeight", 1);
@@ -73,9 +75,13 @@ void SingleTagYield::InitializeSignalShape() {
     m_Parameters.insert({"Mean", Mean});
     auto Sigma = Utilities::load_param(m_Settings["MBC_Shape"], Name + "Sigma");
     m_Parameters.insert({"Sigma", Sigma});
-    Resolution = Unique::create<RooGaussian*>("Gaussian", "", m_MBC, *m_Parameters["Mean"], *m_Parameters["Sigma"]);
+    Resolution = Unique::create<RooGaussian*>("Gaussian", "",
+					      m_MBC, *m_Parameters["Mean"],
+					      *m_Parameters["Sigma"]);
   } else {
-    m_Parameters.insert({"frac", Unique::create<RooRealVar*>((Name + "frac").c_str(), "", 0.5, 0.0, 1.0)});
+    m_Parameters.insert({"frac",
+	                 Unique::create<RooRealVar*>((Name + "frac").c_str(), "",
+						     0.5, 0.0, 1.0)});
     auto Mean1 = Utilities::load_param(m_Settings["MBC_Shape"], Name + "Mean1");
     auto Mean2 = Utilities::load_param(m_Settings["MBC_Shape"], Name + "Mean2");
     m_Parameters.insert({"Mean1", Mean1});
@@ -84,26 +90,45 @@ void SingleTagYield::InitializeSignalShape() {
     auto Sigma2 = Utilities::load_param(m_Settings["MBC_Shape"], Name + "Sigma2");
     m_Parameters.insert({"Sigma1", Sigma1});
     m_Parameters.insert({"Sigma2", Sigma2});
-    auto Gaussian1 = Unique::create<RooGaussian*>("Gaussian1", "", m_MBC, *m_Parameters["Mean1"], *m_Parameters["Sigma1"]);
-    auto Gaussian2 = Unique::create<RooGaussian*>("Gaussian2", "", m_MBC, *m_Parameters["Mean2"], *m_Parameters["Sigma2"]);
-    Resolution = Unique::create<RooAddPdf*>("Resolution", "", RooArgList(*Gaussian1, *Gaussian2), *m_Parameters["frac"]);
+    auto Gaussian1 = Unique::create<RooGaussian*>("Gaussian1", "",
+						  m_MBC,
+						  *m_Parameters["Mean1"],
+						  *m_Parameters["Sigma1"]);
+    auto Gaussian2 = Unique::create<RooGaussian*>("Gaussian2", "",
+						  m_MBC,
+						  *m_Parameters["Mean2"],
+						  *m_Parameters["Sigma2"]);
+    Resolution = Unique::create<RooAddPdf*>("Resolution", "",
+					    RooArgList(*Gaussian1, *Gaussian2),
+					    *m_Parameters["frac"]);
   }
   RooDataSet MCSignal("MCSignal", "", m_MCSignalTree, RooArgList(m_MBC));
-  auto SignalShape = Unique::create<RooKeysPdf*>("SignalShape", "", m_MBC, MCSignal);
-  auto SignalShapeConv = Unique::create<RooFFTConvPdf*>("SignalShapeConv", "", m_MBC, *SignalShape, *Resolution);
+  auto SignalShape = Unique::create<RooKeysPdf*>("SignalShape", "",
+						 m_MBC, MCSignal);
+  auto SignalShapeConv = Unique::create<RooFFTConvPdf*>("SignalShapeConv", "",
+							m_MBC,
+							*SignalShape,
+							*Resolution);
   m_ModelPDFs.add(*SignalShapeConv);
-  auto SingleTag_Yield = Utilities::load_param(m_Settings["MBC_Shape"], Name + "Yield");
+  auto SingleTag_Yield = Utilities::load_param(m_Settings["MBC_Shape"],
+					       Name + "Yield");
   m_ModelYields.add(*SingleTag_Yield);
   m_Parameters.insert({"Yield", SingleTag_Yield});
 }
 
 void SingleTagYield::InitializeArgus() {
   m_Parameters.insert({"End", Unique::create<RooRealVar*>("End", "", 1.8865)});
-  auto c = Utilities::load_param(m_Settings["MBC_Shape"], m_Settings.get("Mode") + "_SingleTag_c");
+  auto c = Utilities::load_param(m_Settings["MBC_Shape"],
+				 m_Settings.get("Mode") + "_SingleTag_c");
   m_Parameters.insert({"c", c});
-  auto Argus = Unique::create<RooArgusBG*>("Argus", "", m_MBC, *m_Parameters["End"], *m_Parameters["c"]);
+  auto Argus = Unique::create<RooArgusBG*>("Argus", "",
+					   m_MBC,
+					   *m_Parameters["End"],
+					   *m_Parameters["c"]);
   m_ModelPDFs.add(*Argus);
-  auto SingleTag_BackgroundYield = Utilities::load_param(m_Settings["MBC_Shape"], m_Settings.get("Mode") + "_SingleTag_CombinatorialYield");
+  auto SingleTag_BackgroundYield =
+    Utilities::load_param(m_Settings["MBC_Shape"],
+			  m_Settings.get("Mode") + "_SingleTag_CombinatorialYield");
   m_ModelYields.add(*SingleTag_BackgroundYield);
   m_Parameters.insert({"CombinatorialYield", SingleTag_BackgroundYield});
 }
@@ -129,9 +154,11 @@ void SingleTagYield::InitializePeakingBackgrounds() {
       std::cout << "Adding peaking background with yield: " << PeakingYield << "\n";
       // This is automatically handled in FitShape
     } else {
-      double BackgroundToSignalRatio = m_Settings["BackgroundToSignalRatio"].getD(Name + "_BackgroundToSignalRatio");
+      double BackgroundToSignalRatio =
+	m_Settings["BackgroundToSignalRatio"].getD(Name + "_BackgroundToSignalRatio");
       PeakingPDF->UseRelativeYield(m_Parameters["Yield"], BackgroundToSignalRatio);
-      std::cout << "Adding peaking background with background-to-signal ratio: " << BackgroundToSignalRatio << "\n";
+      std::cout << "Adding peaking background with background-to-signal ratio: ";
+      std::cout << BackgroundToSignalRatio << "\n";
     }
     m_ModelPDFs.add(*PeakingPDF->GetPDF());
     m_ModelYields.add(*PeakingPDF->GetYield());
@@ -140,7 +167,8 @@ void SingleTagYield::InitializePeakingBackgrounds() {
 }
 
 void SingleTagYield::InitializeFitShape() {
-  m_FullModel = Unique::create<RooAddPdf*>("MBC_Model", "", m_ModelPDFs, m_ModelYields);
+  m_FullModel = Unique::create<RooAddPdf*>("MBC_Model", "",
+					   m_ModelPDFs, m_ModelYields);
 } 
 
 void SingleTagYield::FitYield() {
@@ -153,15 +181,21 @@ void SingleTagYield::FitYield() {
     m_DataTree->SetBranchStatus(MassVarName.c_str(), 1);
     double LowMassCut = m_Settings.getD("InvariantMassVariable_low");
     double HighMassCut = m_Settings.getD("InvariantMassVariable_high");
-    InvMassVar = std::unique_ptr<RooRealVar>(new RooRealVar(MassVarName.c_str(), "", LowMassCut, HighMassCut));
-    MassCut = MassVarName + " > " + std::to_string(LowMassCut) + " && " + MassVarName + " < " + std::to_string(HighMassCut);
+    InvMassVar = std::unique_ptr<RooRealVar>(new RooRealVar(MassVarName.c_str(),
+							    "",
+							    LowMassCut,
+							    HighMassCut));
+    MassCut = MassVarName + " > " + std::to_string(LowMassCut)
+            + " && " + MassVarName + " < " + std::to_string(HighMassCut);
     MassCutBinned = MassCut + "*LuminosityWeight";
     Variables.add(*InvMassVar);
   }
   TH1D h1("h1", "h1", m_Settings.getI("Bins_in_fit"), 1.83, 1.8865);
   m_DataTree->Draw("MBC >> h1", MassCutBinned.c_str(), "goff");
   RooDataHist BinnedData("BinnedData", "BinnedData", RooArgList(m_MBC), &h1);
-  RooDataSet Data("Data", "Data", m_DataTree, Variables, MassCut.c_str(), "LuminosityWeight");
+  RooDataSet Data("Data", "Data",
+		  m_DataTree, Variables,
+		  MassCut.c_str(), "LuminosityWeight");
   RooArgSet *Parameters = m_FullModel->getParameters(m_MBC);
   m_InitialParameters = Parameters->snapshot();
   if(m_Settings.get("FitType") != "NoFit") {
@@ -173,25 +207,33 @@ void SingleTagYield::FitYield() {
   }
   PlotSingleTagYield(Data);
   if(m_Settings.getB("YieldSystematics")) {
+    gRandom->SetSeed(m_Settings.getI("Seed"));
     double SystError;
-    int PeakingBackgrounds = m_Settings["MBC_Shape"].getI(m_Settings.get("Mode") + "_PeakingBackgrounds");
+    int PeakingBackgrounds =
+      m_Settings["MBC_Shape"].getI(m_Settings.get("Mode") + "_PeakingBackgrounds");
     if(PeakingBackgrounds > 0) {
       std::vector<double> FittedYields;
-      gRandom->SetSeed(m_Settings.getI("Seed"));
       for(int i = 0; i < m_Settings.getI("NumberRuns"); i++) {
 	std::cout << "Starting systematics fit number: " << i << "\n";
 	*Parameters = *m_InitialParameters;
 	SmearPeakingBackgrounds();
 	auto Result = m_FullModel->fitTo(BinnedData, Strategy(2), Save());
 	Result->Print("V");
-	FittedYields.push_back(m_Parameters["Yield"]->getVal());
+	int Status = Result->status();
+	if(Status == 0 || Status == 4) {
+	  FittedYields.push_back(m_Parameters["Yield"]->getVal());
+	} else {
+	  std::cout << "Status = " << Status << ", skipping\n";
+	}
       }
       SystError = TMath::RMS(FittedYields.begin(), FittedYields.end());
     } else {
       SystError = 0.0;
     }
-    std::ofstream OutputFile(m_Settings.get("ResultsFilename"), std::ios_base::app);
-    std::string YieldName = m_Settings.get("Mode") + "_SingleTag_Yield_PeakingBackgrounds";
+    std::ofstream OutputFile(m_Settings.get("ResultsFilename"),
+			     std::ios_base::app);
+    std::string YieldName = m_Settings.get("Mode")
+                          + "_SingleTag_Yield_PeakingBackgrounds";
     OutputFile << YieldName << "_syst_err " << SystError << "\n";
     OutputFile.close();
   }
@@ -220,7 +262,8 @@ void SingleTagYield::PlotSingleTagYield(const RooDataSet &Data) const {
   FormatAxis(Frame->GetXaxis());
   FormatAxis(Frame->GetYaxis());
   Frame->GetYaxis()->SetTitleOffset(1.32);
-  if(m_Settings.contains("No_x_axis_tick_label") && m_Settings.getB("No_x_axis_tick_label")) {
+  if(m_Settings.contains("No_x_axis_tick_label") &&
+     m_Settings.getB("No_x_axis_tick_label")) {
     Frame->GetXaxis()->SetLabelSize(0);
     std::cout << "Removing tick labels\n";
   }
@@ -231,24 +274,47 @@ void SingleTagYield::PlotSingleTagYield(const RooDataSet &Data) const {
   Text.SetTextColor(kBlack);
   Text.SetNDC(true);
   Text.SetText(0.2, 0.8, Utilities::GetTagNameLaTeX(TagMode).c_str());
-  Frame->SetTitle((TagMode + std::string(" Single Tag M_{ BC}; M_{ BC} (GeV/#it{c}^{2}); Events / 0.3 MeV/#it{c}^{2}")).c_str());
+  std::string TitleText = TagMode + " Single Tag M_{ BC};";
+  TitleText += "M_{ BC} (GeV/#it{c}^{2});";
+  TitleText += "Events / 0.3 MeV/#it{c}^{2}";
+  Frame->SetTitle(TitleText.c_str());
   RooPlot *Data_RooPlot = Data.plotOn(Frame, Binning(200));
   FormatData(Data_RooPlot->getHist());
-  double TotalEvents = std::accumulate(m_ModelYields.begin(), m_ModelYields.end(), 0.0, [] (double a, const auto &b) { return a + static_cast<RooRealVar*>(b)->getVal(); });
-  m_FullModel->plotOn(Frame, LineColor(kRed), LineWidth(3), Normalization(TotalEvents, RooAbsReal::NumEvent));
+  double TotalEvents = std::accumulate(m_ModelYields.begin(),
+				       m_ModelYields.end(),
+				       0.0,
+				       [] (double a, const auto &b) {
+					 auto bb = static_cast<RooRealVar*>(b);
+					 return a + bb->getVal(); });
+  m_FullModel->plotOn(Frame,
+		      LineColor(kRed),
+		      LineWidth(3),
+		      Normalization(TotalEvents, RooAbsReal::NumEvent));
   RooHist *Pull = Frame->pullHist();
-  //m_FullModel->plotOn(Frame, LineColor(kRed), Components("SignalShapeConv"), Normalization(TotalEvents, RooAbsReal::NumEvent));
   if(m_PeakingBackgrounds.size() > 0) {
     std::string PeakingList("Argus");
     for(unsigned int i = 0; i < m_PeakingBackgrounds.size(); i++) {
-      PeakingList += std::string(",") + m_PeakingBackgrounds[i]->GetPDF()->GetName();
+      PeakingList += std::string(",");
+      PeakingList += m_PeakingBackgrounds[i]->GetPDF()->GetName();
     }
-    m_FullModel->plotOn(Frame, FillStyle(1001), LineColor(kGreen + 2), FillColor(kGreen + 2), LineWidth(3), DrawOption("F"), Components(PeakingList.c_str()));
+    m_FullModel->plotOn(Frame, 
+			FillStyle(1001),
+			LineColor(kGreen + 2),
+			FillColor(kGreen + 2),
+			LineWidth(3),
+			DrawOption("F"),
+			Components(PeakingList.c_str()));
   }
-  m_FullModel->plotOn(Frame, FillStyle(1001), LineColor(kAzure + 6), FillColor(kAzure + 6), LineWidth(3), DrawOption("F"), Components("Argus"), Normalization(TotalEvents, RooAbsReal::NumEvent));
+  m_FullModel->plotOn(Frame,
+		      FillStyle(1001),
+		      LineColor(kAzure + 6),
+		      FillColor(kAzure + 6),
+		      LineWidth(3),
+		      DrawOption("F"),
+		      Components("Argus"),
+		      Normalization(TotalEvents, RooAbsReal::NumEvent));
   Data.plotOn(Frame, Binning(200));
   Frame->Draw();
-  //WriteBes3();
   Text.Draw("SAME");
   Pad2.cd();
   RooPlot *PullFrame = m_MBC.frame();
@@ -277,8 +343,10 @@ void SingleTagYield::SaveFitParameters() const {
   OutputFile << "status " << m_Result->status() << "\n";
   OutputFile << "covQual " << m_Result->covQual() << "\n";
   for(const auto &Param : m_Parameters) {
-    OutputFile << Mode + "_" + Param.first << " " << Param.second->getVal() << "\n";
-    OutputFile << Mode + "_" + Param.first << "_err " << Param.second->getError() << "\n";
+    OutputFile << Mode + "_" + Param.first;
+    OutputFile << " " << Param.second->getVal() << "\n";
+    OutputFile << Mode + "_" + Param.first;
+    OutputFile << "_err " << Param.second->getError() << "\n";
   }
   auto Yield = m_Parameters.at("Yield");
   OutputFile << Mode + "_SingleTag_Yield " << Yield->getVal() << "\n";
@@ -288,7 +356,9 @@ void SingleTagYield::SaveFitParameters() const {
 
 std::pair<double, double> SingleTagYield::CalculateSingleTagYield() const {
   using namespace RooFit;
-  return std::pair<double, double>{m_Parameters.at("Yield")->getVal(), m_Parameters.at("Yield")->getPropagatedError(*m_Result)};
+  return std::pair<double, double>{
+    m_Parameters.at("Yield")->getVal(),
+    m_Parameters.at("Yield")->getPropagatedError(*m_Result)};
 }
 
 void SingleTagYield::sPlotReweight(RooDataSet &Data) {
@@ -306,7 +376,9 @@ void SingleTagYield::sPlotReweight(RooDataSet &Data) {
   }
   RooStats::SPlot("sData", "", Data, m_FullModel, sPlotYields);
   TFile Outfile(m_Settings.get("sPlotFilename").c_str(), "RECREATE");
-  auto Tree = RooStats::GetAsTTree(m_Settings.get("TreeName").c_str(), m_Settings.get("TreeName").c_str(), Data);
+  auto Tree = RooStats::GetAsTTree(m_Settings.get("TreeName").c_str(),
+				   m_Settings.get("TreeName").c_str(),
+				   Data);
   Tree->Write();
   Outfile.Close();
 }
@@ -317,7 +389,8 @@ void SingleTagYield::SmearArgusEndPoint() {
 
 void SingleTagYield::SmearPeakingBackgrounds() {
   std::string Mode = m_Settings.get("Mode");
-  int PeakingBackgrounds = m_Settings["MBC_Shape"].getI(Mode + "_PeakingBackgrounds");
+  int PeakingBackgrounds =
+    m_Settings["MBC_Shape"].getI(Mode + "_PeakingBackgrounds");
   for(int i = 0; i < PeakingBackgrounds; i++) {
     std::string Name = Mode + "_PeakingBackground" + std::to_string(i);
     auto YieldVar = m_PeakingBackgrounds[i]->GetYield();
@@ -330,13 +403,17 @@ void SingleTagYield::SmearPeakingBackgrounds() {
       }
       static_cast<RooRealVar*>(YieldVar)->setVal(PeakingYield);
     } else {
-      double BackgroundToSignalRatio = m_Settings["MBC_Shape"].getD(Name + "_BackgroundToSignalRatio");
-      double BackgroundToSignalRatio_err = m_Settings["MBC_Shape"].getD(Name + "_BackgroundToSignalRatio_err");
+      double BackgroundToSignalRatio =
+	m_Settings["BackgroundToSignalRatio"].getD(Name + "_BackgroundToSignalRatio");
+      double BackgroundToSignalRatio_err =
+	m_Settings["BackgroundToSignalRatio"].getD(Name + "_BackgroundToSignalRatio_err");
       BackgroundToSignalRatio += gRandom->Gaus(0.0, BackgroundToSignalRatio_err);
       if(BackgroundToSignalRatio <= 0.0) {
 	BackgroundToSignalRatio = 0.0;
       }
-      auto BkgToSigVar = static_cast<RooFormulaVar*>(YieldVar)->getParameter((Name + "_BackgroundToSignalYieldRatio").c_str());
+      auto YieldFormulaVar = static_cast<RooFormulaVar*>(YieldVar);
+      std::string YieldFormulaName = Name + "_BackgroundToSignalYieldRatio";
+      auto BkgToSigVar = YieldFormulaVar->getParameter(YieldFormulaName.c_str());
       static_cast<RooRealVar*>(BkgToSigVar)->setVal(BackgroundToSignalRatio);
     }
   }

@@ -179,7 +179,7 @@ void DoubleTagYield::DoSystematicsFits() {
     throw std::invalid_argument("Job number cannot be negative");
   }
   int Seed = m_Settings.getI("Seed");
-  gRandom->SetSeed(Seed + JobNumber);
+  gRandom->SetSeed(Seed + JobNumber + 1);
   if(!std::filesystem::exists("PeakingBackgroundFitResults") ||
      !std::filesystem::is_directory("PeakingBackgroundFitResults")) {
     std::filesystem::create_directory("PeakingBackgroundFitResults");
@@ -203,7 +203,7 @@ void DoubleTagYield::DoSystematicsFits() {
 	std::cout << "Covariance matrix not valid, fitting again";
 	std::cout << "(" << Counter << ")\n";
       }
-      Result = Model->fitTo(*Dataset, Save(), NumCPU(nCPUs),
+      Result = Model->fitTo(*DataSet, Save(), NumCPU(nCPUs),
 			    Strategy(2), Minos(m_FitModel.m_SignalYields),
 			    PrintLevel(-1),
 			    Minimizer("Minuit2","migrad"));
@@ -214,7 +214,7 @@ void DoubleTagYield::DoSystematicsFits() {
     Filename += std::to_string(JobNumber*NumberToysPerJob + i) + ".txt";
     SaveSignalYields(Filename, Result);
     Filename = Utilities::ReplaceString(Filename, ".txt", ".root");
-    SaveLikelihood(Filename, ToyDataset);
+    SaveLikelihood(Filename, DataSet);
     std::cout << "Job " << JobNumber << ", fit " << i << " done!\n";
   }
 }
