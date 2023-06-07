@@ -193,7 +193,7 @@ namespace Utilities {
   std::string GetTagType(const std::string &Mode) {
     if(Mode == "Kpi" || Mode == "Kpipi0" || Mode == "Kpipipi" || Mode == "KeNu") {
       return "Flavour";
-    } else if(Mode == "KSpipi" || Mode == "KSKK" || Mode == "KLpipi" || Mode == "KLKK") {
+    } else if(Mode == "KSpipi" || Mode == "KSpipiPartReco" || Mode == "KSKK" || Mode == "KLpipi" || Mode == "KLKK") {
       return "SCMB";
     } else {
       const std::vector<std::string> CPModes{"KK", "KKPartReco", "pipi", "KSpi0pi0", "pipipi0", "KLpi0", "KSpi0", "KSpi0PartReco", "KSeta", "KSetaPrimepipieta", "KSetaPrimerhogamma", "KSpipipi0", "KLpi0pi0"};

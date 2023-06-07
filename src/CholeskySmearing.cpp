@@ -1,6 +1,7 @@
 // Martin Duy Tat 21st April 2022
 
 #include<stdexcept>
+#include<iostream>
 #include"TMatrixT.h"
 #include"TRandom.h"
 #include"TDecompChol.h"
@@ -50,8 +51,21 @@ TMatrixT<double> CholeskySmearing::GetCholeskyDecomposition(
   TDecompChol CholeskyDecomposition(CovMatrix);
   bool Success = CholeskyDecomposition.Decompose();
   if(!Success) {
-    throw std::runtime_error("Covariance matrix not positive definite");
+    TMatrixT<double> I(CovMatrix.GetNrows(), CovMatrix.GetNcols());
+    for(int i = 0; i < CovMatrix.GetNrows(); i++) {
+      I(i, i) = 1.0e-14;
+    }
+    TDecompChol CholeskyDecomposition2(CovMatrix + I);
+    Success = CholeskyDecomposition2.Decompose();
+    if(!Success) {
+      throw std::runtime_error("Covariance matrix not positive definite");
+    } else {
+      std::cout << "Adding 1.0e-14 to diagonal, matrix is now positive definite\n";
+      TMatrixT<double> Temp = CholeskyDecomposition.GetU();
+      return Temp.T();
+    }
+  } else {
+    TMatrixT<double> Temp = CholeskyDecomposition.GetU();
+    return Temp.T();
   }
-  TMatrixT<double> Temp = CholeskyDecomposition.GetU();
-  return Temp.T();
 }

@@ -138,8 +138,7 @@ std::string RawBinnedDTYields::GetFilename(const std::string &Tag,
 	}
 	DTYieldFilename += "/Fit" + std::to_string(FitNumber) + ".txt";
       } else {
-	DTYieldFilename =
-	  Utilities::ReplaceString(settings.get("DT_Yield"), "TAG", Tag);
+	throw std::runtime_error("Cannot find systematics fit results for " + Tag);
       }
     } else {
       DTYieldFilename =
