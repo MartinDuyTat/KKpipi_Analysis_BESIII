@@ -253,13 +253,19 @@ void DoubleTagYield::PlotProjections() {
     std::string LabelText = Utilities::GetTagNameLaTeX(TagMode);
     std::string Title;
     if(SignalBin != 0) {
-      LabelText += ", bin " + std::to_string(SignalBin);
-    }
-    if(TagMode == "KSpipi" || TagMode == "KSpipiPartReco" ||
-       TagMode == "KLpipi" || TagMode == "KSKK" ||
-       TagMode == "KLKK" || TagMode == "KKpipi") {
       LabelText = "#splitline{" + LabelText;
-      LabelText += "}{Bin " + std::to_string(TagBin) + "}";
+      if(TagMode == "KSpipi" || TagMode == "KSpipiPartReco" ||
+	 TagMode == "KLpipi" || TagMode == "KSKK" ||
+	 TagMode == "KLKK" || TagMode == "KKpipi") {
+	LabelText += "}{Bin (" + std::to_string(SignalBin) + ",";
+	LabelText += std::to_string(TagBin) + ")}";
+      } else {
+	LabelText += "}{Bin " + std::to_string(SignalBin) + "}";
+      }
+    } else {
+      if(TagBin != 0) {
+	LabelText += "}{Bin " + std::to_string(TagBin) + "}";
+      }
     }
     if(TagMode.substr(0, 2) == "KL" ||
        TagMode.find("PartReco") != std::string::npos) {

@@ -47,7 +47,6 @@ double BinnedDTYieldPrediction::GetSTYield(const std::string &Tag,
       const double STPeakingBackground_err =
 	ParsedSTYields.at(SystematicsYieldName);
       YieldSmear = gRandom->Gaus(0.0, STPeakingBackground_err);
-      std::cout << YieldSmear << "\n";
     }
   }
   const std::string EffName = Tag + "_SingleTagEfficiency";
