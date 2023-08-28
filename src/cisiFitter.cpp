@@ -316,6 +316,7 @@ void cisiFitter::SaveFitResults(ROOT::Minuit2::Minuit2Minimizer &Minimiser,
     File.WriteObject(&CovStatus, "CovStatus");
     TParameter<double> LL("LL", Minimiser.MinValue());
     File.WriteObject(&LL, "LL");
+    std::cout << "LL and fit status saved\n";
   }
   {
     std::vector<std::string> VariableNames;
@@ -323,18 +324,21 @@ void cisiFitter::SaveFitResults(ROOT::Minuit2::Minuit2Minimizer &Minimiser,
       VariableNames.push_back(Minimiser.VariableName(i));
     }
     File.WriteObject(&VariableNames, "VariableNames");
+    std::cout << "Variable names saved\n";
   }
   {
     const double *Values = Minimiser.X();
     const std::vector<double> FitValues(Values, Values + NParameters);
     File.WriteObject(&FitValues, "FitValues");
+    std::cout << "Fit values saved\n";
   }
   {
     const double *Errors = Minimiser.Errors();
     const std::vector<double> FitUncertainties(Errors, Errors + NParameters);
     File.WriteObject(&FitUncertainties, "FitUncertainties");
+    std::cout << "Fit uncertainties saved\n";
   }
-  {
+  if(m_Settings.getB("RunMinos")) {
     Minimiser.SetPrintLevel(-1);
     std::vector<double> PlusUncertainties(NParameters),
                         MinusUncertainties(NParameters);
@@ -343,6 +347,7 @@ void cisiFitter::SaveFitResults(ROOT::Minuit2::Minuit2Minimizer &Minimiser,
     }
     File.WriteObject(&PlusUncertainties, "PlusUncertainties");
     File.WriteObject(&MinusUncertainties, "MinusUncertainties");
+    std::cout << "Minos uncertainties saved\n";
   }
   {
     std::vector<double> CovarianceMatrix, CorrelationMatrix;
@@ -354,6 +359,7 @@ void cisiFitter::SaveFitResults(ROOT::Minuit2::Minuit2Minimizer &Minimiser,
     }
     File.WriteObject(&CovarianceMatrix, "CovMatrix");
     File.WriteObject(&CorrelationMatrix, "CorrMatrix");
+    std::cout << "Covariance and correlation matrices saved\n";
   }
   File.Close();
   std::cout << "Fit results saved to " << Filename << "\n";
