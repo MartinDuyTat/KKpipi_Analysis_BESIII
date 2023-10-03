@@ -275,7 +275,7 @@ void cisiFitter::Plot_DeltaKpi(ROOT::Minuit2::Minuit2Minimizer &Minimiser,
   Results.GetXaxis()->SetLimits(-Boundary, Boundary);
   Results.GetYaxis()->SetRangeUser(-Boundary, Boundary);
   Results.SetMarkerStyle(8);
-  Results.SetTitle(";r_{D}cos(#delta_{K#pi});r_{D}sin(#delta_{K#pi})");
+  Results.SetTitle(";r_{D}^{K#pi}cos(#delta_{D}^{K#pi});r_{D}^{K#pi}sin(#delta_{D}^{K#pi})");
   Results.Draw("AP");
   // Draw circle representing rD
   TEllipse rDContour(0.0, 0.0, 0.05867, 0.05867);
