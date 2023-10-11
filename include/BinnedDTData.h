@@ -94,10 +94,6 @@ class BinnedDTData {
    */
   std::unique_ptr<const BinnedDTYieldPrediction> m_DTPredictions;
   /**
-   * The generated toy double tag yields
-   */
-  mutable std::vector<std::vector<AsymmetricUncertainty>> m_ToyDTYields;
-  /**
    * Flag that is true if the uncertainties of the yields are symmetrized
    */
   const bool m_SymmetricUncertainties;
