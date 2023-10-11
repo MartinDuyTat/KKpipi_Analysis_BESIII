@@ -33,6 +33,28 @@ int main(int argc, char *argv[]) {
     std::cout << "Dumping generator yields for toy studes...\n";
     Fitter.SavePredictedYields();
     std::cout << "Ready to do toys!\n";
+  } else if(RunMode == "DumpGeneratorYieldsForFeldmanCousins") {
+    std::cout << "Dumping generator yields for a Feldman Cousins scan...\n";
+    std::size_t Parameter = settings.getI("FeldmanCousins_Parameter");
+    Fitter.GenerateFeldmanCousinsYields(Parameter);
+    std::cout << "Ready to do Feldman Cousins scan!\n";
+  } else if(RunMode == "FitFeldmanCousinsToy") {
+    std::string ToyName = settings.get("FeldmanCousins_ToyName");
+    if(ToyName == "None") {
+      return 0;
+    }
+    std::cout << "Fitting Feldman Cousins toy " << ToyName;
+    int ToyNumber = settings.getI("ToyNumber");
+    if(ToyNumber < 0) {
+      return 0;
+    }
+    int Parameter = std::stoi(ToyName.substr(13, 1));
+    Fitter.FitFeldmanCousinsToy(ToyName, ToyNumber, Parameter);
+    std::cout << "Feldman Cousins Delta chi2 saved!\n";
+  } else if(RunMode == "FeldmanCousinsDataScan") {
+    std::cout << "Doing a Feldman Cousins scan over data...\n";
+    Fitter.FeldmanCousinsDataScan();
+    std::cout << "Feldman Cousins scan complete!\n";
   }
   return 0;
 }

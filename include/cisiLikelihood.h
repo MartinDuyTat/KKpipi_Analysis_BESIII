@@ -47,6 +47,13 @@ class cisiLikelihood {
    */
   void SavePredictedBinYields(std::ofstream &File,
 			      const cisiFitterParameters &Parameters) const;
+  /**
+   * Load a Feldman Cousins dataset
+   * @param ToyName The name of the toy
+   * @param ToyNumber The toy number
+   */
+  void LoadFeldmanCousinsDataset(const std::string &ToyName,
+				 int ToyNumber) const;
  private:
   /**
    * Vector of all the tags

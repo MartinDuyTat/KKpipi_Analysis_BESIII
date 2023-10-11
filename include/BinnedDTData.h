@@ -65,6 +65,13 @@ class BinnedDTData {
    */
   void SavePredictedBinYields(std::ofstream &File,
 			      const cisiFitterParameters &Parameters) const;
+  /**
+   * Load a Feldman Cousins dataset for SCMB tags and toy number 0 for other tags
+   * @param ToyName The name of the toy
+   * @param ToyNumber The toy number
+   */
+  void LoadFeldmanCousinsDataset(const std::string &ToyName,
+				 int ToyNumber) const;
  private:
   /**
    * The name of this tag mode
@@ -129,6 +136,17 @@ class BinnedDTData {
   std::unique_ptr<const RawBinnedDTYieldLikelihood> GetDTYieldLikelihood(
     const std::string &Tag,
     const Settings &settings,
+    int ToyNumber = -1) const;
+  /**
+   * Helper function that loads the full Feldman Cousins likelihood object
+   * @param Tag The tag mode
+   * @param settings The settings file
+   * @param ToyNumber For toys, this labels toy number, otherwise set to -1
+   */
+  std::unique_ptr<const RawBinnedDTYieldLikelihood> GetFeldmanCousinsLikelihood(
+    const std::string &Tag,
+    const Settings &settings,
+    const std::string &ToyName,
     int ToyNumber = -1) const;
   /**
    * Helper function that creates the correct yield prediction object

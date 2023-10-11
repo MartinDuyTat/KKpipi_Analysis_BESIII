@@ -42,6 +42,10 @@ class BinnedFitModel {
      */
     void SetGeneratorYields();
     /**
+     * Reset the signal yields to generator values from a file
+     */
+    void SetGeneratorYields(const std::string &Filename);
+    /**
      * DoubleTagYield is a friend so that it can access the yield variables
      */
     friend class DoubleTagYield;

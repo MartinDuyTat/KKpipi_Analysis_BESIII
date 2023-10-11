@@ -93,6 +93,10 @@ void DoubleTagYield::DoFit() {
   if(m_Settings.getB("ToyFits")) {
     DoToyFits();
   }
+  // Generate Feldman Cousins toys
+  if(m_Settings.getB("FeldmanCousinsToys")) {
+    GenerateFeldmanCousinsToys();
+  }
   // sPlot
   if(m_Settings.contains("sPlotReweight") &&
      m_Settings.getB("sPlotReweight")) {
@@ -108,6 +112,7 @@ void DoubleTagYield::SaveLikelihood(const std::string &Filename,
   NLL->Write("Likelihood");
   m_FitModel.m_SignalYields.Write("SignalYields");
   File.Close();
+  delete NLL;
 }
 
 void DoubleTagYield::DoToyFits() {
@@ -159,6 +164,40 @@ void DoubleTagYield::DoToyFits() {
     SaveLikelihood(Filename, ToyDataset);
     std::cout << "Job " << JobNumber << ", toy " << i << " done!\n";
   }
+}
+
+void DoubleTagYield::GenerateFeldmanCousinsToys() {
+  RooSimultaneous *Model = m_FitModel.GetPDF();
+  RooArgSet *Parameters = Model->getParameters(m_SignalMBC);
+  auto CatObject = m_DataLoader.GetCategoryObject();
+  int Seed = m_Settings.getI("Seed");
+  const int NumberFCToys = m_Settings.getI("NumberFeldmanCousinsToys");
+  RooRandom::randomGenerator()->SetSeed(Seed);
+  if(!std::filesystem::exists("FeldmanCousinsToys") ||
+     !std::filesystem::is_directory("FeldmanCousinsToys")) {
+    std::filesystem::create_directory("FeldmanCousinsToys");
+  }
+  const std::string FCPath = m_Settings.get("FeldmanCousinsYieldsPath");
+  const std::string FCFile = m_Settings.get("FeldmanCousinsYieldsFile");
+  if(FCFile == "None") {
+    throw std::runtime_error("Need to set FCFile");
+  }
+  std::string GeneratorYieldFilename = FCFile;
+  GeneratorYieldFilename = Utilities::ReplaceString(GeneratorYieldFilename,
+						    ".txt", "");
+  std::cout << "Generating Feldman Cousins toys " << GeneratorYieldFilename;
+  std::cout << "...\n";
+  for(int i = 0; i < NumberFCToys; i++) {
+    *Parameters = *m_ParametersAfterFit;
+    m_FitModel.SetGeneratorYields(FCPath + "/" + FCFile);
+    auto ToyDataset = Model->generate(RooArgSet(m_SignalMBC,
+						*CatObject.GetCategoryVariable()),
+				      Extended());
+    std::string Filename("FeldmanCousinsToys/");
+    Filename += GeneratorYieldFilename + std::to_string(i) + ".root";
+    SaveLikelihood(Filename, ToyDataset);
+  }
+  std::cout << GeneratorYieldFilename << " Feldman Cousins toys done!\n";
 }
 
 void DoubleTagYield::DoSystematicsFits() {

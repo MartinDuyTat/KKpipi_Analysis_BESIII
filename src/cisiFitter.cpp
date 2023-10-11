@@ -14,6 +14,7 @@
 #include"TLine.h"
 #include"TParameter.h"
 #include"TEllipse.h"
+#include"TGraphErrors.h"
 #include"Minuit2/Minuit2Minimizer.h"
 #include"Math/Functor.h"
 #include"Settings.h"
@@ -121,6 +122,139 @@ void cisiFitter::SavePredictedYields() const {
   File.close();
 }
 
+void cisiFitter::GenerateFeldmanCousinsYields(std::size_t Parameter) const {
+  if(Parameter < 1 || Parameter > 4) {
+    throw std::invalid_argument("Feldman Cousins scan parameters must be between 1 and 4");
+  }
+  if(!std::filesystem::exists("FeldmanCousinsYields") ||
+     !std::filesystem::is_directory("FeldmanCousinsYields")) {
+    std::filesystem::create_directory("FeldmanCousinsYields");
+  }
+  double Increment = m_Settings.getD("FeldmanCousins_Increment");
+  int NumberIncrements = m_Settings.getI("FeldmanCousins_NumberIncrements");
+  const auto GeneratorParameters = GetGeneratorValues();
+  for(int i = -NumberIncrements; i <= NumberIncrements; i++) {
+    if(i == 0) {
+      continue;
+    }
+    auto NewGeneratorParameters = GeneratorParameters;
+    NewGeneratorParameters.m_si[Parameter - 1] += Increment*i;
+    std::string Filename = "FeldmanCousinsYields/ScanParameter";
+    Filename += std::to_string(Parameter) + "_Increment";
+    Filename += std::string(i > 0 ? "P" : "M") + std::to_string(TMath::Abs(i));
+    Filename += "_GeneratorYields.txt";
+    std::ofstream File(Filename);
+    m_cisiLikelihood.SavePredictedBinYields(File, NewGeneratorParameters);
+    File.close();
+  }
+}
+
+void cisiFitter::FitFeldmanCousinsToy(const std::string &ToyName,
+				      int ToyNumber,
+				      std::size_t Parameter) const {
+  int CovStatus = -1;
+  ROOT::Minuit2::Minuit2Minimizer Minimiser;
+  Minimiser.SetPrintLevel(4);
+  auto &cisiLikelihoodRef = m_cisiLikelihood;
+  auto LikelihoodFunction = [=, &cisiLikelihoodRef] (const double *x) {
+    const cisiFitterParameters Parameters(x, m_NumberBins);
+    return m_cisiLikelihood.CalculateLogLikelihood(Parameters);
+  };
+  std::cout << "Feldman Cousins toy " << ToyNumber << "\n";
+  // First do nominal fit to toy
+  m_cisiLikelihood.LoadFeldmanCousinsDataset(ToyName, ToyNumber);
+  const std::size_t NumberParameters = 4*m_NumberBins + 3;
+  ROOT::Math::Functor fcn(LikelihoodFunction, NumberParameters);
+  Minimiser.SetFunction(fcn);
+  SetupMinimiser(Minimiser);
+  std::size_t Counter = 0;
+  while(CovStatus != 3 && Counter < 5) {
+    if(Counter != 0) {
+      std::cout << "Fit did not converge, fitting again ";
+      std::cout << "(" << Counter << ")\n";
+    }
+    Minimiser.Minimize();
+    CovStatus = Minimiser.CovMatrixStatus();
+    Counter++;
+  }
+  // Save chi2 at minimum in the nominal fit
+  const double MinValue = Minimiser.MinValue();
+  // Stupid way of finding generator value of si
+  std::string Name = ToyName;
+  Name = Name.substr(Name.find('_') + 10, std::string::npos);
+  Name = Name.substr(0, Name.find('_'));
+  int Sign = Name[0] == 'P' ? +1 : -1;
+  Name = Name.substr(1, std::string::npos);
+  int Steps = std::stoi(Name);
+  double Increment = m_Settings.getD("FeldmanCousins_Increment");
+  double Gen_si = m_Settings.getD("Generator_s" + std::to_string(Parameter));
+  double New_si = Gen_si + Sign*Steps*Increment;
+  // Fix si value to scan point and repeat fit
+  Minimiser.SetVariableValue(m_NumberBins + Parameter, New_si);
+  Minimiser.FixVariable(m_NumberBins + Parameter);
+  Counter = 0;
+  CovStatus = -1;
+  while(CovStatus != 3 && Counter < 5) {
+    if(Counter != 0) {
+      std::cout << "Fit did not converge, fitting again ";
+      std::cout << "(" << Counter << ")\n";
+    }
+    Minimiser.Minimize();
+    CovStatus = Minimiser.CovMatrixStatus();
+    Counter++;
+  }
+  // Save new chi2 at the scan point and save the difference
+  const double MinValue_FixedParam = Minimiser.MinValue();
+  Minimiser.ReleaseVariable(m_NumberBins + Parameter);
+  if(!std::filesystem::exists("FeldmanCousinsResults") ||
+     !std::filesystem::is_directory("FeldmanCousinsResults")) {
+    std::filesystem::create_directory("FeldmanCousinsResults");
+  }
+  const std::string Filename = "FeldmanCousinsResults/" + ToyName
+                             + std::to_string(ToyNumber) + ".txt";
+  std::ofstream OutputFile(Filename);
+  OutputFile << MinValue_FixedParam - MinValue << "\n";
+  OutputFile.close();
+}
+
+void cisiFitter::FeldmanCousinsDataScan() const {
+  ROOT::Minuit2::Minuit2Minimizer Minimiser;
+  Minimiser.SetPrintLevel(4);
+  auto &cisiLikelihoodRef = m_cisiLikelihood;
+  auto LikelihoodFunction = [=, &cisiLikelihoodRef] (const double *x) {
+    const cisiFitterParameters Parameters(x, m_NumberBins);
+    return m_cisiLikelihood.CalculateLogLikelihood(Parameters);
+  };
+  const std::size_t NumberParameters = 4*m_NumberBins + 3;
+  ROOT::Math::Functor fcn(LikelihoodFunction, NumberParameters);
+  Minimiser.SetFunction(fcn);
+  SetupMinimiser(Minimiser);
+  Minimiser.Minimize();
+  const double GlobalMinimum = Minimiser.MinValue();
+  std::size_t Parameter = m_Settings.getI("FeldmanCousins_Parameter");
+  if(Parameter == 0 || Parameter > 4) {
+    throw std::runtime_error("Parameter must be between 1 and 4");
+  }
+  const double Gen_si = m_Settings.getD("Generator_s" + std::to_string(Parameter));
+  double Increment = m_Settings.getD("FeldmanCousins_Increment");
+  int NumberIncrements = m_Settings.getI("FeldmanCousins_NumberIncrements");
+  Minimiser.FixVariable(m_NumberBins + Parameter);
+  std::string Filename = m_Settings.get("FeldmanCousinsDataScanFilename");
+  Filename += "_" + std::to_string(Parameter) + ".txt";
+  std::ofstream File(Filename);
+  for(int i = -NumberIncrements; i <= NumberIncrements; i++) {
+    if(i == 0) {
+      continue;
+    }
+    const double New_si = Gen_si + i*Increment;
+    Minimiser.SetVariableValue(m_NumberBins + Parameter, New_si);
+    Minimiser.Minimize();
+    const double NewMinimum = Minimiser.MinValue();
+    File << New_si << " " << NewMinimum - GlobalMinimum << "\n";
+  }
+  File.close();
+}
+
 void cisiFitter::SetupMinimiser(ROOT::Minuit2::Minuit2Minimizer &Minimiser) const {
   Minimiser.SetVariable(0, "BF_KKpipi", 0.00247, 0.1);
   Minimiser.SetVariableLimits(0, 0.001, 0.010);
@@ -181,13 +315,13 @@ cisiFitterParameters cisiFitter::GetGeneratorValues() const {
     Values.push_back(m_Settings.getD("Generator_s" + std::to_string(Bin)));
   }
   {
-    std::vector<double> Ki, Kbari;
-    for(std::size_t Bin = 1; Bin <= m_NumberBins; Bin++) {
-      Ki.push_back(m_Settings.getD("Generator_K" + std::to_string(Bin)));
-      Kbari.push_back(m_Settings.getD("Generator_Kbar" + std::to_string(Bin)));
+    std::vector<double> Ri, Rbari;
+    for(int Bin = m_NumberBins; Bin >= 1; Bin--) {
+      Values.push_back(m_Settings.getD("Generator_R_M" + std::to_string(Bin)));
     }
-    const auto Ri = Utilities::ConvertKiToRi(Ki, Kbari);
-    Values.insert(Values.end(), Ri.begin(), Ri.end() - 1);
+    for(int Bin = 1; Bin < static_cast<int>(m_NumberBins); Bin++) {
+      Values.push_back(m_Settings.getD("Generator_R_P" + std::to_string(Bin)));
+    }
   }
   Values.push_back(m_Settings.getD("Generator_BF_KKpipi"));
   {
@@ -275,14 +409,19 @@ void cisiFitter::Plot_DeltaKpi(ROOT::Minuit2::Minuit2Minimizer &Minimiser,
   Results.GetXaxis()->SetLimits(-Boundary, Boundary);
   Results.GetYaxis()->SetRangeUser(-Boundary, Boundary);
   Results.SetMarkerStyle(8);
+  Results.GetYaxis()->SetTitleOffset(1.2);
   Results.SetTitle(";r_{D}^{K#pi}cos(#delta_{D}^{K#pi});r_{D}^{K#pi}sin(#delta_{D}^{K#pi})");
   Results.Draw("AP");
-  // Draw circle representing rD
-  TEllipse rDContour(0.0, 0.0, 0.05867, 0.05867);
-  //rDContour.SetFillColor(17);
-  rDContour.SetLineStyle(kDashed);
-  rDContour.SetLineWidth(3);
-  rDContour.Draw("SAME");
+  // Draw HFLAV average
+  double rDCosDeltaKpi_HFLAV = -0.05857;
+  double rDCosDeltaKpi_err_HFLAV = 0.00017;
+  double rDSinDeltaKpi_HFLAV = -0.0073;
+  double rDSinDeltaKpi_err_HFLAV = 0.0093;
+  TGraphErrors HFLAV(1, &rDCosDeltaKpi_HFLAV, &rDSinDeltaKpi_HFLAV,
+		     &rDCosDeltaKpi_err_HFLAV, &rDSinDeltaKpi_err_HFLAV);
+  HFLAV.SetMarkerStyle(20);
+  HFLAV.SetLineWidth(3);
+  HFLAV.Draw("PE SAME");
   // Create and draw contour
   const std::size_t Points = 101;
   Minimiser.SetPrintLevel(-1);

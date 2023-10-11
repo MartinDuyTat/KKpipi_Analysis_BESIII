@@ -80,3 +80,10 @@ void cisiLikelihood::SavePredictedBinYields(
 		[&] (const auto &a) {
 		  a.SavePredictedBinYields(File, Parameters); });
 }
+
+void cisiLikelihood::LoadFeldmanCousinsDataset(const std::string &ToyName,
+					       int ToyNumber) const {
+  for(const auto &TagData : m_TagData) {
+    TagData.LoadFeldmanCousinsDataset(ToyName, ToyNumber);
+  }
+}

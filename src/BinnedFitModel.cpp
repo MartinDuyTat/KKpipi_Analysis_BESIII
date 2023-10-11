@@ -2,6 +2,7 @@
 
 #include<string>
 #include<stdexcept>
+#include<fstream>
 #include"TTree.h"
 #include"TRandom.h"
 #include"TFile.h"
@@ -247,6 +248,27 @@ void BinnedFitModel::SetGeneratorYields() {
   for(const auto &CategoryString : m_Category.GetCategories()) {
     std::string SignalName = CategoryString + "_SignalYield";
     double GeneratorYield = m_Settings["GeneratorYields"].getD(CategoryString);
+    static_cast<RooRealVar*>(m_Yields[SignalName])->setVal(GeneratorYield);
+  }
+}
+
+void BinnedFitModel::SetGeneratorYields(const std::string &Filename) {
+  std::ifstream File(Filename);
+  std::string Line;
+  std::map<std::string, double> GeneratorYields;
+  while(std::getline(File, Line)) {
+    if(Line.empty()) {
+      continue;
+    }
+    std::stringstream ss(Line);
+    std::string Name;
+    double Value;
+    ss >> Name >> Value;
+    GeneratorYields.insert({Name, Value});
+  }
+  for(const auto &CategoryString : m_Category.GetCategories()) {
+    std::string SignalName = CategoryString + "_SignalYield";
+    double GeneratorYield = GeneratorYields[CategoryString];
     static_cast<RooRealVar*>(m_Yields[SignalName])->setVal(GeneratorYield);
   }
 }

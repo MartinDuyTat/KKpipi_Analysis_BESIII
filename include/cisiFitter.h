@@ -35,6 +35,24 @@ class cisiFitter {
    * Save predicted yields to a file for each tag
    */
   void SavePredictedYields() const;
+  /**
+   * Save predicted yields for a Feldman Cousins scan of a parameter
+   * @param Parameter The index of the parameter we want to scan over
+   */
+  void GenerateFeldmanCousinsYields(std::size_t Parameter) const;
+  /**
+   * Fit the Feldman Cousins toy
+   * @param ToyName The name of the toy
+   * @param ToyNumber The toy number
+   * @param Parameter The scan parameter
+   */
+  void FitFeldmanCousinsToy(const std::string &ToyName,
+			    int ToyNumber,
+			    std::size_t Parameter) const;
+  /**
+   * Do a Feldman Cousins scan over data
+   */
+  void FeldmanCousinsDataScan() const;
  private:
   /**
    * The ci and si likelihood

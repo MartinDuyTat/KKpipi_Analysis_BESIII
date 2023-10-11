@@ -25,6 +25,19 @@ class RawBinnedDTYieldLikelihood {
 			     const std::string &TagCategory,
 			     int ToyNumber = -1);
   /**
+   * Constructor that loads the Feldman Cousins likelihood from a file
+   * @param Tag The name of the tag
+   * @param settings The settings file
+   * @param TagCategory CP, Flavour or SCMB
+   * @param ToyName The name of the toy
+   * @param ToyNumber Feldman Cousins toy number
+   */
+  RawBinnedDTYieldLikelihood(const std::string &Tag,
+			     const Settings &settings,
+			     const std::string &TagCategory,
+			     const std::string &ToyName,
+			     int ToyNumber);
+  /**
    * We don't need copy constructor
    */
   RawBinnedDTYieldLikelihood(const RawBinnedDTYieldLikelihood &LL) = delete;

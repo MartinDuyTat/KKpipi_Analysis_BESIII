@@ -56,6 +56,10 @@ class DoubleTagYield {
      */
     void DoToyFits();
     /**
+     * Generate datasets for Feldman Cousins toys
+     */
+    void GenerateFeldmanCousinsToys();
+    /**
      * Perform systematics studies
      */
     void DoSystematicsFits();

@@ -268,3 +268,53 @@ void BinnedDTData::SavePredictedBinYields(
   }
   File << "\n";
 }
+
+void BinnedDTData::LoadFeldmanCousinsDataset(const std::string &ToyName,
+					     int ToyNumber) const {
+  const auto iter_CP = std::find(m_CPTags.begin(), m_CPTags.end(), m_TagMode);
+  const auto iter_SCMB = std::find(m_SCMBTags.begin(),
+				   m_SCMBTags.end(),
+				   m_TagMode);
+  const auto iter_Flavour = std::find(m_FlavourTags.begin(),
+				      m_FlavourTags.end(),
+				      m_TagMode);
+  if(iter_CP != m_CPTags.end() || iter_Flavour != m_FlavourTags.end()) {
+    m_DTYields = GetRawDTYields(m_TagMode, m_Settings, 0);
+  } else if(iter_SCMB != m_SCMBTags.end()) {
+    m_DTYieldLikelihood = GetFeldmanCousinsLikelihood(m_TagMode,
+						      m_Settings,
+						      ToyName,
+						      ToyNumber);
+  } else {
+    throw std::runtime_error(m_TagMode + " is not a valid tag mode");
+  }
+}
+
+std::unique_ptr<const RawBinnedDTYieldLikelihood>
+BinnedDTData::GetFeldmanCousinsLikelihood(const std::string &Tag,
+					  const Settings &settings,
+					  const std::string &ToyName,
+					  int ToyNumber) const {
+  if(!m_FullLikelihood) {
+    return nullptr;
+  }
+  const auto iter_CP = std::find(m_CPTags.begin(), m_CPTags.end(), Tag);
+  const auto iter_SCMB = std::find(m_SCMBTags.begin(), m_SCMBTags.end(), Tag);
+  const auto iter_Flavour = std::find(m_FlavourTags.begin(),
+				      m_FlavourTags.end(), Tag);
+  std::string TagCategory;
+  if(iter_CP != m_CPTags.end() || iter_Flavour != m_FlavourTags.end()) {
+    throw std::runtime_error("Cannot load Feldman Cousins toy for " + Tag);
+  } else if(ToyNumber < 0) {
+    throw std::runtime_error("Feldman Cousins toy number must be positive");
+  } else if(iter_SCMB != m_SCMBTags.end()) {
+    TagCategory = "SCMB";
+  } else {
+    throw std::runtime_error("We should not reach this point...");
+  }
+  return std::make_unique<const RawBinnedDTYieldLikelihood>(Tag,
+							    settings,
+							    TagCategory,
+							    ToyName,
+							    ToyNumber);
+}

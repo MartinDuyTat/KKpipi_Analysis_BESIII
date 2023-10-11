@@ -22,6 +22,27 @@ RawBinnedDTYieldLikelihood::RawBinnedDTYieldLikelihood(const std::string &Tag,
   m_Order(GetYieldOrder(settings["BinningScheme"].getI("NumberBins"))) {
 }
 
+RawBinnedDTYieldLikelihood::RawBinnedDTYieldLikelihood(const std::string &Tag,
+						       const Settings &settings,
+						       const std::string &TagCategory,
+						       const std::string &ToyName,
+						       int ToyNumber):
+  m_TagMode(Tag),
+  m_TagCategory(TagCategory),
+  m_Order(GetYieldOrder(settings["BinningScheme"].getI("NumberBins"))) {
+  for(int i = 0; i < 2; i++) {
+    RooMsgService::instance().getStream(i).removeTopic(RooFit::Eval);
+    RooMsgService::instance().getStream(i).removeTopic(RooFit::Caching);
+    RooMsgService::instance().getStream(i).removeTopic(RooFit::Fitting);
+  }
+  std::string FCFilename = settings.get("FeldmanCousinsToyPath");
+  FCFilename = Utilities::ReplaceString(FCFilename, "TAG", Tag);
+  FCFilename += "/" + ToyName + std::to_string(ToyNumber) + ".root";
+  TFile File(FCFilename.c_str(), "READ");
+  File.GetObject("Likelihood", m_FullLikelihood);
+  m_Offset = m_FullLikelihood->getVal();
+}
+
 RawBinnedDTYieldLikelihood::~RawBinnedDTYieldLikelihood() {
   if(m_FullLikelihood) {
     delete m_FullLikelihood;
