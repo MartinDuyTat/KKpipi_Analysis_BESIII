@@ -21,7 +21,28 @@ GammaLikelihood::GammaLikelihood(const Settings &settings,
   m_BinnedBYieldPrediction(settings),
   m_cisiLikelihood(Likelihood),
   m_Settings(settings),
-  m_cisiFixed(settings.getB("cisiFixed")) {
+  m_cisiFixed(settings.getB("cisiFixed")),
+  m_cisiAsymmetric(settings.getB("cisiAsymmetricUncertainties")),
+  m_ci_fitted({settings.getD("c1_fitted"),
+	       settings.getD("c2_fitted"),
+	       settings.getD("c3_fitted"),
+	       settings.getD("c4_fitted")}),
+  m_ci_fitted_err({settings.getD("c1_fitted_err"),
+	          settings.getD("c2_fitted_err"),
+	          settings.getD("c3_fitted_err"),
+	          settings.getD("c4_fitted_err")}),
+  m_si_fitted({settings.getD("s1_fitted"),
+	       settings.getD("s2_fitted"),
+	       settings.getD("s3_fitted"),
+	       settings.getD("s4_fitted")}),
+  m_si_fitted_err({{settings.getD("s1_fitted_plus_err"),
+	            settings.getD("s1_fitted_minus_err")},
+	           {settings.getD("s2_fitted_plus_err"),
+	            settings.getD("s2_fitted_minus_err")},
+	           {settings.getD("s3_fitted_plus_err"),
+	            settings.getD("s3_fitted_minus_err")},
+	           {settings.getD("s4_fitted_plus_err"),
+	            settings.getD("s4_fitted_minus_err")}}) {
 }
 
 double GammaLikelihood::CalculateLogLikelihood(
@@ -37,7 +58,11 @@ double GammaLikelihood::CalculateLogLikelihood(
     }
   }
   if(!m_cisiFixed) {
-    LL += m_cisiLikelihood.CalculateLogLikelihood(Parameters.m_cisiParameters);
+    if(m_cisiAsymmetric) {
+      LL += GetcisiLikelihood(Parameters.m_cisiParameters);
+    } else {
+      LL += m_cisiLikelihood.CalculateLogLikelihood(Parameters.m_cisiParameters);
+    }
   }
   return LL;
 }
@@ -115,4 +140,28 @@ std::vector<double> GammaLikelihood::GetBinnedBYields(const std::string &Filenam
     }
   }
   return Yields;
+}
+
+double GammaLikelihood::GetcisiLikelihood(const cisiFitterParameters &Parameters) const {
+  double LL = 0.0;
+  for(std::size_t Parameter = 1; Parameter <= m_NumberBins; Parameter++) {
+    LL += GetciLikelihood(Parameters.m_ci[Parameter - 1], Parameter);
+    LL += GetsiLikelihood(Parameters.m_si[Parameter - 1], Parameter);
+  }
+  return LL;
+}
+
+double GammaLikelihood::GetciLikelihood(double ci, std::size_t Parameter) const {
+  const double Diff = m_ci_fitted[Parameter - 1] - ci;
+  return Diff*Diff/m_ci_fitted_err[Parameter - 1];
+}
+
+double GammaLikelihood::GetsiLikelihood(double si, std::size_t Parameter) const {
+  const double Diff = m_si_fitted[Parameter - 1] - si;
+  const double PlusUncertainty = m_si_fitted_err[Parameter - 1].first;
+  const double MinusUncertainty = m_si_fitted_err[Parameter - 1].second;
+  const double Std2 = PlusUncertainty*MinusUncertainty;
+  const double StdDiff = MinusUncertainty - PlusUncertainty;
+  const double Var = Std2 + StdDiff*Diff;
+  return (Var > 0.0 ? Diff*Diff/Var : 1.0e10);
 }

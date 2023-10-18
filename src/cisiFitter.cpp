@@ -348,6 +348,12 @@ void cisiFitter::SetupMinimiserWithGamma(ROOT::Minuit2::Minuit2Minimizer &Minimi
       Minimiser.FixVariable(i);
     }
   }
+  if(m_Settings.getB("cisiAsymmetricUncertainties")) {
+    Minimiser.FixVariable(0);
+    for(std::size_t i = 2*m_NumberBins + 1; i < 4*m_NumberBins + 3; i++) {
+      Minimiser.FixVariable(i);
+    }
+  }
 }
 
 cisiFitterParameters cisiFitter::GetGeneratorValues() const {

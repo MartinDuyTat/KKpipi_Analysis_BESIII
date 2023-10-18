@@ -7,6 +7,8 @@
 #ifndef GAMMALIKELIHOOD
 #define GAMMALIKELIHOOD
 
+#include<vector>
+#include<utility>
 #include"TMatrixT.h"
 #include"Settings.h"
 #include"GammaFitterParameters.h"
@@ -73,6 +75,39 @@ class GammaLikelihood {
    * Flag that is true if the \f$c_i\f$ and \f$s_i$ are fixed (for debugging)
    */
   const bool m_cisiFixed;
+  /**
+   * Flag that is true if the \f$c_i\f$ and \f$s_i\f$ are approximated
+   * with asymmetric uncertainties
+   */
+  const bool m_cisiAsymmetric;
+  /**
+   * The fitted values of \f$c_i\f$ for the \f$\gamma\f$ fit
+   */
+  const std::vector<double> m_ci_fitted;
+  /**
+   * The fitted uncertainties of \f$c_i\f$ for the \f$\gamma\f$ fit
+   */
+  const std::vector<double> m_ci_fitted_err;
+  /**
+   * The fitted values of \f$s_i\f$ for the \f$\gamma\f$ fit
+   */
+  const std::vector<double> m_si_fitted;
+  /**
+   * The fitted uncertainties of \f$s_i\f$ for the \f$\gamma\f$ fit
+   */
+  const std::vector<std::pair<double, double>> m_si_fitted_err;
+  /**
+   * Helper function that calculates the likelihood of \f$c_i\f$ and \f$s_i$
+   */
+  double GetcisiLikelihood(const cisiFitterParameters &Parameters) const;
+  /**
+   * Helper function that calculates the likelihood of \f$c_i\f$
+   */
+  double GetciLikelihood(double ci, std::size_t Parameter) const;
+  /**
+   * Helper function that calculates the likelihood of \f$s_i\f$
+   */
+  double GetsiLikelihood(double si, std::size_t Parameter) const;
 };
 
 #endif
