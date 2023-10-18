@@ -277,7 +277,7 @@ void BinnedDTData::LoadFeldmanCousinsDataset(const std::string &ToyName,
 				      m_FlavourTags.end(),
 				      m_TagMode);
   if(iter_CP != m_CPTags.end() || iter_Flavour != m_FlavourTags.end()) {
-    m_DTYields = GetRawDTYields(m_TagMode, m_Settings, 0);
+    m_DTYields = GetRawDTYields(m_TagMode, m_Settings, ToyNumber);
   } else if(iter_SCMB != m_SCMBTags.end()) {
     m_DTYieldLikelihood = GetFeldmanCousinsLikelihood(m_TagMode,
 						      m_Settings,
