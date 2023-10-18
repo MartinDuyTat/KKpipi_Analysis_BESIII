@@ -79,6 +79,10 @@ class cisiFitter {
    */
   void SetupMinimiser(ROOT::Minuit2::Minuit2Minimizer &Minimiser) const;
   /**
+   * Helper function to setup minimiser for \f$\gamma\f$ fit
+   */
+  void SetupMinimiserWithGamma(ROOT::Minuit2::Minuit2Minimizer &Minimiser) const;
+  /**
    * Helper function to generator values for toy generation
    */
   cisiFitterParameters GetGeneratorValues() const;
@@ -105,6 +109,10 @@ class cisiFitter {
    */
   void SaveFitResults(ROOT::Minuit2::Minuit2Minimizer &Minimiser,
 		      const std::string &Filename) const;
+  /**
+   * Function for doing a contour scan over \f$\gamma\f$ and \f$\delta_B\f$
+   */
+  void ScanGammaDeltaB(ROOT::Minuit2::Minuit2Minimizer &Minimiser) const;
 };
 
 #endif

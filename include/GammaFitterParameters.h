@@ -15,29 +15,22 @@ struct GammaFitterParameters {
    */
   GammaFitterParameters(const double *Parameters, std::size_t NBins):
     m_cisiParameters(Parameters, NBins),
-    /*m_xMinus(Parameters[4*NBins + 3]),
-    m_yMinus(Parameters[4*NBins + 4]),
-    m_xPlus(Parameters[4*NBins + 5]),
-    m_yPlus(Parameters[4*NBins + 6]),
-    m_xXi(Parameters[4*NBins + 7]),
-    m_yXi(Parameters[4*NBins + 8]),*/
     m_gamma(Parameters[4*NBins + 3]),
     m_deltaB_dk(Parameters[4*NBins + 4]),
     m_rB_dk(Parameters[4*NBins + 5]),
     m_deltaB_dpi(Parameters[4*NBins + 6]),
     m_rB_dpi(Parameters[4*NBins + 7]),
-    m_dummy(Parameters[4*NBins + 8]),
     m_xMinus(m_rB_dk*TMath::Cos((m_deltaB_dk - m_gamma)*TMath::Pi()/180.0)),
     m_yMinus(m_rB_dk*TMath::Sin((m_deltaB_dk - m_gamma)*TMath::Pi()/180.0)),
     m_xPlus(m_rB_dk*TMath::Cos((m_deltaB_dk + m_gamma)*TMath::Pi()/180.0)),
     m_yPlus(m_rB_dk*TMath::Sin((m_deltaB_dk + m_gamma)*TMath::Pi()/180.0)),
     m_xXi((m_rB_dpi/m_rB_dk)*TMath::Cos((m_deltaB_dpi - m_deltaB_dk)*TMath::Pi()/180.0)),
     m_yXi((m_rB_dpi/m_rB_dk)*TMath::Sin((m_deltaB_dpi - m_deltaB_dk)*TMath::Pi()/180.0)),
-    m_Ri(std::vector<double>(Parameters + 4*NBins + 9, Parameters + 6*NBins + 8)),
-    m_BMinusDKYield(Parameters[6*NBins + 8]),
-    m_BPlusDKYield(Parameters[6*NBins + 9]),
-    m_BMinusDpiYield(Parameters[6*NBins + 10]),
-    m_BPlusDpiYield(Parameters[6*NBins + 11]) {
+    m_Ri(std::vector<double>(Parameters + 4*NBins + 8, Parameters + 6*NBins + 7)),
+    m_BMinusDKYield(Parameters[6*NBins + 7]),
+    m_BPlusDKYield(Parameters[6*NBins + 8]),
+    m_BMinusDpiYield(Parameters[6*NBins + 9]),
+    m_BPlusDpiYield(Parameters[6*NBins + 10]) {
   }
   /**
    * The \f$c_i$ and \f$s_i\f$ parameters and other nuisance parameters
