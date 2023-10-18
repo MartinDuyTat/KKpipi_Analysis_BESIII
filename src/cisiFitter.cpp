@@ -15,6 +15,7 @@
 #include"TParameter.h"
 #include"TEllipse.h"
 #include"TGraphErrors.h"
+#include"TGraph2D.h"
 #include"Minuit2/Minuit2Minimizer.h"
 #include"Math/Functor.h"
 #include"Settings.h"
@@ -22,6 +23,8 @@
 #include"cisiFitter.h"
 #include"Utilities.h"
 #include"cisiFitterParameters.h"
+#include"GammaLikelihood.h"
+#include"GammaFitterParameters.h"
 
 cisiFitter::cisiFitter(const Settings &settings):
   m_cisiLikelihood(settings),
@@ -32,7 +35,7 @@ cisiFitter::cisiFitter(const Settings &settings):
 
 void cisiFitter::Minimise() const {
   ROOT::Minuit2::Minuit2Minimizer Minimiser;
-  Minimiser.SetPrintLevel(4);
+  Minimiser.SetPrintLevel(2);
   auto &cisiLikelihoodRef = m_cisiLikelihood;
   auto LikelihoodFunction = [=, &cisiLikelihoodRef] (const double *x) {
     const cisiFitterParameters Parameters(x, m_NumberBins);
@@ -83,7 +86,7 @@ void cisiFitter::Minimise() const {
 void cisiFitter::RunToy(int ToyNumber) const {
   int CovStatus = -1;
   ROOT::Minuit2::Minuit2Minimizer Minimiser;
-  Minimiser.SetPrintLevel(4);
+  Minimiser.SetPrintLevel(2);
   auto &cisiLikelihoodRef = m_cisiLikelihood;
   auto LikelihoodFunction = [=, &cisiLikelihoodRef] (const double *x) {
     const cisiFitterParameters Parameters(x, m_NumberBins);
@@ -154,7 +157,7 @@ void cisiFitter::FitFeldmanCousinsToy(const std::string &ToyName,
 				      std::size_t Parameter) const {
   int CovStatus = -1;
   ROOT::Minuit2::Minuit2Minimizer Minimiser;
-  Minimiser.SetPrintLevel(4);
+  Minimiser.SetPrintLevel(2);
   auto &cisiLikelihoodRef = m_cisiLikelihood;
   auto LikelihoodFunction = [=, &cisiLikelihoodRef] (const double *x) {
     const cisiFitterParameters Parameters(x, m_NumberBins);
@@ -219,7 +222,7 @@ void cisiFitter::FitFeldmanCousinsToy(const std::string &ToyName,
 
 void cisiFitter::FeldmanCousinsDataScan() const {
   ROOT::Minuit2::Minuit2Minimizer Minimiser;
-  Minimiser.SetPrintLevel(4);
+  Minimiser.SetPrintLevel(2);
   auto &cisiLikelihoodRef = m_cisiLikelihood;
   auto LikelihoodFunction = [=, &cisiLikelihoodRef] (const double *x) {
     const cisiFitterParameters Parameters(x, m_NumberBins);
@@ -502,4 +505,148 @@ void cisiFitter::SaveFitResults(ROOT::Minuit2::Minuit2Minimizer &Minimiser,
   }
   File.Close();
   std::cout << "Fit results saved to " << Filename << "\n";
+}
+
+void cisiFitter::MinimiseWithGamma() const {
+  ROOT::Minuit2::Minuit2Minimizer Minimiser;
+  Minimiser.SetPrintLevel(2);
+  Minimiser.SetMaxFunctionCalls(100000);
+  GammaLikelihood gammaLikelihood(m_Settings, m_cisiLikelihood);
+  auto LikelihoodFunction = [=, &gammaLikelihood] (const double *x) {
+    const GammaFitterParameters Parameters(x, m_NumberBins);
+    return gammaLikelihood.CalculateLogLikelihood(Parameters);
+  };
+  // Number of parameters in the fit:
+  // 6 CP observables for gamma
+  // 2NBins - 1 R_i for LHCb
+  // 4 yield normalisations
+  // NBins ci
+  // NBins si
+  // 2*NBins - 1 R_i
+  // 2 DeltaKpi
+  // 1 BF of KKpipi
+  // 1 BF of KKpipi for KLpipi tag
+  const std::size_t NumberParameters = 6*m_NumberBins + 12;
+  ROOT::Math::Functor fcn(LikelihoodFunction, NumberParameters);
+  Minimiser.SetFunction(fcn);
+  SetupMinimiser(Minimiser);
+  /*Minimiser.SetVariable(4*m_NumberBins + 3, "xMinus", 0.08, 0.1);
+  Minimiser.SetVariableLimits(4*m_NumberBins + 3, -0.4, 0.4);
+  Minimiser.SetVariable(4*m_NumberBins + 4, "yMinus", -0.03, 0.1);
+  Minimiser.SetVariableLimits(4*m_NumberBins + 4, -0.4, 0.4);
+  Minimiser.SetVariable(4*m_NumberBins + 5, "xPlus", -0.13, 0.1);
+  Minimiser.SetVariableLimits(4*m_NumberBins + 5, -0.4, 0.4);
+  Minimiser.SetVariable(4*m_NumberBins + 6, "yPlus", -0.04, 0.1);
+  Minimiser.SetVariableLimits(4*m_NumberBins + 6, -0.4, 0.4);
+  Minimiser.SetVariable(4*m_NumberBins + 7, "xXi", -0.03, 0.1);
+  Minimiser.SetVariableLimits(4*m_NumberBins + 7, -0.4, 0.4);
+  Minimiser.SetVariable(4*m_NumberBins + 8, "yXi", -0.02, 0.1);
+  Minimiser.SetVariableLimits(4*m_NumberBins + 8, -0.4, 0.4);*/
+
+  //Minimiser.SetVariable(4*m_NumberBins + 3, "gamma", 112.0, 10.0);
+  Minimiser.SetVariable(4*m_NumberBins + 3, "gamma", 90.0, 20.0);
+  Minimiser.SetVariableLimits(4*m_NumberBins + 3, 0.0, 180.0);
+  //Minimiser.SetVariable(4*m_NumberBins + 4, "deltaB_dk", 84.0, 10.0);
+  Minimiser.SetVariable(4*m_NumberBins + 4, "deltaB_dk", 90.0, 20.0);
+  Minimiser.SetVariableLimits(4*m_NumberBins + 4, 0.0, 180.0);
+  Minimiser.SetVariable(4*m_NumberBins + 5, "rB_dk", 0.1, 0.05);
+  Minimiser.SetVariableLimits(4*m_NumberBins + 5, 0.0, 1.0);
+  Minimiser.SetVariable(4*m_NumberBins + 6, "deltaB_dpi", 270.0, 50.0);
+  //Minimiser.SetVariable(4*m_NumberBins + 6, "deltaB_dpi", 270.0, 10.0);
+  Minimiser.SetVariableLimits(4*m_NumberBins + 6, 180.0, 360);
+  Minimiser.SetVariable(4*m_NumberBins + 7, "rB_dpi", 0.005, 0.005);
+  Minimiser.SetVariableLimits(4*m_NumberBins + 7, 0.0, 0.1);
+
+  Minimiser.SetVariable(4*m_NumberBins + 8, "dummy", 0.0, 0.02);
+  //Minimiser.SetVariableLimits(4*m_NumberBins + 8, -1.0, 1.0);
+  Minimiser.FixVariable(4*m_NumberBins + 8);
+  int Counter = -m_NumberBins;
+  for(std::size_t i = 4*m_NumberBins + 9; i < 6*m_NumberBins + 8; i++) {
+    std::string Name = Counter > 0 ? "P" : "M";
+    Name += std::to_string(TMath::Abs(Counter++));
+    if(Counter == 0) {
+      Counter++;
+    }
+    Minimiser.SetVariable(i, ("R_LHCb_" + Name).c_str(), 0.5, 1.0);
+    Minimiser.SetVariableLimits(i, 0.0, 1.0);
+  }
+  Minimiser.SetVariable(6*m_NumberBins + 8, "BMinusDKYield", 1500.0, 0.1);
+  Minimiser.SetVariableLimits(6*m_NumberBins + 8, 100.0, 5000.0);
+  Minimiser.SetVariable(6*m_NumberBins + 9, "BPlusDKYield", 1500.0, 0.1);
+  Minimiser.SetVariableLimits(6*m_NumberBins + 9, 100.0, 5000.0);
+  Minimiser.SetVariable(6*m_NumberBins + 10, "BMinusDpiYield", 20000.0, 0.1);
+  Minimiser.SetVariableLimits(6*m_NumberBins + 10, 100.0, 70000.0);
+  Minimiser.SetVariable(6*m_NumberBins + 11, "BPlusDpiYield", 20000.0, 0.1);
+  Minimiser.SetVariableLimits(6*m_NumberBins + 11, 100.0, 70000.0);
+  if(m_Settings.getB("cisiFixed")) {
+    for(std::size_t i = 0; i < 4*m_NumberBins + 3; i++) {
+      Minimiser.FixVariable(i);
+    }
+  }
+  Minimiser.Minimize();
+  /*for(std::size_t i = 4*m_NumberBins + 3; i <= 4*m_NumberBins + 8; i++) {
+    for(std::size_t j = 4*m_NumberBins + 3; j <= 4*m_NumberBins + 8; j++) {
+      std::cout << Minimiser.Correlation(i, j);
+      if(j < 4*m_NumberBins + 8) {
+	std::cout << ", ";
+      } else {
+	std::cout << ",\n";
+      }
+    }
+  }*/
+  // Create and draw contours
+  TCanvas c("c", "", 1200, 900);
+  std::vector<double> x, y, z;
+  Minimiser.SetPrintLevel(-1);
+  for(double gamma = 40.0; gamma <= 170.0; gamma += 10.0) {
+    for(double deltaB_dk = 30.0; deltaB_dk <= 160.0; deltaB_dk += 10.0) {
+      std::cout << "Scanning gamma = " << gamma << ", delta_B_dk = " << deltaB_dk << "\n";
+      Minimiser.SetVariableValue(4*m_NumberBins + 3, gamma);
+      Minimiser.SetVariableValue(4*m_NumberBins + 4, deltaB_dk);
+      Minimiser.FixVariable(4*m_NumberBins + 3);
+      Minimiser.FixVariable(4*m_NumberBins + 4);
+      Minimiser.Minimize();
+      x.push_back(gamma);
+      y.push_back(deltaB_dk);
+      z.push_back(Minimiser.MinValue());
+    }
+  }
+  TGraph2D Graph2d(x.size(), x.data(), y.data(), z.data());
+  Graph2d.SetTitle("Simultaneous LHCb and BESIII fit;#gamma;#delta_{B}^{DK}");
+  Graph2d.Draw("COLZ");
+  /*const std::size_t Points = 31;
+  Minimiser.SetPrintLevel(-1);
+  std::vector<TGraph> Contours;
+  std::vector<double> ErrorDefs_Plot{2.30, 6.18, 11.83};
+  for(double ErrorDef : ErrorDefs_Plot) {
+    Minimiser.SetErrorDef(ErrorDef);
+    for(std::size_t Index = 4*m_NumberBins + 3;
+	Index <= 4*m_NumberBins + 4;
+	Index += 2) {
+      std::vector<double> x(Points), y(Points);
+      unsigned int nPoints = Points - 1;
+      Minimiser.Contour(Index, Index + 1, nPoints, x.data(), y.data());
+      x.back() = x[0];
+      y.back() = y[0];
+      Contours.push_back(TGraph(Points, x.data(), y.data()));
+      Contours.back().SetLineWidth(3);
+    }
+  }
+  Contours[0].GetXaxis()->SetLimits(0.0, 180.0);
+  Contours[0].GetYaxis()->SetRangeUser(0.0, 180.0);
+  Contours[0].SetTitle("Simultaneous LHCb and BESIII fit;#gamma;#delta_{B}^{DK}");
+  Contours[0].Draw("AL");
+  for(auto &Contour : Contours) {
+    Contour.Draw("L SAME");
+  }*/
+  c.SaveAs("Contours_gamma_deltaB.pdf");
+  /*Minimiser.SetPrintLevel(-1);
+  double ErrorPlus, ErrorMinus;
+  std::vector<double> ErrorDefs_Minos{1.0, 4.0, 9.0};
+  for(double ErrorDef : ErrorDefs_Minos) {
+    Minimiser.SetErrorDef(ErrorDef);
+    Minimiser.GetMinosError(4*m_NumberBins + 3, ErrorMinus, ErrorPlus);
+    std::cout << "DeltaLL = " << ErrorDef << " gamma uncertainty: +";
+    std::cout << ErrorPlus << ", " << ErrorMinus << "\n";
+  }*/
 }

@@ -1,6 +1,7 @@
 add_library(KKpipiStrongPhase
 	    ApplyCuts.cpp
 	    Bes3plotstyle.cpp
+	    BinnedBYieldPrediction.cpp
 	    BinnedDataLoader.cpp
 	    BinnedCPTagYieldPrediction.cpp
 	    BinnedFlavourTagYieldPrediction.cpp
@@ -20,6 +21,7 @@ add_library(KKpipiStrongPhase
 	    DeltaEFitModel.cpp
 	    DoubleTagYield.cpp
 	    FPlusFitter.cpp
+	    GammaLikelihood.cpp
 	    InitialCuts.cpp
 	    PredictNumberEvents.cpp
 	    Settings.cpp

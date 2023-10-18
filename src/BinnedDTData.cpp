@@ -138,9 +138,7 @@ Eigen::MatrixXd BinnedDTData::CreateInvCovarianceMatrix(
     for(std::size_t j = 0; j <= i; j++) {
       const double Std_j = GetAsymmetricStd(MeasuredYields[j], PredictedYields[j]);
       CovMatrix(i, j) = CorrelationMatrix(i, j)*Std_i*Std_j;
-      if(i != j) {
-	CovMatrix(j, i) = CovMatrix(i, j);
-      }
+      CovMatrix(j, i) = CovMatrix(i, j);
     }
   }
   return CovMatrix.llt().solve(Eigen::MatrixXd::Identity(Size, Size));

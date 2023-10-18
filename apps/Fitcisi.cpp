@@ -55,6 +55,10 @@ int main(int argc, char *argv[]) {
     std::cout << "Doing a Feldman Cousins scan over data...\n";
     Fitter.FeldmanCousinsDataScan();
     std::cout << "Feldman Cousins scan complete!\n";
+  } else if(RunMode == "SingleFitWithGamma") {
+    std::cout << "Fitting ci and si simultaneously with gamma...\n";
+    Fitter.MinimiseWithGamma();
+    std::cout << "Model-independent measurement of gamma complete!\n";
   }
   return 0;
 }

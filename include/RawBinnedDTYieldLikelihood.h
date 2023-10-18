@@ -8,7 +8,9 @@
 
 #include<vector>
 #include<string>
-#include"RooNLLVar.h"
+#include<memory>
+#include"RooArgSet.h"
+#include"RooAbsReal.h"
 #include"Settings.h"
 
 class RawBinnedDTYieldLikelihood {
@@ -44,7 +46,7 @@ class RawBinnedDTYieldLikelihood {
   /**
    * We own the pointer to the likelihood, need to delete
    */
-  ~RawBinnedDTYieldLikelihood();
+  ~RawBinnedDTYieldLikelihood() = default;
   /**
    * Evaluate the log likelihood
    */
@@ -61,11 +63,11 @@ class RawBinnedDTYieldLikelihood {
   /**
    * The full likelihood of the signal yields
    */
-  RooNLLVar *m_FullLikelihood;
+  std::unique_ptr<RooAbsReal> m_FullLikelihood;
   /**
-   * The constant offset at the minimum
+   * The fit variables
    */
-  double m_Offset;
+  std::unique_ptr<RooArgSet> m_Variables;
   /**
    * The ordering of the yields
    */
@@ -73,9 +75,9 @@ class RawBinnedDTYieldLikelihood {
   /**
    * Helper function that loads the full likelihood from a file
    */
-  RooNLLVar* GetFullLikelihood(const std::string &Tag,
-			       const Settings &settings,
-			       int ToyNumber) const;
+  RooAbsReal* GetFullLikelihood(const std::string &Tag,
+				const Settings &settings,
+				int ToyNumber) const;
   /**
    * Helper function to set up the yield ordering
    */

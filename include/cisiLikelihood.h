@@ -1,4 +1,4 @@
-// Martin Duy Tat 13th Octboer 2022
+// Martin Duy Tat 13th October 2022
 /**
  * cisiLikelihood is a class that combines all the likelihood contributions from each tag and creates a final likelihood that can be minimised
  */

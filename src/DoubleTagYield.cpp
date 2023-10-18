@@ -24,6 +24,7 @@
 #include"RooMsgService.h"
 #include"RooHelpers.h"
 #include"RooRandom.h"
+#include"RooWorkspace.h"
 #include"RooStats/SPlot.h"
 #include"RooStats/RooStatsUtils.h"
 #include"DoubleTagYield.h"
@@ -108,11 +109,11 @@ void DoubleTagYield::SaveLikelihood(const std::string &Filename,
 				    RooDataSet *DataSet) {
   RooSimultaneous *Model = m_FitModel.GetPDF();
   TFile File(Filename.c_str(), "RECREATE");
-  auto NLL = Model->createNLL(*DataSet, BatchMode(true));
-  NLL->Write("Likelihood");
-  m_FitModel.m_SignalYields.Write("SignalYields");
+  RooWorkspace w;
+  w.import(*Model);
+  w.import(*DataSet);
+  w.Write("Workspace");
   File.Close();
-  delete NLL;
 }
 
 void DoubleTagYield::DoToyFits() {

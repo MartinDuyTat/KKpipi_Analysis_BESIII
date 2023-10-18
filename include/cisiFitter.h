@@ -53,6 +53,10 @@ class cisiFitter {
    * Do a Feldman Cousins scan over data
    */
   void FeldmanCousinsDataScan() const;
+  /**
+   * Do a fit with \f$\gamma\f$ as well
+   */
+  void MinimiseWithGamma() const;
  private:
   /**
    * The ci and si likelihood

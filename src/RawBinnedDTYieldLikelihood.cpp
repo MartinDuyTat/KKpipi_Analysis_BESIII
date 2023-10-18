@@ -3,9 +3,11 @@
 #include<vector>
 #include<string>
 #include"TFile.h"
-#include"RooNLLVar.h"
+#include"RooAbsReal.h"
 #include"RooArgSet.h"
 #include"RooMsgService.h"
+#include"RooAbsPdf.h"
+#include"RooWorkspace.h"
 #include"RawBinnedDTYieldLikelihood.h"
 #include"RawBinnedDTYields.h"
 #include"Settings.h"
@@ -18,7 +20,7 @@ RawBinnedDTYieldLikelihood::RawBinnedDTYieldLikelihood(const std::string &Tag,
   m_TagMode(Tag),
   m_TagCategory(TagCategory),
   m_FullLikelihood(GetFullLikelihood(Tag, settings, ToyNumber)),
-  m_Offset(m_FullLikelihood->getVal()),
+  m_Variables(m_FullLikelihood->getVariables()),
   m_Order(GetYieldOrder(settings["BinningScheme"].getI("NumberBins"))) {
 }
 
@@ -39,30 +41,24 @@ RawBinnedDTYieldLikelihood::RawBinnedDTYieldLikelihood(const std::string &Tag,
   FCFilename = Utilities::ReplaceString(FCFilename, "TAG", Tag);
   FCFilename += "/" + ToyName + std::to_string(ToyNumber) + ".root";
   TFile File(FCFilename.c_str(), "READ");
-  File.GetObject("Likelihood", m_FullLikelihood);
-  m_Offset = m_FullLikelihood->getVal();
-}
-
-RawBinnedDTYieldLikelihood::~RawBinnedDTYieldLikelihood() {
-  if(m_FullLikelihood) {
-    delete m_FullLikelihood;
-    m_FullLikelihood = nullptr;
-  }
+  RooWorkspace *w= nullptr;
+  File.GetObject("Workspace", w);
+  auto Model = w->pdf(("Simultaneous_PDF_KKpipi_vs_" + m_TagMode).c_str());
+  auto Data = w->data("InputData");
+  m_FullLikelihood.reset(Model->createNLL(*Data));
 }
 
 double RawBinnedDTYieldLikelihood::GetLogLikelihood(
   const std::vector<double> &PredictedBinYields) const {
-  auto Variables = m_FullLikelihood->getVariables();
   for(std::size_t i = 0; i < PredictedBinYields.size(); i++) {
-    auto YieldVar = Variables->find(m_Order[i].c_str());
+    auto YieldVar = m_Variables->find(m_Order[i].c_str());
     static_cast<RooRealVar*>(YieldVar)->setVal(PredictedBinYields[i]);
   }
   double LogLikelihood = m_FullLikelihood->getVal();
-  delete Variables;
   return LogLikelihood;
 }
 
-RooNLLVar* RawBinnedDTYieldLikelihood::GetFullLikelihood(
+RooAbsReal* RawBinnedDTYieldLikelihood::GetFullLikelihood(
   const std::string &Tag,
   const Settings &settings,
   int ToyNumber) const {
@@ -74,9 +70,11 @@ RooNLLVar* RawBinnedDTYieldLikelihood::GetFullLikelihood(
   auto DTYieldFilename = RawBinnedDTYields::GetFilename(Tag, settings, ToyNumber);
   DTYieldFilename = Utilities::ReplaceString(DTYieldFilename, ".txt", ".root");
   TFile File(DTYieldFilename.c_str(), "READ");
-  RooNLLVar *FullLikelihood = nullptr;
-  File.GetObject("Likelihood", FullLikelihood);
-  return FullLikelihood;
+  RooWorkspace *w = nullptr;
+  File.GetObject("Workspace", w);
+  auto Model = w->pdf(("Simultaneous_PDF_KKpipi_vs_" + m_TagMode).c_str());
+  auto Data = w->data("InputData");
+  return Model->createNLL(*Data);
 }
 
 std::vector<std::string> RawBinnedDTYieldLikelihood::GetYieldOrder(
