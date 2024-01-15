@@ -14,9 +14,11 @@
 #include"BinnedDTData.h"
 #include"Utilities.h"
 #include"cisiFitterParameters.h"
+#include"GaussianConstraints.h"
 
 cisiLikelihood::cisiLikelihood(const Settings &settings):
-  m_TagData(SetupTags(settings)) {
+  m_TagData(SetupTags(settings)),
+  m_GaussianConstrainDeltaKpi(settings.getB("GaussianConstrainDeltaKpi")) {
 }
 
 double cisiLikelihood::CalculateLogLikelihood(
@@ -24,7 +26,14 @@ double cisiLikelihood::CalculateLogLikelihood(
   auto LikelihoodAdder = [&] (double a, const BinnedDTData &b) {
     return a + b.GetLogLikelihood(Parameters);
   };
-  return std::accumulate(m_TagData.begin(), m_TagData.end(), 0.0, LikelihoodAdder);
+  double LL = std::accumulate(m_TagData.begin(),
+			      m_TagData.end(),
+			      0.0,
+			      LikelihoodAdder);
+  if(m_GaussianConstrainDeltaKpi) {
+    LL += GaussianConstraints::AddGaussianConstraints(Parameters);
+  }
+  return LL;
 }
 
 void cisiLikelihood::LoadToyDataset(int ToyNumber) const {

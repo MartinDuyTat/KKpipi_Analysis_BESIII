@@ -60,6 +60,10 @@ class cisiLikelihood {
    */
   const std::vector<BinnedDTData> m_TagData;
   /**
+   * Flag that is true if \f$\delta_D^{K\pi}\f$ is Gaussian constrained
+   */
+  const bool m_GaussianConstrainDeltaKpi;
+  /**
    * Helper function that sets up all the tags
    * @param settings The settings file
    */
