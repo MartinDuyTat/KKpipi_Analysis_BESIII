@@ -19,7 +19,8 @@ RawBinnedDTYieldLikelihood::RawBinnedDTYieldLikelihood(const std::string &Tag,
 						       int ToyNumber):
   m_TagMode(Tag),
   m_TagCategory(TagCategory),
-  m_FullLikelihood(GetFullLikelihood(Tag, settings, ToyNumber)),
+  m_Workspace(GetWorkspace(Tag, settings, ToyNumber)),
+  m_FullLikelihood(std::move(GetFullLikelihood())),
   m_Variables(m_FullLikelihood->getVariables()),
   m_Order(GetYieldOrder(settings["BinningScheme"].getI("NumberBins"))) {
 }
@@ -36,16 +37,15 @@ RawBinnedDTYieldLikelihood::RawBinnedDTYieldLikelihood(const std::string &Tag,
     RooMsgService::instance().getStream(i).removeTopic(RooFit::Eval);
     RooMsgService::instance().getStream(i).removeTopic(RooFit::Caching);
     RooMsgService::instance().getStream(i).removeTopic(RooFit::Fitting);
+    RooMsgService::instance().getStream(i).removeTopic(RooFit::Minimization);
   }
   std::string FCFilename = settings.get("FeldmanCousinsToyPath");
   FCFilename = Utilities::ReplaceString(FCFilename, "TAG", Tag);
   FCFilename += "/" + ToyName + std::to_string(ToyNumber) + ".root";
   TFile File(FCFilename.c_str(), "READ");
-  RooWorkspace *w= nullptr;
-  File.GetObject("Workspace", w);
-  auto Model = w->pdf(("Simultaneous_PDF_KKpipi_vs_" + m_TagMode).c_str());
-  auto Data = w->data("InputData");
-  m_FullLikelihood.reset(Model->createNLL(*Data));
+  m_Workspace.reset(File.Get<RooWorkspace>("Workspace"));
+  m_FullLikelihood = std::move(GetFullLikelihood());
+  File.Close();
 }
 
 double RawBinnedDTYieldLikelihood::GetLogLikelihood(
@@ -58,23 +58,31 @@ double RawBinnedDTYieldLikelihood::GetLogLikelihood(
   return LogLikelihood;
 }
 
-RooAbsReal* RawBinnedDTYieldLikelihood::GetFullLikelihood(
+std::unique_ptr<RooWorkspace> RawBinnedDTYieldLikelihood::GetWorkspace(
   const std::string &Tag,
   const Settings &settings,
   int ToyNumber) const {
+  auto DTYieldFilename = RawBinnedDTYields::GetFilename(Tag, settings, ToyNumber);
+  DTYieldFilename = Utilities::ReplaceString(DTYieldFilename, ".txt", ".root");
+  TFile File(DTYieldFilename.c_str(), "READ");
+  std::unique_ptr<RooWorkspace> w{File.Get<RooWorkspace>("Workspace")};
+  return w;
+}
+
+std::unique_ptr<RooAbsReal> RawBinnedDTYieldLikelihood::GetFullLikelihood() const {
   for(int i = 0; i < 2; i++) {
     RooMsgService::instance().getStream(i).removeTopic(RooFit::Eval);
     RooMsgService::instance().getStream(i).removeTopic(RooFit::Caching);
     RooMsgService::instance().getStream(i).removeTopic(RooFit::Fitting);
+    RooMsgService::instance().getStream(i).removeTopic(RooFit::Minimization);
   }
-  auto DTYieldFilename = RawBinnedDTYields::GetFilename(Tag, settings, ToyNumber);
-  DTYieldFilename = Utilities::ReplaceString(DTYieldFilename, ".txt", ".root");
-  TFile File(DTYieldFilename.c_str(), "READ");
-  RooWorkspace *w = nullptr;
-  File.GetObject("Workspace", w);
-  auto Model = w->pdf(("Simultaneous_PDF_KKpipi_vs_" + m_TagMode).c_str());
-  auto Data = w->data("InputData");
-  return Model->createNLL(*Data);
+  const std::string PDFName = "Simultaneous_PDF_KKpipi_vs_" + m_TagMode;
+  auto Model = m_Workspace->pdf(PDFName.c_str());
+  auto Data = m_Workspace->data("hmaster");
+  if(!Data) {
+    Data = m_Workspace->data("InputData");
+  }
+  return std::unique_ptr<RooAbsReal>{Model->createNLL(*Data)};
 }
 
 std::vector<std::string> RawBinnedDTYieldLikelihood::GetYieldOrder(

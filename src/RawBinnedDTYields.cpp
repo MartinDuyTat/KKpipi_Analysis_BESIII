@@ -113,8 +113,8 @@ RawBinnedDTYields::LoadCorrelationMatrix(const std::string &Tag,
 TMatrixTSym<double>
 RawBinnedDTYields::LoadCorrelationMatrix(const std::string &Filename) const {
   TFile File(Filename.c_str());
-  TMatrixTSym<double> *CorrelationMatrix = nullptr;
-  File.GetObject("CorrelationMatrix", CorrelationMatrix);
+  std::unique_ptr<TMatrixTSym<double>> CorrelationMatrix{
+    File.Get<TMatrixTSym<double>>("CorrelationMatrix")};
   File.Close();
   return *CorrelationMatrix;
 }
@@ -123,7 +123,7 @@ std::string RawBinnedDTYields::GetFilename(const std::string &Tag,
 					   const Settings &settings,
 					   int ToyNumber) {
   std::string DTYieldFilename;
-  if(ToyNumber > 0) {
+  if(ToyNumber >= 0) {
     DTYieldFilename =
       Utilities::ReplaceString(settings.get("DT_ToyYieldDir"), "TAG", Tag);
     DTYieldFilename += "/Toy" + std::to_string(ToyNumber) + ".txt";

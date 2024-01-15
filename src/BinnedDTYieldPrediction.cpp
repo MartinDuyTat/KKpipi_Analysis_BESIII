@@ -2,6 +2,7 @@
 
 #include<vector>
 #include<string>
+#include<memory>
 #include"TFile.h"
 #include"TMatrixT.h"
 #include"TRandom.h"
@@ -65,8 +66,9 @@ TMatrixT<double> BinnedDTYieldPrediction::GetEffMatrix(
   const std::string Filename =
     Utilities::ReplaceString(settings.get("EffMatrix"), "TAG", Tag);
   TFile EffMatrixFile(Filename.c_str(), "READ");
-  TMatrixT<double> *EffMatrix = nullptr;
-  EffMatrixFile.GetObject(EffMatrixName.c_str(), EffMatrix);
+  std::unique_ptr<TMatrixT<double>> EffMatrix{
+    EffMatrixFile.Get<TMatrixT<double>>(EffMatrixName.c_str())
+  };
   if(settings.get("Systematics") == "Efficiency") {
     TMatrixT<double> *EffMatrix_err = nullptr;
     EffMatrixFile.GetObject((EffMatrixName + "_err").c_str(), EffMatrix_err);

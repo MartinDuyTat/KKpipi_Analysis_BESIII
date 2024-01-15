@@ -57,6 +57,15 @@ class cisiFitter {
    * Do a fit with \f$\gamma\f$ as well
    */
   void MinimiseWithGamma() const;
+  /**
+   * Function to do Feldman-Cousins scan of \f$\gamma\f$
+   * @param gamma The scan point of \f$\gamma\f$
+   */
+  void ScanGammaFeldmanCousins(double gamma) const;
+  /**
+   * Run toy studies with the combined \f$\gamma\f$ and BESIII fit
+   */
+  void RunGammaToys() const;
  private:
   /**
    * The ci and si likelihood
@@ -113,6 +122,14 @@ class cisiFitter {
    * Function for doing a contour scan over \f$\gamma\f$ and \f$\delta_B\f$
    */
   void ScanGammaDeltaB(ROOT::Minuit2::Minuit2Minimizer &Minimiser) const;
+  /**
+   * Run the minimiser and map all angles back to the correct range
+   */
+  void MinimiseAndBringBackAngles(ROOT::Minuit2::Minuit2Minimizer &Minimiser) const;
+  /**
+   * Get the angle in the \f$[-\pi, +\pi]\f$ range
+   */
+  static double GetAngleInCorrectRange(double Angle);
 };
 
 #endif

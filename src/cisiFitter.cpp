@@ -25,6 +25,7 @@
 #include"cisiFitterParameters.h"
 #include"GammaLikelihood.h"
 #include"GammaFitterParameters.h"
+#include"Bes3plotstyle.h"
 
 cisiFitter::cisiFitter(const Settings &settings):
   m_cisiLikelihood(settings),
@@ -41,13 +42,6 @@ void cisiFitter::Minimise() const {
     const cisiFitterParameters Parameters(x, m_NumberBins);
     return m_cisiLikelihood.CalculateLogLikelihood(Parameters);
   };
-  // Number of parameters in the fit:
-  // NBins ci
-  // NBins si
-  // 2*NBins - 1 R_i
-  // 2 DeltaKpi
-  // 1 BF of KKpipi
-  // 1 BF of KKpipi for KLpipi tag
   const std::size_t NumberParameters = 4*m_NumberBins + 3;
   ROOT::Math::Functor fcn(LikelihoodFunction, NumberParameters);
   Minimiser.SetFunction(fcn);
@@ -259,6 +253,13 @@ void cisiFitter::FeldmanCousinsDataScan() const {
 }
 
 void cisiFitter::SetupMinimiser(ROOT::Minuit2::Minuit2Minimizer &Minimiser) const {
+  // Number of parameters in the fit:
+  // NBins ci
+  // NBins si
+  // 2*NBins - 1 R_i
+  // 2 DeltaKpi
+  // 1 BF of KKpipi
+  // 1 BF of KKpipi for KLpipi tag
   Minimiser.SetVariable(0, "BF_KKpipi", 0.00247, 0.1);
   Minimiser.SetVariableLimits(0, 0.001, 0.010);
   const double cMin = m_Settings.getD("c_min");
@@ -309,22 +310,38 @@ void cisiFitter::SetupMinimiser(ROOT::Minuit2::Minuit2Minimizer &Minimiser) cons
 }
 
 void cisiFitter::SetupMinimiserWithGamma(ROOT::Minuit2::Minuit2Minimizer &Minimiser) const {
+  // Number of additional parameters in the fit:
+  // 5 physics parameters
+  // 2*NBins - 1 R_i
+  // 4 yield normalisations
   SetupMinimiser(Minimiser);
   Minimiser.SetVariable(4*m_NumberBins + 3, "gamma",
-			m_Settings.getD("gamma_initial"), 20.0);
-  Minimiser.SetVariableLimits(4*m_NumberBins + 3, 0.0, 180.0);
-  Minimiser.SetVariable(4*m_NumberBins + 4, "deltaB_dk",
+			m_Settings.getD("gamma_initial"), 30.0);
+  Minimiser.SetVariableLimits(4*m_NumberBins + 3, -360.0, 360.0);
+  /*Minimiser.SetVariable(4*m_NumberBins + 4, "deltaB_dk",
 			m_Settings.getD("deltaB_dk_initial"), 20.0);
-  Minimiser.SetVariableLimits(4*m_NumberBins + 4, 0.0, 180.0);
+  Minimiser.SetVariableLimits(4*m_NumberBins + 4, -720.0, 720.0);
   Minimiser.SetVariable(4*m_NumberBins + 5, "rB_dk",
-			m_Settings.getD("rB_dk_initial"), 0.05);
-  Minimiser.SetVariableLimits(4*m_NumberBins + 5, 0.0, 1.0);
-  Minimiser.SetVariable(4*m_NumberBins + 6, "deltaB_dpi",
+			m_Settings.getD("rB_dk_initial"), 0.03);
+  Minimiser.SetVariableLimits(4*m_NumberBins + 5, 0.03, 0.25);*/
+  Minimiser.SetVariable(4*m_NumberBins + 4, "rBcosDeltaB_dk",
+			m_Settings.getD("rBcosDeltaB_dk_initial"), 0.1);
+  Minimiser.SetVariableLimits(4*m_NumberBins + 4, -0.3, 0.3);
+  Minimiser.SetVariable(4*m_NumberBins + 5, "rBsinDeltaB_dk",
+			m_Settings.getD("rBsinDeltaB_dk_initial"), 0.1);
+  Minimiser.SetVariableLimits(4*m_NumberBins + 5, -0.3, 0.3);
+  /*Minimiser.SetVariable(4*m_NumberBins + 6, "deltaB_dpi",
 			m_Settings.getD("deltaB_dpi_initial"), 50.0);
-  Minimiser.SetVariableLimits(4*m_NumberBins + 6, 180.0, 360);
+  Minimiser.SetVariableLimits(4*m_NumberBins + 6, -720.0, 720.0);
   Minimiser.SetVariable(4*m_NumberBins + 7, "rB_dpi",
-			m_Settings.getD("rB_dpi_initial"), 0.005);
-  Minimiser.SetVariableLimits(4*m_NumberBins + 7, 0.0, 0.1);
+			m_Settings.getD("rB_dpi_initial"), 0.004);
+  Minimiser.SetVariableLimits(4*m_NumberBins + 7, 0.0, 0.018);*/
+  Minimiser.SetVariable(4*m_NumberBins + 6, "x_xi",
+			m_Settings.getD("x_xi_initial"), 0.02);
+  Minimiser.SetVariableLimits(4*m_NumberBins + 6, -0.15, 0.15);
+  Minimiser.SetVariable(4*m_NumberBins + 7, "y_xi",
+			m_Settings.getD("y_xi_initial"), 0.02);
+  Minimiser.SetVariableLimits(4*m_NumberBins + 7, -0.15, 0.15);
   int Counter = -m_NumberBins;
   for(std::size_t i = 4*m_NumberBins + 8; i < 6*m_NumberBins + 7; i++) {
     std::string Name = Counter > 0 ? "P" : "M";
@@ -452,13 +469,17 @@ void cisiFitter::Plot_cisi(ROOT::Minuit2::Minuit2Minimizer &Minimiser,
 void cisiFitter::Plot_DeltaKpi(ROOT::Minuit2::Minuit2Minimizer &Minimiser,
 			       double rDcosDeltaKpi,
 			       double rDsinDeltaKpi) const {
+  // BESIII plot style
+  SetStyle();
+  SetPrelimStyle();
   // Make canvas
   TCanvas c("DeltaKpi_c", "", 900, 900);
   // Draw fit results
   TGraph Results(1, &rDcosDeltaKpi, &rDsinDeltaKpi);
-  const double Boundary = m_Settings.getD("DeltaKpiPlotBoundary");
-  Results.GetXaxis()->SetLimits(-Boundary, Boundary);
-  Results.GetYaxis()->SetRangeUser(-Boundary, Boundary);
+  const double Boundary_x = m_Settings.getD("DeltaKpiPlotBoundary_x");
+  const double Boundary_y = m_Settings.getD("DeltaKpiPlotBoundary_y");
+  Results.GetXaxis()->SetLimits(-Boundary_x, Boundary_x);
+  Results.GetYaxis()->SetRangeUser(-Boundary_y, Boundary_y);
   Results.SetMarkerStyle(8);
   Results.GetYaxis()->SetTitleOffset(1.2);
   Results.SetTitle(";r_{D}^{K#pi}cos(#delta_{D}^{K#pi});r_{D}^{K#pi}sin(#delta_{D}^{K#pi})");
@@ -564,21 +585,13 @@ void cisiFitter::MinimiseWithGamma() const {
     const GammaFitterParameters Parameters(x, m_NumberBins);
     return gammaLikelihood.CalculateLogLikelihood(Parameters);
   };
-  // Number of parameters in the fit:
-  // 6 CP observables for gamma
-  // 2NBins - 1 R_i for LHCb
-  // 4 yield normalisations
-  // NBins ci
-  // NBins si
-  // 2*NBins - 1 R_i
-  // 2 DeltaKpi
-  // 1 BF of KKpipi
-  // 1 BF of KKpipi for KLpipi tag
-  const std::size_t NumberParameters = 6*m_NumberBins + 12;
+  const std::size_t NumberParameters = 6*m_NumberBins + 11;
   ROOT::Math::Functor fcn(LikelihoodFunction, NumberParameters);
   Minimiser.SetFunction(fcn);
   SetupMinimiserWithGamma(Minimiser);
-  Minimiser.Minimize();
+  MinimiseAndBringBackAngles(Minimiser);
+  std::string ResultsFile = m_Settings.get("GammaFitResultsFilename");
+  SaveFitResults(Minimiser, ResultsFile);
   if(m_Settings.getB("GammaDeltaBContourScan")) {
     ScanGammaDeltaB(Minimiser);
   }
@@ -595,7 +608,7 @@ void cisiFitter::ScanGammaDeltaB(ROOT::Minuit2::Minuit2Minimizer &Minimiser) con
       Minimiser.SetVariableValue(4*m_NumberBins + 4, deltaB_dk);
       Minimiser.FixVariable(4*m_NumberBins + 3);
       Minimiser.FixVariable(4*m_NumberBins + 4);
-      Minimiser.Minimize();
+      MinimiseAndBringBackAngles(Minimiser);
       x.push_back(gamma);
       y.push_back(deltaB_dk);
       z.push_back(Minimiser.MinValue());
@@ -605,4 +618,226 @@ void cisiFitter::ScanGammaDeltaB(ROOT::Minuit2::Minuit2Minimizer &Minimiser) con
   Graph2d.SetTitle("Simultaneous LHCb and BESIII fit;#gamma;#delta_{B}^{DK}");
   Graph2d.Draw("COLZ");
   c.SaveAs("Contours_gamma_deltaB.pdf");
+}
+
+void cisiFitter::ScanGammaFeldmanCousins(double gamma) const {
+  ROOT::Minuit2::Minuit2Minimizer Minimiser;
+  Minimiser.SetPrintLevel(2);
+  Minimiser.SetMaxFunctionCalls(100000);
+  GammaLikelihood gammaLikelihood(m_Settings, m_cisiLikelihood);
+  auto LikelihoodFunction = [=, &gammaLikelihood] (const double *x) {
+    const GammaFitterParameters Parameters(x, m_NumberBins);
+    return gammaLikelihood.CalculateLogLikelihood(Parameters);
+  };
+  const std::size_t NumberParameters = 6*m_NumberBins + 11;
+  ROOT::Math::Functor fcn(LikelihoodFunction, NumberParameters);
+  Minimiser.SetFunction(fcn);
+  SetupMinimiserWithGamma(Minimiser);
+  // Default fit to data and save likelihood value
+  int CovStatus = -1;
+  std::size_t Counter = 0;
+  while(CovStatus != 3 && Counter < 5) {
+    if(Counter != 0) {
+      std::cout << "Fit did not converge, fitting again ";
+      std::cout << "(" << Counter << ")\n";
+    }
+    MinimiseAndBringBackAngles(Minimiser);
+    CovStatus = Minimiser.CovMatrixStatus();
+    Counter++;
+  }
+  CovStatus = -1;
+  Counter = 0;
+  const double GlobalMin = Minimiser.MinValue();
+  // Save fit values for toy generation
+  auto GenValues_arr = Minimiser.X();
+  GammaFitterParameters GeneratorValues(GenValues_arr, m_NumberBins);
+  GeneratorValues.UpdateGamma(gamma);
+  // Fix gamma and fit again to get likelihood difference
+  Minimiser.SetVariableValue(4*m_NumberBins + 3, gamma);
+  Minimiser.FixVariable(4*m_NumberBins + 3);
+  while(CovStatus != 3 && Counter < 5) {
+    if(Counter != 0) {
+      std::cout << "Fit did not converge, fitting again ";
+      std::cout << "(" << Counter << ")\n";
+    }
+    MinimiseAndBringBackAngles(Minimiser);
+    CovStatus = Minimiser.CovMatrixStatus();
+    Counter++;
+  }
+  CovStatus = -1;
+  Counter = 0;
+  const double LikelihoodDiff_data = Minimiser.MinValue() - GlobalMin;
+  Minimiser.ReleaseVariable(4*m_NumberBins + 3);
+  // Do the same with Feldman-Cousins toys
+  Minimiser.SetPrintLevel(1);
+  auto LikelihoodFunctionToy = [=, &gammaLikelihood] (const double *x) {
+    const GammaFitterParameters Parameters(x, m_NumberBins);
+    return gammaLikelihood.CalculateToyLogLikelihood(Parameters);
+  };
+  ROOT::Math::Functor fcn_Toy(LikelihoodFunctionToy, NumberParameters);
+  Minimiser.SetFunction(fcn_Toy);
+  const std::size_t NumberToys = m_Settings.getI("GammaNumberToys");
+  double p_value = 0.0;
+  std::size_t GoodToys = 0;
+  for(std::size_t i = 0; i < NumberToys; i++) {
+    // Generate toy
+    std::cout << "Toy " << i << "\n";
+    m_cisiLikelihood.LoadToyDataset(i);
+    gammaLikelihood.GenerateToy(GeneratorValues);
+    Minimiser.SetVariableValues(GenValues_arr);
+    // Check if the loaded dataset had DT fits that converged, if not just skip
+    if(TMath::IsNaN(LikelihoodFunctionToy(GenValues_arr))) {
+      std::cout << "DT fit didn't converge, skipping this toy\n";
+      continue;
+    }
+    // Nominal fit to toy
+    while(CovStatus != 3 && Counter < 5) {
+      if(Counter != 0) {
+	std::cout << "Fit did not converge, fitting again ";
+	std::cout << "(" << Counter << ")\n";
+      }
+      MinimiseAndBringBackAngles(Minimiser);
+      CovStatus = Minimiser.CovMatrixStatus();
+      Counter++;
+    }
+    CovStatus = -1;
+    Counter = 0;
+    const double ToyGlobalMin = Minimiser.MinValue();
+    // Fix gamma and fit again to get likelihood difference
+    Minimiser.SetVariableValues(GenValues_arr);
+    Minimiser.SetVariableValue(4*m_NumberBins + 3, gamma);
+    Minimiser.FixVariable(4*m_NumberBins + 3);
+    while(CovStatus != 3 && Counter < 5) {
+      if(Counter != 0) {
+	std::cout << "Fit did not converge, fitting again ";
+	std::cout << "(" << Counter << ")\n";
+      }
+      MinimiseAndBringBackAngles(Minimiser);
+      CovStatus = Minimiser.CovMatrixStatus();
+      Counter++;
+    }
+    CovStatus = -1;
+    Counter = 0;
+    const double LikelihoodDiff_toy = Minimiser.MinValue() - ToyGlobalMin;
+    Minimiser.ReleaseVariable(4*m_NumberBins + 3);
+    std::cout << "Delta LL in toy: " << LikelihoodDiff_toy << "\n";
+    std::cout << "Delta LL in data: " << LikelihoodDiff_data << "\n";
+    if(LikelihoodDiff_toy > LikelihoodDiff_data) {
+      p_value += 1.0;
+    }
+    GoodToys++;
+  }
+  p_value /= GoodToys;
+  if(!std::filesystem::exists("FeldmanCousinsGammaFitResults") ||
+     !std::filesystem::is_directory("FeldmanCousinsGammaFitResults")) {
+    std::filesystem::create_directory("FeldmanCousinsGammaFitResults");
+  }
+  const std::string Filename = "FeldmanCousinsGammaFitResults/Gamma_"
+    + std::to_string(static_cast<int>(std::round(gamma))) + ".txt";
+  std::ofstream File(Filename);
+  File << p_value << "\n";
+  File << TMath::Sqrt(p_value*(1.0 - p_value)/GoodToys) << "\n";
+  File.close();
+}
+
+void cisiFitter::RunGammaToys() const {
+  ROOT::Minuit2::Minuit2Minimizer Minimiser;
+  Minimiser.SetPrintLevel(2);
+  Minimiser.SetMaxFunctionCalls(100000);
+  const std::size_t NumberParameters = 6*m_NumberBins + 11;
+  GammaLikelihood gammaLikelihood(m_Settings, m_cisiLikelihood);
+  auto LikelihoodFunction = [=, &gammaLikelihood] (const double *x) {
+    const GammaFitterParameters Parameters(x, m_NumberBins);
+    return gammaLikelihood.CalculateLogLikelihood(Parameters);
+  };
+  ROOT::Math::Functor fcn(LikelihoodFunction, NumberParameters);
+  Minimiser.SetFunction(fcn);
+  SetupMinimiserWithGamma(Minimiser);
+  // Default fit to data to get generator values
+  MinimiseAndBringBackAngles(Minimiser);
+  GammaFitterParameters GeneratorValues(Minimiser.X(), m_NumberBins);
+  auto LikelihoodFunctionToy = [=, &gammaLikelihood] (const double *x) {
+    const GammaFitterParameters Parameters(x, m_NumberBins);
+    return gammaLikelihood.CalculateToyLogLikelihood(Parameters);
+  };
+  ROOT::Math::Functor fcn_Toy(LikelihoodFunctionToy, NumberParameters);
+  Minimiser.SetFunction(fcn_Toy);
+  const std::size_t NumberToys = m_Settings.getI("GammaNumberToys");
+  Minimiser.SetPrintLevel(-1);
+  for(std::size_t i = 0; i < NumberToys; i++) {
+    std::cout << "Toy " << i << "\n";
+    m_cisiLikelihood.LoadToyDataset(i);
+    gammaLikelihood.GenerateToy(GeneratorValues);
+    int CovStatus = -1;
+    std::size_t Counter = 0;
+    while(CovStatus != 3 && Counter < 5) {
+      if(Counter != 0) {
+	std::cout << "Fit did not converge, fitting again ";
+	std::cout << "(" << Counter << ")\n";
+      }
+      MinimiseAndBringBackAngles(Minimiser);
+      CovStatus = Minimiser.CovMatrixStatus();
+      Counter++;
+    }
+    if(!std::filesystem::exists("ToyGammaFitResults") ||
+       !std::filesystem::is_directory("ToyGammaFitResults")) {
+      std::filesystem::create_directory("ToyGammaFitResults");
+    }
+    const std::string Filename = "ToyGammaFitResults/Toy"
+      + std::to_string(i) + ".root";
+    SaveFitResults(Minimiser, Filename);
+    Minimiser.Clear();
+    SetupMinimiserWithGamma(Minimiser);
+  }
+}
+
+void cisiFitter::MinimiseAndBringBackAngles(
+  ROOT::Minuit2::Minuit2Minimizer &Minimiser) const {
+  double MappedGamma = -999.9;
+  while(MappedGamma < -180.0 || MappedGamma > 180.0) {
+    Minimiser.Minimize();
+    auto X = Minimiser.X();
+    MappedGamma = GetAngleInCorrectRange(X[4*m_NumberBins + 3]);
+    /*double MappedDeltaB_dk = GetAngleInCorrectRange(X[4*m_NumberBins + 4]);
+      double MappedDeltaB_dpi = GetAngleInCorrectRange(X[4*m_NumberBins + 6]);*/
+    if(MappedGamma < 0.0) {
+      MappedGamma += 180.0;
+      Minimiser.SetVariableValue(4*m_NumberBins + 4, -X[4*m_NumberBins + 4]);
+      Minimiser.SetVariableValue(4*m_NumberBins + 5, -X[4*m_NumberBins + 5]);
+    /*MappedDeltaB_dk += 180.0;
+      MappedDeltaB_dpi += 180.0;*/
+    }
+    Minimiser.SetVariableValue(4*m_NumberBins + 3, MappedGamma);
+    /*Minimiser.SetVariableValue(4*m_NumberBins + 4, MappedDeltaB_dk);
+      Minimiser.SetVariableValue(4*m_NumberBins + 6, MappedDeltaB_dpi);*/
+    Minimiser.Minimize();
+    auto XX = Minimiser.X();
+    MappedGamma = XX[4*m_NumberBins + 3];
+  }
+  auto X = Minimiser.X();
+  if(MappedGamma < 0.0) {
+    MappedGamma += 180.0;
+    Minimiser.SetVariableValue(4*m_NumberBins + 4, -X[4*m_NumberBins + 4]);
+    Minimiser.SetVariableValue(4*m_NumberBins + 5, -X[4*m_NumberBins + 5]);
+  }
+  Minimiser.Minimize();
+  /*const std::size_t N = Minimiser.NDim();
+  const std::size_t Size = N - 4*m_NumberBins - 3;
+  TMatrixT<double> CorrelationMatrix(Size, Size);
+  for(std::size_t i = 0; i < Size; i++) {
+    const std::size_t i_index = i + 4*m_NumberBins + 3;
+    for(std::size_t j = 0; j < Size; j++) {
+      const std::size_t j_index = j + 4*m_NumberBins + 3;
+      CorrelationMatrix(i, j) = Minimiser.Correlation(i_index, j_index);
+    }
+  }
+  CorrelationMatrix.Print();*/
+}
+
+double cisiFitter::GetAngleInCorrectRange(double Angle) {
+  int Sign = Angle > 0 ? +1 : -1;
+  while(Angle < -180.0 || Angle > 180.0) {
+    Angle -= Sign*360.0;
+  }
+  return Angle;
 }

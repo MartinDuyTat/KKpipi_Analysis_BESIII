@@ -2,6 +2,7 @@
 
 #include<vector>
 #include<string_view>
+#include<memory>
 #include"TMatrixT.h"
 #include"TMatrixTSym.h"
 #include"TMath.h"
@@ -42,17 +43,25 @@ GammaLikelihood::GammaLikelihood(const Settings &settings,
 	           {settings.getD("s3_fitted_plus_err"),
 	            settings.getD("s3_fitted_minus_err")},
 	           {settings.getD("s4_fitted_plus_err"),
-	            settings.getD("s4_fitted_minus_err")}}) {
+	            settings.getD("s4_fitted_minus_err")}}),
+  m_Cholesky(GetCovMatrix(settings.get("GammaResultsFile"), m_NumberBins).Invert()) {
 }
 
 double GammaLikelihood::CalculateLogLikelihood(
   const GammaFitterParameters &Parameters) const {
-  const auto PredictedYields = m_BinnedBYieldPrediction.GetPredictedYields(Parameters);
+  return CalculateLogLikelihood(Parameters, m_BinnedBYields);
+}
+
+double GammaLikelihood::CalculateLogLikelihood(
+  const GammaFitterParameters &Parameters,
+  const std::vector<double> &BinnedBYields) const {
+  const auto PredictedYields =
+    m_BinnedBYieldPrediction.GetPredictedYields(Parameters);
   double LL = 0.0;
   for(std::size_t i = 0; i < 8*m_NumberBins; i++) {
-    const double YieldDiff_i = m_BinnedBYields[i] - PredictedYields[i];
+    const double YieldDiff_i = BinnedBYields[i] - PredictedYields[i];
     for(std::size_t j = 0; j <= i; j++) {
-      const double YieldDiff_j = m_BinnedBYields[j] - PredictedYields[j];
+      const double YieldDiff_j = BinnedBYields[j] - PredictedYields[j];
       const int SymmetryFactor = (i == j ? 1 : 2);
       LL += YieldDiff_i*YieldDiff_j*m_InvCovMatrix(i, j)*SymmetryFactor;
     }
@@ -67,12 +76,30 @@ double GammaLikelihood::CalculateLogLikelihood(
   return LL;
 }
 
+double GammaLikelihood::CalculateToyLogLikelihood(
+  const GammaFitterParameters &Parameters) const {
+  return CalculateLogLikelihood(Parameters, m_ToyBinnedBYields);
+}
+
+void GammaLikelihood::GenerateToy(const GammaFitterParameters &Parameters) const {
+  const auto PredictedYields =
+    m_BinnedBYieldPrediction.GetPredictedYields(Parameters);
+  m_Cholesky.Smear();
+  auto RandomNumbers = m_Cholesky.GetSmearings();
+  m_ToyBinnedBYields.resize(PredictedYields.size());
+  for(std::size_t i = 0; i < PredictedYields.size(); i++) {
+    m_ToyBinnedBYields[i] = PredictedYields[i] + RandomNumbers(i, 0);
+  }
+}
+
 TMatrixT<double> GammaLikelihood::GetCovMatrix(const std::string &Filename,
 			      std::size_t NBins) {
   // Open file with fit results
   TFile File(Filename.c_str(), "READ");
   // Loop over all variables, save the order and uncertainties
-  auto FloatingParameters = static_cast<RooArgList*>(File.Get("floating_param"));
+  std::unique_ptr<RooArgList> FloatingParameters{
+    File.Get<RooArgList>("floating_param")
+  };
   std::vector<std::size_t> Order;
   std::vector<double> Uncertainties;
   constexpr std::array<std::string_view, 2> BModes{"dk", "dpi"};
@@ -97,8 +124,9 @@ TMatrixT<double> GammaLikelihood::GetCovMatrix(const std::string &Filename,
     }
   }
   // Double loop over all signal yields to save covariance matrix
-  TMatrixTSym<double> *correlation_matrix = nullptr;
-  File.GetObject("correlation_matrix", correlation_matrix);
+  std::unique_ptr<TMatrixTSym<double>> correlation_matrix{
+    File.Get<TMatrixTSym<double>>("correlation_matrix")
+  };
   TMatrixT<double> CovMatrix(8*NBins, 8*NBins);
   std::size_t Index_i = 0;
   for(auto i : Order) {
@@ -117,8 +145,9 @@ std::vector<double> GammaLikelihood::GetBinnedBYields(const std::string &Filenam
 				     std::size_t NBins) {
   std::vector<double> Yields;
   TFile File(Filename.c_str(), "READ");
-  RooArgList *FloatingParameters = nullptr;
-  File.GetObject("floating_param", FloatingParameters);
+  std::unique_ptr<RooArgList> FloatingParameters{
+    File.Get<RooArgList>("floating_param")
+  };
   constexpr std::array<std::string_view, 2> BModes{"dk", "dpi"};
   constexpr std::array<std::string_view, 2> Charges{"minus", "plus"};
   for(const auto &BMode : BModes) {

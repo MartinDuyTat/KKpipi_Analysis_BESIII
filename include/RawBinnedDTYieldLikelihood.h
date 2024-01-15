@@ -11,6 +11,7 @@
 #include<memory>
 #include"RooArgSet.h"
 #include"RooAbsReal.h"
+#include"RooWorkspace.h"
 #include"Settings.h"
 
 class RawBinnedDTYieldLikelihood {
@@ -61,6 +62,10 @@ class RawBinnedDTYieldLikelihood {
    */
   const std::string m_TagCategory;
   /**
+   * Keep workspace around, otherwise it will crash...
+   */
+  std::unique_ptr<RooWorkspace> m_Workspace;
+  /**
    * The full likelihood of the signal yields
    */
   std::unique_ptr<RooAbsReal> m_FullLikelihood;
@@ -73,11 +78,15 @@ class RawBinnedDTYieldLikelihood {
    */
   std::vector<std::string> m_Order;
   /**
+   * Helper function that loads the workspace
+   */
+  std::unique_ptr<RooWorkspace> GetWorkspace(const std::string &Tag,
+					     const Settings &settings,
+					     int ToyNumber) const;
+  /**
    * Helper function that loads the full likelihood from a file
    */
-  RooAbsReal* GetFullLikelihood(const std::string &Tag,
-				const Settings &settings,
-				int ToyNumber) const;
+  std::unique_ptr<RooAbsReal> GetFullLikelihood() const;
   /**
    * Helper function to set up the yield ordering
    */

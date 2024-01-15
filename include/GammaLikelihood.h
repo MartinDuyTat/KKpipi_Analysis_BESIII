@@ -14,6 +14,7 @@
 #include"GammaFitterParameters.h"
 #include"cisiLikelihood.h"
 #include"BinnedBYieldPrediction.h"
+#include"CholeskySmearing.h"
 
 class GammaLikelihood {
  public:
@@ -29,9 +30,27 @@ class GammaLikelihood {
    */
   GammaLikelihood(const GammaLikelihood &Likelihood) = delete;
   /**
-   * Function that returns the likelihood for \f$\gamm\f$
+   * Function that returns the likelihood for \f$\gamma\f$
+   * @param Parameters The fit parameters
    */
   double CalculateLogLikelihood(const GammaFitterParameters &Parameters) const;
+  /**
+   * Function that returns the likelihood for \f$\gamma\f$
+   * @param Parameters The fit parameters
+   * @param BinnedBYields The yields of \f$B^\pm\f$
+   */
+  double CalculateLogLikelihood(const GammaFitterParameters &Parameters,
+				const std::vector<double> &BinnedBYields) const;
+  /**
+   * Function that returns the likelihood for \f$\gamma\f$ with the toy yields
+   * @param Parameters The fit parameters
+   */
+  double CalculateToyLogLikelihood(const GammaFitterParameters &Parameters) const;
+  /**
+   * Function to generate a toy dataset
+   * @param Parameters The parameters used to generate the toy
+   */
+  void GenerateToy(const GammaFitterParameters &Parameters) const;
  private:
   /**
    * Function for loading the (inverse of the) covariance matrix
@@ -96,6 +115,14 @@ class GammaLikelihood {
    * The fitted uncertainties of \f$s_i\f$ for the \f$\gamma\f$ fit
    */
   const std::vector<std::pair<double, double>> m_si_fitted_err;
+  /**
+   * Smearing object for toys
+   */
+  mutable CholeskySmearing m_Cholesky;
+  /**
+   * Toy yields
+   */
+  mutable std::vector<double> m_ToyBinnedBYields;
   /**
    * Helper function that calculates the likelihood of \f$c_i\f$ and \f$s_i$
    */
