@@ -481,7 +481,10 @@ void cisiFitter::Plot_DeltaKpi(ROOT::Minuit2::Minuit2Minimizer &Minimiser,
   Results.GetXaxis()->SetLimits(-Boundary_x, Boundary_x);
   Results.GetYaxis()->SetRangeUser(-Boundary_y, Boundary_y);
   Results.SetMarkerStyle(8);
-  Results.GetYaxis()->SetTitleOffset(1.2);
+  Results.GetYaxis()->SetTitleOffset(1.35);
+  Results.GetXaxis()->SetTitleOffset(1.1);
+  c.SetLeftMargin(0.20);
+  c.SetRightMargin(0.06);
   Results.SetTitle(";r_{D}^{K#pi}cos(#delta_{D}^{K#pi});r_{D}^{K#pi}sin(#delta_{D}^{K#pi})");
   Results.Draw("AP");
   // Draw HFLAV average

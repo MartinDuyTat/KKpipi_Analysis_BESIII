@@ -17,6 +17,7 @@
 #include"TRandom.h"
 #include"TLatex.h"
 #include"TStyle.h"
+#include"TGaxis.h"
 #include"RooRealVar.h"
 #include"RooDataSet.h"
 #include"RooDataHist.h"
@@ -247,6 +248,7 @@ void SingleTagYield::PlotSingleTagYield(const RooDataSet &Data) const {
   SetStyle();
   SetPrelimStyle();
   TCanvas c1("c1", "c1", 1600, 1600);
+  TGaxis::SetMaxDigits(3);
   TPad Pad1("Pad1", "Pad1", 0.0, 0.25, 1.0, 1.0);
   TPad Pad2("Pad2", "Pad2", 0.0, 0.0, 1.0, 0.25);
   Pad1.Draw();
@@ -257,11 +259,12 @@ void SingleTagYield::PlotSingleTagYield(const RooDataSet &Data) const {
   Pad2.SetBorderMode(0);
   Pad2.SetBottomMargin(0.1);
   Pad2.SetTopMargin(0.05);*/
+  Pad1.SetTopMargin(0.07);
   Pad1.cd();
   RooPlot *Frame = m_MBC.frame();
   FormatAxis(Frame->GetXaxis());
   FormatAxis(Frame->GetYaxis());
-  Frame->GetYaxis()->SetTitleOffset(1.32);
+  Frame->GetYaxis()->SetTitleOffset(1.2);
   if(m_Settings.contains("No_x_axis_tick_label") &&
      m_Settings.getB("No_x_axis_tick_label")) {
     Frame->GetXaxis()->SetLabelSize(0);

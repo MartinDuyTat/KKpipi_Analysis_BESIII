@@ -47,22 +47,38 @@ int main(int argc, char *argv[]) {
                                      + "_true == " + std::to_string(Bin.first);
       BinCut = BinCut && TCut(SignalBinCut.c_str());
     }
+    TCut OldDataCut("abs(Run) < 50000");
+    TCut NewDataCut("abs(Run) >= 50000");
+    TCut OldDataBinCut = BinCut && OldDataCut;
+    TCut NewDataBinCut = BinCut && NewDataCut;
     const double Events_CPEven =
       Utilities::SumWeights(&TruthChain,
 			    "ModelWeight_CPEven",
-			    std::string(BinCut.GetTitle()));
+			    std::string(OldDataBinCut.GetTitle())) +
+      Utilities::SumWeights(&TruthChain,
+			    "ModelWeight_CPEven",
+			    std::string(NewDataBinCut.GetTitle()))*(13.0/5.0);
     const double Events_CPOdd =
       Utilities::SumWeights(&TruthChain,
 			    "ModelWeight_CPOdd",
-			    std::string(BinCut.GetTitle()));
+			    std::string(OldDataBinCut.GetTitle())) +
+      Utilities::SumWeights(&TruthChain,
+			    "ModelWeight_CPOdd",
+			    std::string(NewDataBinCut.GetTitle()))*(13.0/5.0);
     const std::string WeightNameK0pipi = K0pipiQCMC ? 
       "ModelWeight_" + K0pipiMode + "_TagBin" + std::to_string(Bin.second) : "";
     const double Events_K0pipi =
       Utilities::SumWeights(&TruthChain,
 			    WeightNameK0pipi,
-			    std::string(BinCut.GetTitle()));
+			    std::string(OldDataBinCut.GetTitle())) +
+      Utilities::SumWeights(&TruthChain,
+			    WeightNameK0pipi,
+			    std::string(NewDataBinCut.GetTitle()))*(13.0/5.0);
     const double Events =
-      Utilities::SumWeights(&TruthChain, "", std::string(BinCut.GetTitle()));
+      Utilities::SumWeights(&TruthChain, "",
+			    std::string(OldDataBinCut.GetTitle())) +
+      Utilities::SumWeights(&TruthChain, "",
+			    std::string(NewDataBinCut.GetTitle()))*(13.0/5.0);
     GeneratedEvents_CPEven.push_back(Events_CPEven);
     GeneratedEvents_CPOdd.push_back(Events_CPOdd);
     GeneratedEvents_K0pipi.push_back(Events_K0pipi);
@@ -86,6 +102,8 @@ int main(int argc, char *argv[]) {
          ModelWeight_CPOdd = 1.0;
   Chain.SetBranchAddress("ModelWeight_CPEven", &ModelWeight_CPEven);
   Chain.SetBranchAddress("ModelWeight_CPOdd", &ModelWeight_CPOdd);
+  int Run;
+  Chain.SetBranchAddress("Run", &Run);
   std::map<int, double> K0pipiWeights;
   if(K0pipiQCMC) {
     for(int TagBin = 1; TagBin <= 8; TagBin++) {
@@ -110,6 +128,7 @@ int main(int argc, char *argv[]) {
 			 &TagBin_true);
   for(int i = 0; i < Chain.GetEntries(); i++) {
     Chain.GetEntry(i);
+    double LumiWeight = TMath::Abs(Run) < 50000 ? 1.0 : (13.0/5.0);
     auto RecBin_index =
       std::distance(BinCombinations.begin(),
 		    std::find(BinCombinations.begin(),
@@ -120,14 +139,15 @@ int main(int argc, char *argv[]) {
 		    std::find(BinCombinations.begin(),
 			      BinCombinations.end(),
 			      std::make_pair(SignalBin_true, TagBin_true)));
-    EffMatrix_CPEven(RecBin_index, TrueBin_index) += ModelWeight_CPEven;
-    EffMatrix_CPOdd(RecBin_index, TrueBin_index) += ModelWeight_CPOdd;
+    EffMatrix_CPEven(RecBin_index, TrueBin_index) += ModelWeight_CPEven*LumiWeight;
+    EffMatrix_CPOdd(RecBin_index, TrueBin_index) += ModelWeight_CPOdd*LumiWeight;
     if(K0pipiQCMC) {
-      EffMatrix_K0pipi(RecBin_index, TrueBin_index) += K0pipiWeights[TagBin_true];
+      EffMatrix_K0pipi(RecBin_index, TrueBin_index) +=
+	K0pipiWeights[TagBin_true]*LumiWeight;
     } else {
-      EffMatrix_K0pipi(RecBin_index, TrueBin_index) += 1.0;
+      EffMatrix_K0pipi(RecBin_index, TrueBin_index) += LumiWeight;
     }
-    EffMatrix(RecBin_index, TrueBin_index) += 1.0;
+    EffMatrix(RecBin_index, TrueBin_index) += LumiWeight;
   }
   std::cout << "Efficiency matrix constructed!\n";
   std::cout << "Normalizing efficiency matrix...\n";
