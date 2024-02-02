@@ -78,6 +78,14 @@ class RawBinnedDTYieldLikelihood {
    */
   std::vector<std::string> m_Order;
   /**
+   * The signal yield variables
+   */
+  RooArgSet m_SignalYieldVariables;
+  /**
+   * The profile likelihood of the signal yields
+   */
+  std::unique_ptr<RooAbsReal> m_ProfileLikelihood;
+  /**
    * Helper function that loads the workspace
    */
   std::unique_ptr<RooWorkspace> GetWorkspace(const std::string &Tag,
@@ -87,6 +95,14 @@ class RawBinnedDTYieldLikelihood {
    * Helper function that loads the full likelihood from a file
    */
   std::unique_ptr<RooAbsReal> GetFullLikelihood() const;
+  /**
+   * Helper function for getting the signal yield variables
+   */
+  RooArgSet GetSignalYieldVariables() const;
+  /**
+   * Helper function that loads the profile likelihood
+   */
+  std::unique_ptr<RooAbsReal> GetProfileLikelihood();
   /**
    * Helper function to set up the yield ordering
    */

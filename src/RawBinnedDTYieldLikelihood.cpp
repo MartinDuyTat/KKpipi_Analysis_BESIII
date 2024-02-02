@@ -22,7 +22,9 @@ RawBinnedDTYieldLikelihood::RawBinnedDTYieldLikelihood(const std::string &Tag,
   m_Workspace(GetWorkspace(Tag, settings, ToyNumber)),
   m_FullLikelihood(std::move(GetFullLikelihood())),
   m_Variables(m_FullLikelihood->getVariables()),
-  m_Order(GetYieldOrder(settings["BinningScheme"].getI("NumberBins"))) {
+  m_Order(GetYieldOrder(settings["BinningScheme"].getI("NumberBins"))),
+  m_SignalYieldVariables(GetSignalYieldVariables()),
+  m_ProfileLikelihood(std::move(GetProfileLikelihood())) {
 }
 
 RawBinnedDTYieldLikelihood::RawBinnedDTYieldLikelihood(const std::string &Tag,
@@ -54,7 +56,7 @@ double RawBinnedDTYieldLikelihood::GetLogLikelihood(
     auto YieldVar = m_Variables->find(m_Order[i].c_str());
     static_cast<RooRealVar*>(YieldVar)->setVal(PredictedBinYields[i]);
   }
-  double LogLikelihood = m_FullLikelihood->getVal();
+  double LogLikelihood = m_ProfileLikelihood->getVal();
   return LogLikelihood;
 }
 
@@ -83,6 +85,20 @@ std::unique_ptr<RooAbsReal> RawBinnedDTYieldLikelihood::GetFullLikelihood() cons
     Data = m_Workspace->data("InputData");
   }
   return std::unique_ptr<RooAbsReal>{Model->createNLL(*Data)};
+}
+
+RooArgSet RawBinnedDTYieldLikelihood::GetSignalYieldVariables() const {
+  RooArgSet SignalYieldVariables;
+  for(auto SignalVar : m_Order) {
+    SignalYieldVariables.add(*m_Variables->find(SignalVar.c_str()));
+  }
+  return SignalYieldVariables;
+}
+  
+
+std::unique_ptr<RooAbsReal> RawBinnedDTYieldLikelihood::GetProfileLikelihood() {
+  return std::unique_ptr<RooAbsReal>{m_FullLikelihood->
+                                     createProfile(m_SignalYieldVariables)};
 }
 
 std::vector<std::string> RawBinnedDTYieldLikelihood::GetYieldOrder(

@@ -50,7 +50,12 @@ DoubleTagYield::DoubleTagYield(const Settings &settings, TTree *Tree):
     RooMsgService::instance().getStream(i).removeTopic(RooFit::Minimization);
     RooMsgService::instance().getStream(i).removeTopic(RooFit::Plotting);
   }
-  m_SignalMBC.setBins(1000, "cache");
+  const std::string TagMode = settings.get("Mode");
+  if(TagMode == "KSpipi" || TagMode == "KSpipiPartReco" || TagMode == "KLpipi") {
+    m_SignalMBC.setBins(100, "cache");
+  } else {
+    m_SignalMBC.setBins(1000, "cache");
+  }
 }
 
 void DoubleTagYield::DoFit() {
