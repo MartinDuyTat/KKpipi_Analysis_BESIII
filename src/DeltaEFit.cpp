@@ -8,6 +8,7 @@
 #include"TPad.h"
 #include"TLine.h"
 #include"TMath.h"
+#include"TLatex.h"
 #include"RooRealVar.h"
 #include"RooDataHist.h"
 #include"RooDataSet.h"
@@ -19,6 +20,8 @@
 #include"DeltaEFit.h"
 #include"DeltaEFitModel.h"
 #include"Settings.h"
+#include"Utilities.h"
+#include"Bes3plotstyle.h"
 
 DeltaEFit::DeltaEFit(TTree *Tree, const Settings &settings):
                      m_Tree(Tree),
@@ -52,20 +55,25 @@ void DeltaEFit::FitDeltaE() {
 
 void DeltaEFit::SavePlot(const RooDataSet &UnbinnedData, const DeltaEFitModel &FitModel) const {
   using namespace RooFit;
-  TCanvas c1("c1", "c1", 1600, 1200);
+  SetStyle();
+  SetPrelimStyle();
+  TCanvas c1("c1", "c1", 1600, 1600);
   TPad Pad1("Pad1", "Pad1", 0.0, 0.25, 1.0, 1.0);
   TPad Pad2("Pad2", "Pad2", 0.0, 0.0, 1.0, 0.25);
   Pad1.Draw();
   Pad2.Draw();
-  Pad1.SetBottomMargin(0.1);
-  Pad1.SetTopMargin(0.1);
-  Pad1.SetBorderMode(0);
-  Pad2.SetBorderMode(0);
-  Pad2.SetBottomMargin(0.1);
-  Pad2.SetTopMargin(0.05);
   Pad1.cd();
+  Pad1.SetTopMargin(0.10);
   RooPlot *Frame = m_DeltaE.frame();
-  Frame->SetTitle((m_Settings.get("Mode") + std::string(" Single Tag #Delta E fit;#Delta E (GeV);Events")).c_str());
+  Frame->SetTitle(";#DeltaE (GeV);Entries");
+  Frame->GetYaxis()->SetMaxDigits(3);
+  std::string TagMode = m_Settings.get("Mode");
+  TLatex Text;
+  Text.SetTextFont(42);
+  Text.SetTextSize(0.09);
+  Text.SetTextColor(kBlack);
+  Text.SetNDC(true);
+  Text.SetText(0.2, 0.8, Utilities::GetTagNameLaTeX(TagMode).c_str());
   UnbinnedData.plotOn(Frame, Binning(400));
   auto Model = FitModel.GetModel();
   Model->plotOn(Frame, LineColor(kBlue), Normalization(1.0, RooAbsReal::Relative));
@@ -80,7 +88,9 @@ void DeltaEFit::SavePlot(const RooDataSet &UnbinnedData, const DeltaEFitModel &F
   Line_High->SetLineStyle(kDashed);
   Frame->addObject(Line_Low);
   Frame->addObject(Line_High);
+  Frame->SetNdivisions(-404);
   Frame->Draw();
+  Text.Draw("SAME");
   Pad2.cd();
   RooPlot *PullFrame = m_DeltaE.frame();
   PullFrame->addObject(Pull, "P E1");
