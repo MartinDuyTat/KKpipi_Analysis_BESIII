@@ -84,12 +84,12 @@ void DoubleTagYield::DoFit() {
   if(!m_Settings.getB("ToyFits")) {
     PlotProjections();
     SaveSignalYields(m_Settings.get("FittedSignalYieldsFile"), Result);
-  }
-  // Save likelihood
-  if(m_Settings.getB("SaveLikelihood")) {
-    std::string Filename = m_Settings.get("FittedSignalYieldsFile");
-    Filename = Utilities::ReplaceString(Filename, ".txt", ".root");
-    SaveLikelihood(Filename, DataSet);
+    // Save likelihood
+    if(m_Settings.getB("SaveLikelihood")) {
+      std::string Filename = m_Settings.get("FittedSignalYieldsFile");
+      Filename = Utilities::ReplaceString(Filename, ".txt", ".root");
+      SaveLikelihood(Filename, DataSet);
+    }
   }
   // Smear peaking backgrounds for systematics studies
   if(m_Settings.getB("YieldSystematics")) {
@@ -488,7 +488,9 @@ void DoubleTagYield::SaveSignalYields(const std::string &Filename,
   // Loop over all categories and save correlation and covarience matrices
   std::size_t Size = category.GetCategories().size();
   if(Size > 0) {
-    TFile File("RawYieldsCorrelationMatrix.root", "RECREATE");
+    std::string CorrFilename = Utilities::ReplaceString(
+      Filename, ".txt", "_RawYieldsCorrMatrix.root");
+    TFile File(CorrFilename.c_str(), "RECREATE");
     TMatrixTSym<double> CorrelationMatrix(Size);
     TMatrixTSym<double> CovarianceMatrix(Size);
     const auto categories = category.GetCategories();

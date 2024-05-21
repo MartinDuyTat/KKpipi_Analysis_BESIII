@@ -483,13 +483,18 @@ void cisiFitter::Plot_DeltaKpi(ROOT::Minuit2::Minuit2Minimizer &Minimiser,
   Results.SetMarkerStyle(8);
   Results.GetYaxis()->SetTitleOffset(1.35);
   Results.GetXaxis()->SetTitleOffset(1.1);
+  Results.GetXaxis()->SetLabelSize(0.035);
+  Results.GetYaxis()->SetLabelSize(0.035);
+  // Shrink axis labels because we were told so...
+  Results.GetXaxis()->SetTitleSize(0.045);
+  Results.GetYaxis()->SetTitleSize(0.045);
   c.SetLeftMargin(0.20);
   c.SetRightMargin(0.06);
   Results.SetTitle(";r_{D}^{K#pi}cos(#delta_{D}^{K#pi});r_{D}^{K#pi}sin(#delta_{D}^{K#pi})");
   Results.Draw("AP");
   // Draw HFLAV average
-  double rDCosDeltaKpi_HFLAV = -0.05857;
-  double rDCosDeltaKpi_err_HFLAV = 0.00017;
+  double rDCosDeltaKpi_HFLAV = -0.0581;
+  double rDCosDeltaKpi_err_HFLAV = 0.0012;
   double rDSinDeltaKpi_HFLAV = -0.0073;
   double rDSinDeltaKpi_err_HFLAV = 0.0093;
   TGraphErrors HFLAV(1, &rDCosDeltaKpi_HFLAV, &rDSinDeltaKpi_HFLAV,

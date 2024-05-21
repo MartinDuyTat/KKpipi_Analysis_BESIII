@@ -15,6 +15,7 @@
 #include"RooAbsReal.h"
 #include"RooFormulaVar.h"
 #include"RooSimultaneous.h"
+#include"RooFFTConvPdf.h"
 #include"RooDataSet.h"
 #include"BinnedFitModel.h"
 #include"Settings.h"
@@ -127,19 +128,6 @@ void BinnedFitModel::InitializeYields() {
 }
 
 void BinnedFitModel::InitializeSignalShape() {
-  m_Parameters.insert({
-    "Mean1",
-    Utilities::load_param(m_Settings["MBC_Shape"],
-			  m_Settings.get("Mode") + "_DoubleTag_Mean1")});
-  m_Parameters.insert({
-    "Sigma1",
-    Utilities::load_param(m_Settings["MBC_Shape"],
-			  m_Settings.get("Mode") + "_DoubleTag_Sigma1")});
-  auto Resolution = Unique::create<RooGaussian*>("Gaussian1",
-						 "",
-						 *m_SignalMBC,
-						 *m_Parameters["Mean1"],
-						 *m_Parameters["Sigma1"]);
   TChain SignalMCChain(m_Settings.get("TreeName").c_str());
   std::string SignalMCFilename =
     m_Settings["Datasets_WithDeltaECuts"].get("SignalMC_DT");
@@ -162,6 +150,24 @@ void BinnedFitModel::InitializeSignalShape() {
 						 "",
 						 *m_SignalMBC,
 						 MCSignal);
+  if(m_Settings.contains("NoFFTConvolution") && 
+     m_Settings.getB("NoFFTConvolution")) {
+    m_SignalShapeConv = SignalShape;
+    return;
+  }
+  m_Parameters.insert({
+    "Mean1",
+    Utilities::load_param(m_Settings["MBC_Shape"],
+			  m_Settings.get("Mode") + "_DoubleTag_Mean1")});
+  m_Parameters.insert({
+    "Sigma1",
+    Utilities::load_param(m_Settings["MBC_Shape"],
+			  m_Settings.get("Mode") + "_DoubleTag_Sigma1")});
+  auto Resolution = Unique::create<RooGaussian*>("Gaussian1",
+						 "",
+						 *m_SignalMBC,
+						 *m_Parameters["Mean1"],
+						 *m_Parameters["Sigma1"]);
   m_SignalShapeConv = Unique::create<RooFFTConvPdf*>("SignalShapeConv",
 						     "",
 						     *m_SignalMBC,

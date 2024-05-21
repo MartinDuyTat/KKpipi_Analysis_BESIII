@@ -9,7 +9,6 @@
 #include<string>
 #include<map>
 #include"TTree.h"
-#include"RooFFTConvPdf.h"
 #include"RooSimultaneous.h"
 #include"RooArgusBG.h"
 #include"RooAddPdf.h"
@@ -61,7 +60,7 @@ class BinnedFitModel {
     /**
      * The signal shape from signal MC convolved with a double Gaussian
      */
-    RooFFTConvPdf *m_SignalShapeConv = nullptr;
+    RooAbsPdf *m_SignalShapeConv = nullptr;
     /**
      * The combinatorial shape which floats in the fit, but shared between all bins
      */

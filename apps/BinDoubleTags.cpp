@@ -12,6 +12,7 @@
 #include"TChain.h"
 #include"TTree.h"
 #include"TFile.h"
+#include"TRandom.h"
 #include"Utilities.h"
 #include"Settings.h"
 #include"PhaseSpace/KKpipi_PhaseSpace.h"
@@ -48,6 +49,16 @@ int main(int argc, char *argv[]) {
       OutputTree->Branch(DalitzVariable.c_str(), &DalitzCoordinates[DalitzVariable]);
     }
   }
+  // Smear MC so that we don't need to convolve with Gaussian in the fit
+  double FitSmearing = 0.0;
+  double MBC;
+  std::string FitVariable;
+  if(settings.contains("FitVariableToSmear")) {
+    InputChain.SetBranchAddress(settings.get("FitVariableToSmear").c_str(), &MBC);
+    OutputTree->SetBranchAddress(settings.get("FitVariableToSmear").c_str(), &MBC);
+    FitSmearing = settings.getD("FitVariableSmearing");
+  }
+    
   int EventsOutsidePhaseSpace = 0;
   int EventsOutsidePhaseSpace_true = 0;
   std::cout << "Ready to bin phase space\n";
@@ -87,6 +98,7 @@ int main(int argc, char *argv[]) {
 	DalitzCoordinates[DalitzVariable] = TrueDalitzCoordinates[DalitzVariable];
       }
     }
+    MBC += gRandom->Gaus(0.0, FitSmearing);
     OutputTree->Fill();
   }
   if(settings.getB("Bin_reconstructed")) {

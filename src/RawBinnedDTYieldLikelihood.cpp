@@ -56,8 +56,10 @@ double RawBinnedDTYieldLikelihood::GetLogLikelihood(
     auto YieldVar = m_Variables->find(m_Order[i].c_str());
     static_cast<RooRealVar*>(YieldVar)->setVal(PredictedBinYields[i]);
   }
-  double LogLikelihood = m_ProfileLikelihood->getVal();
-  return LogLikelihood;
+  //double LogLikelihood = m_ProfileLikelihood->getVal();
+  double LogLikelihood = m_FullLikelihood->getVal();
+  // RooFit NLL has a factor 1/2 compared to my chi2 definition
+  return 2.0*LogLikelihood;
 }
 
 std::unique_ptr<RooWorkspace> RawBinnedDTYieldLikelihood::GetWorkspace(
@@ -84,7 +86,10 @@ std::unique_ptr<RooAbsReal> RawBinnedDTYieldLikelihood::GetFullLikelihood() cons
   if(!Data) {
     Data = m_Workspace->data("InputData");
   }
-  return std::unique_ptr<RooAbsReal>{Model->createNLL(*Data)};
+  const std::string evalBackend = /*m_TagMode == "KSpipiPartReco" ? "legacy" : "cpu"*/ "legacy";
+  return std::unique_ptr<RooAbsReal>{
+    Model->createNLL(*Data, RooFit::EvalBackend(evalBackend))
+  };
 }
 
 RooArgSet RawBinnedDTYieldLikelihood::GetSignalYieldVariables() const {

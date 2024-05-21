@@ -105,8 +105,10 @@ std::pair<double, double> RawBinnedDTYields::GenerateYield(
 TMatrixTSym<double>
 RawBinnedDTYields::LoadCorrelationMatrix(const std::string &Tag,
 					    const Settings &settings) const {
-  const std::string Filename =
-    Utilities::ReplaceString(settings.get("RawYields_CorrMatrix"), "TAG", Tag);
+  std::string Filename = settings.get("DT_Yield");
+  Filename = Utilities::ReplaceString(Filename, "TAG", Tag);
+  Filename = Utilities::ReplaceString(Filename,
+				      ".txt", "_RawYieldsCorrMatrix.root");
   return LoadCorrelationMatrix(Filename);
 }
 

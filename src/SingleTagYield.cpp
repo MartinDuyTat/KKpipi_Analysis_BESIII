@@ -221,7 +221,7 @@ void SingleTagYield::FitYield() {
 	auto Result = m_FullModel->fitTo(BinnedData, Strategy(2), Save());
 	Result->Print("V");
 	int Status = Result->status();
-	if(Status == 0 || Status == 4) {
+	if(Status == 0 || Status == 4 || Status == 3) {
 	  FittedYields.push_back(m_Parameters["Yield"]->getVal());
 	} else {
 	  std::cout << "Status = " << Status << ", skipping\n";
