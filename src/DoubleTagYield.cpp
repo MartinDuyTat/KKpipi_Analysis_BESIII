@@ -381,8 +381,8 @@ void DoubleTagYield::PlotProjections() {
       }
       Model->plotOn(Frame,
 		    FillStyle(1001),
-		    LineColor(kGreen + 2),
-		    FillColor(kGreen + 2),
+		    LineColor(kMagenta + 1),
+		    FillColor(kMagenta + 1),
 		    LineWidth(3),
 		    DrawOption("F"),
 		    Slice(*CategoryVariable, Category.c_str()),
@@ -391,8 +391,8 @@ void DoubleTagYield::PlotProjections() {
     }
     Model->plotOn(Frame,
 		  FillStyle(1001),
-		  LineColor(kAzure + 6),
-		  FillColor(kAzure + 6),
+		  LineColor(kCyan - 9),
+		  FillColor(kCyan - 9),
 		  LineWidth(3),
 		  DrawOption("F"),
 		  Components("Combinatorial*"),

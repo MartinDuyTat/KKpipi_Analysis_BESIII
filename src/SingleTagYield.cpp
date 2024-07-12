@@ -200,7 +200,7 @@ void SingleTagYield::FitYield() {
   RooArgSet *Parameters = m_FullModel->getParameters(m_MBC);
   m_InitialParameters = Parameters->snapshot();
   if(m_Settings.get("FitType") != "NoFit") {
-    m_Result = m_FullModel->fitTo(BinnedData, Save(), Strategy(2));
+    m_Result = m_FullModel->fitTo(BinnedData, Save(), Strategy(2), Offset("bin"));
     if(m_Settings.get("FitType") == "UnbinnedFit") {
       m_Result = m_FullModel->fitTo(Data, Save(), Strategy(2), NumCPU(4));
     }
@@ -218,7 +218,7 @@ void SingleTagYield::FitYield() {
 	std::cout << "Starting systematics fit number: " << i << "\n";
 	*Parameters = *m_InitialParameters;
 	SmearPeakingBackgrounds();
-	auto Result = m_FullModel->fitTo(BinnedData, Strategy(2), Save());
+	auto Result = m_FullModel->fitTo(BinnedData, Strategy(2), Save(), Offset("bin"));
 	Result->Print("V");
 	int Status = Result->status();
 	if(Status == 0 || Status == 4 || Status == 3) {
@@ -302,16 +302,16 @@ void SingleTagYield::PlotSingleTagYield(const RooDataSet &Data) const {
     }
     m_FullModel->plotOn(Frame, 
 			FillStyle(1001),
-			LineColor(kGreen + 2),
-			FillColor(kGreen + 2),
+			LineColor(kMagenta + 1),
+			FillColor(kMagenta + 1),
 			LineWidth(3),
 			DrawOption("F"),
 			Components(PeakingList.c_str()));
   }
   m_FullModel->plotOn(Frame,
 		      FillStyle(1001),
-		      LineColor(kAzure + 6),
-		      FillColor(kAzure + 6),
+		      LineColor(kCyan - 9),
+		      FillColor(kCyan - 9),
 		      LineWidth(3),
 		      DrawOption("F"),
 		      Components("Argus"),

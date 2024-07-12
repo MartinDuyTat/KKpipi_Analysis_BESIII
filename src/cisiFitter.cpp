@@ -517,6 +517,9 @@ void cisiFitter::Plot_DeltaKpi(ROOT::Minuit2::Minuit2Minimizer &Minimiser,
     y.back() = y[0];
     Contour = new TGraph(Points, x.data(), y.data());
     Contour->SetLineWidth(3);
+    if(ErrorDef != ErrorDefs[0]) {
+      Contour->SetLineStyle(kDashed);
+    }
     Contour->Draw("L SAME");
   }
   c.SaveAs("Contour_DeltaKpi.pdf");

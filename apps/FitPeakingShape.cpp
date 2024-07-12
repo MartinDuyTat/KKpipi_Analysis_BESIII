@@ -19,6 +19,7 @@
 #include"Utilities.h"
 #include"Unique.h"
 #include"Settings.h"
+#include"Bes3plotstyle.h"
 #include"RooShapes/FitShape.h"
 #include"RooShapes/DoubleGaussian_Shape.h"
 #include"RooShapes/DoubleCrystalBall_Shape.h"
@@ -27,6 +28,8 @@
 
 int main(int argc, char *argv[]) {
   using namespace RooFit;
+  SetStyle();
+  SetPrelimStyle();
   Settings settings = Utilities::parse_args(argc, argv);
   std::cout << "Peaking background shape fit\n";
   std::cout << "Loading ROOT files...\n";

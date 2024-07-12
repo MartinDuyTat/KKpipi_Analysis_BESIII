@@ -86,7 +86,7 @@ std::unique_ptr<RooAbsReal> RawBinnedDTYieldLikelihood::GetFullLikelihood() cons
   if(!Data) {
     Data = m_Workspace->data("InputData");
   }
-  const std::string evalBackend = /*m_TagMode == "KSpipiPartReco" ? "legacy" : "cpu"*/ "legacy";
+  const std::string evalBackend = /*m_TagMode == "KSpipiPartReco" ? "legacy" : "cpu"*/ "cpu";
   return std::unique_ptr<RooAbsReal>{
     Model->createNLL(*Data, RooFit::EvalBackend(evalBackend))
   };
