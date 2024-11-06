@@ -123,7 +123,7 @@ std::vector<std::string> RawBinnedDTYieldLikelihood::GetYieldOrder(
 	continue;
       }
       std::string Label = Prefix + (Bin > 0 ? "P" : "M");
-      Label += std::to_string(TMath::Abs(Bin)) + "_SignalYield";
+      Label += std::to_string(TMath::Abs(Bin)) + "_TagBin0_SignalYield";
       Order.push_back(Label);
     }
   } else if(m_TagCategory == "SCMB") {
