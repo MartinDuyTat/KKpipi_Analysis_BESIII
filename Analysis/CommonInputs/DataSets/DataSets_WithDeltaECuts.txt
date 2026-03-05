@@ -1,0 +1,14 @@
+* Asterisks are comment, so use ? for wildcard (this is replaced by * in parsing)
+Data  ${BES3_ANALYSIS_PATH}/Selection/WithDeltaECuts/SingleTag/TAG/KKpipiDoubleTags_WithDeltaECuts_Data?.root
+D0D0  ${BES3_ANALYSIS_PATH}/Selection/WithDeltaECuts/SingleTag/TAG/KKpipiDoubleTags_WithDeltaECuts_D0D0?.root
+D+D-  ${BES3_ANALYSIS_PATH}/Selection/WithDeltaECuts/SingleTag/TAG/KKpipiDoubleTags_WithDeltaECuts_D+D-?.root
+qq    ${BES3_ANALYSIS_PATH}/Selection/WithDeltaECuts/SingleTag/TAG/KKpipiDoubleTags_WithDeltaECuts_qq?.root
+RR1S  ${BES3_ANALYSIS_PATH}/Selection/WithDeltaECuts/SingleTag/TAG/KKpipiDoubleTags_WithDeltaECuts_RR1S?.root
+RR2S  ${BES3_ANALYSIS_PATH}/Selection/WithDeltaECuts/SingleTag/TAG/KKpipiDoubleTags_WithDeltaECuts_RR2S?.root
+ditau ${BES3_ANALYSIS_PATH}/Selection/WithDeltaECuts/SingleTag/TAG/KKpipiDoubleTags_WithDeltaECuts_ditau?.root
+nonDD ${BES3_ANALYSIS_PATH}/Selection/WithDeltaECuts/SingleTag/TAG/KKpipiDoubleTags_WithDeltaECuts_nonDD?.root
+
+SignalMC_ST ${BES3_ANALYSIS_PATH}/Selection/SignalMC/SingleTag/TAG/TAG_SingleTag_SignalMC.root
+SignalMC_DT ${BES3_ANALYSIS_PATH}/Selection/SignalMC/DoubleTag/TAG/KKpipi_vs_TAG_Binned_SignalMC.root
+SignalMC_Peaking_ST ${BES3_ANALYSIS_PATH}/Selection/PeakingBackgrounds/SingleTag/TAG/BACKGROUND_to_TAG_SingleTag_SignalMC.root
+SignalMC_Peaking_DT ${BES3_ANALYSIS_PATH}/Selection/PeakingBackgrounds/DoubleTag/MODE/SIGNAL1_vs_TAG1_to_SIGNAL2_vs_TAG2_DoubleTag_SignalMC.root

@@ -1,0 +1,10 @@
+Mode KSpipi
+TagType DT
+file BinningScheme ${BES3_COMMON_INPUTS}/BinningScheme/BinningScheme_KKpipi.txt
+TruthTupleFilename ${BES3_ANALYSIS_PATH}/TruthTuples/BinnedTruthTuples/KSpipi/KKpipi_vs_KSpipi_TruthTuple_Binned_Reweighted.root
+TreeName KSpipiDoubleTag
+SignalBin_variable SignalBin
+TagBin_variable TagBin
+K0pipi_QCMC_TagMode KSpipi
+SignalMCFilename ${BES3_ANALYSIS_PATH}/Selection/SignalMC/DoubleTag/KSpipi/KKpipi_vs_KSpipi_Binned_SignalMC_Reweighted.root
+EfficiencyMatrixFilename ${BES3_COMMON_INPUTS}/Efficiencies/EfficiencyMatrices/KKpipi_vs_KSpipi_EfficiencyMatrix.root

@@ -1,0 +1,8 @@
+rD 0.05867
+rD_err 0.00015 
+R 1.0
+R_err 0.0
+deltaD 190.0
+deltaD_err 4.2
+
+CorrelationMatrix 1.0,0.0,0.295,0.0,1.0,0.0,0.295,0.0,1.0

@@ -1,0 +1,44 @@
+KKpipi_DeltaE_LowerCut -0.0150054
+KKpipi_DeltaE_UpperCut 0.0139303
+
+Kpi_DeltaE_LowerCut -0.0223836
+Kpi_DeltaE_UpperCut 0.0221054
+
+Kpipi0_DeltaE_LowerCut -0.0365716
+Kpipi0_DeltaE_UpperCut 0.0287008
+
+Kpipipi_DeltaE_LowerCut -0.0176976
+Kpipipi_DeltaE_UpperCut 0.0164051
+
+KK_DeltaE_LowerCut -0.0196094
+KK_DeltaE_UpperCut 0.0192384
+
+KSpi0_DeltaE_LowerCut -0.059877
+KSpi0_DeltaE_UpperCut 0.0427567
+
+pipipi0_DeltaE_LowerCut -0.0470057
+pipipi0_DeltaE_UpperCut 0.0379238
+
+KSpipi_DeltaE_LowerCut -0.018698
+KSpipi_DeltaE_UpperCut 0.0187802
+
+pipi_DeltaE_LowerCut -0.0238827
+pipi_DeltaE_UpperCut 0.0239851
+
+KSeta_DeltaE_LowerCut -0.0395411
+KSeta_DeltaE_UpperCut 0.0382865
+
+KSpipipi0_DeltaE_LowerCut -0.0328377
+KSpipipi0_DeltaE_UpperCut 0.0265714
+
+KSetaPrimepipieta_DeltaE_LowerCut -0.0268691
+KSetaPrimepipieta_DeltaE_UpperCut 0.025944
+
+KSetaPrimerhogamma_DeltaE_LowerCut -0.0358152
+KSetaPrimerhogamma_DeltaE_UpperCut 0.0283407
+
+KSpi0pi0_DeltaE_LowerCut -0.0595528
+KSpi0pi0_DeltaE_UpperCut 0.043822
+
+KSKK_DeltaE_LowerCut -0.0145156
+KSKK_DeltaE_UpperCut 0.0144384

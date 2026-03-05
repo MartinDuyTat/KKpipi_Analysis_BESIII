@@ -1,0 +1,23 @@
+SignalMode KKpipi
+TagMode KSpipi
+TagType DT
+Include_DeltaE_Cuts true
+TruthMatch true
+TreeName KSpipiDoubleTag
+Datasets_to_include SignalMC
+file Datasets ${BES3_COMMON_INPUTS}/DataSets/DataSets.txt
+file LuminosityScale ${BES3_COMMON_INPUTS}/DataSets/LuminosityScale.txt
+file DataTypes ${BES3_COMMON_INPUTS}/DataSets/DataTypes.txt
+DeltaEFilePrefix ${BES3_COMMON_INPUTS}/DataSets/DeltaECuts
+OutputFilenamePrefix KSpipi_DoubleTag
+FitVariableToSmear SignalMBC
+FitVariableSmearing 0.000134
+
+Mode KSpipi
+SignalBin_variable SignalBin
+TagBin_variable TagBin
+Bin_reconstructed true
+Bin_truth true
+InputFilename KSpipi_DoubleTag_SignalMC.root
+OutputFilename KKpipi_vs_KSpipi_Binned_SignalMC.root
+file BinningScheme ${BES3_COMMON_INPUTS}/BinningScheme/BinningScheme_KKpipi.txt

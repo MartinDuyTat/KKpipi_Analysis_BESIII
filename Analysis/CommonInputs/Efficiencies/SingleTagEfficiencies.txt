@@ -1,0 +1,59 @@
+KKpipi_SingleTagEfficiency                   0.187075
+KKpipi_SingleTagEfficiency_err               0.000389972
+
+Kpi_SingleTagEfficiency                      0.685306
+Kpi_SingleTagEfficiency_err                  0.000464394
+
+Kpipi0_SingleTagEfficiency                   0.368975
+Kpipi0_SingleTagEfficiency_err               0.000482527
+
+Kpipipi_SingleTagEfficiency                  0.411431
+Kpipipi_SingleTagEfficiency_err              0.000492093
+
+KK_SingleTagEfficiency                       0.630995
+KK_SingleTagEfficiency_err                   0.000482535
+
+KKPartReco_SingleTagEfficiency                       0.630995
+KKPartReco_SingleTagEfficiency_err                   0.000482535
+
+KSpi0_SingleTagEfficiency                    0.374295
+KSpi0_SingleTagEfficiency_err                0.00048394
+
+KSpi0PartReco_SingleTagEfficiency                    0.374295
+KSpi0PartReco_SingleTagEfficiency_err                0.00048394
+
+pipipi0_SingleTagEfficiency                  0.362671
+pipipi0_SingleTagEfficiency_err              0.000480771
+
+pipi_SingleTagEfficiency                     0.6665
+pipi_SingleTagEfficiency_err                 0.000471464
+
+KSeta_SingleTagEfficiency                    0.313438
+KSeta_SingleTagEfficiency_err                0.000463891
+
+KSpi0pi0_SingleTagEfficiency                 0.144615
+KSpi0pi0_SingleTagEfficiency_err             0.000351712
+
+KSpipipi0_SingleTagEfficiency                0.147089
+KSpipipi0_SingleTagEfficiency_err            0.000354195
+
+KSetaPrimepipieta_SingleTagEfficiency        0.117813
+KSetaPrimepipieta_SingleTagEfficiency_err    0.000322386
+
+KSetaPrimerhogamma_SingleTagEfficiency       0.180585
+KSetaPrimerhogamma_SingleTagEfficiency_err   0.000384674
+
+KSpipi_SingleTagEfficiency                   0.348888
+KSpipi_SingleTagEfficiency_err               0.000476618
+
+KSpipiPartReco_SingleTagEfficiency                   0.348888
+KSpipiPartReco_SingleTagEfficiency_err               0.000476618
+
+KLpi0_SingleTagEfficiency 0.311937
+KLpi0_SingleTagEfficiency_err 0.00120158
+
+KLpipi_SingleTagEfficiency 0.395908
+KLpipi_SingleTagEfficiency_err 0.000896433
+
+KeNu_SingleTagEfficiency 0.582554
+KeNu_SingleTagEfficiency_err 0.00169175

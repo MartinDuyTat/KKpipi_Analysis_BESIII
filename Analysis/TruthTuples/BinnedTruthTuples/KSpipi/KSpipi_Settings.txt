@@ -1,0 +1,9 @@
+TreeName TruthTuple
+Mode KSpipi
+InputFilename ../../TruthTuples/KKpipiVersusKSpipi_TruthTuple.root
+file BinningScheme ${BES3_COMMON_INPUTS}/BinningScheme/BinningScheme_KKpipi.txt
+Bin_reconstructed false
+Bin_truth true
+SignalBin_variable SignalBin
+TagBin_variable TagBin
+OutputFilename KKpipi_vs_KSpipi_TruthTuple_Binned.root

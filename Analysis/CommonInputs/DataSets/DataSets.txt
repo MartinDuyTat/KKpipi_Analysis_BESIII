@@ -1,0 +1,12 @@
+* Asterisks are comment, so use ? for wildcard (this is replaced by * in parsing)
+Data  /data/bes3/tat/KKpipi_StrongPhase_Analysis_4Bins_20fb/Tuples/Data/YEAR/KKpipiDoubleTags?.root
+D0D0  /data/bes3/tat/KKpipi_StrongPhase_Analysis_4Bins/Tuples/InclusiveMC/YEAR/D0D0/KKpipiDoubleTags?.root
+D+D-  /data/bes3/tat/KKpipi_StrongPhase_Analysis_4Bins/Tuples/InclusiveMC/YEAR/D+D-/KKpipiDoubleTags?.root
+qq    /data/bes3/tat/KKpipi_StrongPhase_Analysis_4Bins/Tuples/InclusiveMC/YEAR/qq/KKpipiDoubleTags?.root
+RR1S  /data/bes3/tat/KKpipi_StrongPhase_Analysis_4Bins/Tuples/InclusiveMC/YEAR/RR1S/KKpipiDoubleTags?.root
+RR2S  /data/bes3/tat/KKpipi_StrongPhase_Analysis_4Bins/Tuples/InclusiveMC/YEAR/RR2S/KKpipiDoubleTags?.root
+ditau /data/bes3/tat/KKpipi_StrongPhase_Analysis_4Bins/Tuples/InclusiveMC/YEAR/ditau/KKpipiDoubleTags?.root
+nonDD /data/bes3/tat/KKpipi_StrongPhase_Analysis_4Bins/Tuples/InclusiveMC/YEAR/nonDD/KKpipiDoubleTags?.root
+
+SignalMC_ST /data/bes3/tat/KKpipi_StrongPhase_Analysis_4Bins/Tuples/SignalMC/SingleTag/TAG/?.root
+SignalMC_DT /data/bes3/tat/KKpipi_StrongPhase_Analysis_4Bins/Tuples/SignalMC/DoubleTag/SIGNALVersusTAG/?.root

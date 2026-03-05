@@ -1,0 +1,8 @@
+Model_K_m4 0.0901502
+Model_K_m3 0.265642
+Model_K_m2 0.254386
+Model_K_m1 0.108527
+Model_K_p1 0.0327161
+Model_K_p2 0.0996923
+Model_K_p3 0.122544
+Model_K_p4 0.0263423

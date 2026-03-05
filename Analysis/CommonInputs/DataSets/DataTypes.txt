@@ -1,0 +1,11 @@
+Data 0
+D0D0 1
+D+D- 2
+qq 3
+RR1S 4
+RR2S 5
+ditau 6
+nonDD 7
+mumu 8
+ee 9
+SignalMC 10

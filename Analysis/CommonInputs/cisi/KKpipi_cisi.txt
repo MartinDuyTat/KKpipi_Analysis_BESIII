@@ -1,0 +1,9 @@
+Model_c1 -0.362284
+Model_c2 0.803825
+Model_c3 0.834102
+Model_c4 -0.386215
+
+Model_s1 -0.658462
+Model_s2 -0.332471
+Model_s3 0.338661
+Model_s4 0.626896

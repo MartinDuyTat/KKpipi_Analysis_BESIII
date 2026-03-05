@@ -1,0 +1,9 @@
+* Asterisks are comment, so use ? for wildcard (this is replaced by * in parsing)
+Data  ${BES3_ANALYSIS_PATH}/Selection/WithoutDeltaECuts/TAG/KKpipiDoubleTags_WithoutDeltaECuts_Data?.root
+D0D0  ${BES3_ANALYSIS_PATH}/Selection/WithoutDeltaECuts/TAG/KKpipiDoubleTags_WithoutDeltaECuts_D0D0?.root
+D+D-  ${BES3_ANALYSIS_PATH}/Selection/WithoutDeltaECuts/TAG/KKpipiDoubleTags_WithoutDeltaECuts_D+D-?.root
+qq    ${BES3_ANALYSIS_PATH}/Selection/WithoutDeltaECuts/TAG/KKpipiDoubleTags_WithoutDeltaECuts_qq?.root
+RR1S  ${BES3_ANALYSIS_PATH}/Selection/WithoutDeltaECuts/TAG/KKpipiDoubleTags_WithoutDeltaECuts_RR1S?.root
+RR2S  ${BES3_ANALYSIS_PATH}/Selection/WithoutDeltaECuts/TAG/KKpipiDoubleTags_WithoutDeltaECuts_RR2S?.root
+ditau ${BES3_ANALYSIS_PATH}/Selection/WithoutDeltaECuts/TAG/KKpipiDoubleTags_WithoutDeltaECuts_ditau?.root
+nonDD ${BES3_ANALYSIS_PATH}/Selection/WithoutDeltaECuts/TAG/KKpipiDoubleTags_WithoutDeltaECuts_nonDD?.root

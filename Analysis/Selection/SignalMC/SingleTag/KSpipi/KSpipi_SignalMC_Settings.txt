@@ -1,0 +1,12 @@
+TagMode KSpipi
+SignalMCMode KSpipi
+TagType ST
+Include_DeltaE_Cuts true
+TruthMatch true
+TreeName KSpipiSingleTag
+Datasets_to_include SignalMC
+file Datasets ${BES3_COMMON_INPUTS}/DataSets/DataSets.txt
+file LuminosityScale ${BES3_COMMON_INPUTS}/DataSets/LuminosityScale.txt
+file DataTypes ${BES3_COMMON_INPUTS}/DataSets/DataTypes.txt
+DeltaEFilePrefix ${BES3_COMMON_INPUTS}/DataSets/DeltaECuts
+OutputFilenamePrefix KSpipi_SingleTag

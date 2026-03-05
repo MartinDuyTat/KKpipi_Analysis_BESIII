@@ -1,0 +1,13 @@
+TagMode KSpipi
+TagType ST
+Include_DeltaE_Cuts true
+TruthMatch false
+TreeName KSpipiSingleTag
+Years 2010,2011,2022,2023,2024
+Datasets_to_include Data
+#Datasets_to_include Data,D0D0,D+D-,qq,RR1S,RR2S,ditau,nonDD
+file Datasets ${BES3_COMMON_INPUTS}/DataSets/DataSets.txt
+file LuminosityScale ${BES3_COMMON_INPUTS}/DataSets/LuminosityScale.txt
+file DataTypes ${BES3_COMMON_INPUTS}/DataSets/DataTypes.txt
+DeltaEFilePrefix ${BES3_COMMON_INPUTS}/DataSets/DeltaECuts
+OutputFilenamePrefix KKpipiDoubleTags_WithDeltaECuts

@@ -1,0 +1,19 @@
+KSpipi_PeakingBackground0_mu1 1.864
+KSpipi_PeakingBackground0_mu1_limL 1.85
+KSpipi_PeakingBackground0_mu1_limU 1.867
+
+KSpipi_PeakingBackground0_mu2 1.864
+KSpipi_PeakingBackground0_mu2_limL 1.85
+KSpipi_PeakingBackground0_mu2_limU 1.867
+
+KSpipi_PeakingBackground0_sigma1 0.002
+KSpipi_PeakingBackground0_sigma1_limL 0.001
+KSpipi_PeakingBackground0_sigma1_limU 0.010
+
+KSpipi_PeakingBackground0_sigma2 0.003
+KSpipi_PeakingBackground0_sigma2_limL 0.001
+KSpipi_PeakingBackground0_sigma2_limU 0.010
+
+KSpipi_PeakingBackground0_frac 0.5
+KSpipi_PeakingBackground0_frac_limL 0.0
+KSpipi_PeakingBackground0_frac_limU 1.0

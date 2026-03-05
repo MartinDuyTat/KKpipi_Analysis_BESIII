@@ -1,0 +1,33 @@
+Mode KSpipi
+TagType DT
+TreeName KSpipiDoubleTag
+FitVariable SignalMBC
+FitRange_low 1.83
+FitRange_high 1.8865
+file BinnedDataSets ${BES3_COMMON_INPUTS}/DataSets/DataSets_Binned.txt
+file Datasets_WithDeltaECuts ${BES3_COMMON_INPUTS}/DataSets/DataSets_WithDeltaECuts.txt
+SignalBin_variable SignalBin
+TagBin_variable TagBin
+Events_in_MC 50000
+Bins_in_plots 30
+FullyReconstructed true
+file MBC_Shape MBC_Shape_Settings.txt
+file BackgroundToSignalRatio ${BES3_COMMON_INPUTS}/PeakingBackgrounds/BackgroundToSignalRatios_SCMB.txt
+file QuantumCorrelationFactor ${BES3_COMMON_INPUTS}/PeakingBackgrounds/QuantumCorrelationFactors_SCMB.txt
+MBCPlotFilenamePrefix DoubleTagYield
+FittedSignalYieldsFile KKpipi_vs_KSpipi_SignalYield.txt
+file BinningScheme ${BES3_COMMON_INPUTS}/BinningScheme/BinningScheme_KKpipi.txt
+file GeneratorYields ../../cisiFit/YieldsForToys.txt
+SaveLikelihood true
+ToyFits false
+FeldmanCousinsToys false
+FeldmanCousinsYieldsPath ../../cisiFit/FeldmanCousinsYields/
+FeldmanCousinsYieldsFile None
+NumberFeldmanCousinsToys 1000
+YieldSystematics false
+Seed 42
+NumberToysPerJob 5
+JobNumber -1
+NumberRuns 10
+No_x_axis_tick_label false
+NoFFTConvolution true

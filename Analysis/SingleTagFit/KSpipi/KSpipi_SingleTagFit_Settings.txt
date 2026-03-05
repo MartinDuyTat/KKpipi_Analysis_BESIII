@@ -1,0 +1,18 @@
+TreeName KSpipiSingleTag
+Mode KSpipi
+TagType ST
+FitVariable MBC
+FitRange_low 1.83
+FitRange_high 1.8865
+MBCPlotFilename KSpipi_SingleTag_MBC_Plot.pdf
+FitType BinnedFit
+Bins_in_fit 500
+Events_in_MC 40000
+file Datasets_WithDeltaECuts ${BES3_COMMON_INPUTS}/DataSets/DataSets_WithDeltaECuts.txt
+file MBC_Shape MBC_Shape_Settings.txt
+file BackgroundToSignalRatio ${BES3_COMMON_INPUTS}/PeakingBackgrounds/BackgroundToSignalRatios_ST.txt
+ResultsFilename KSpipi_MBC_FitResults.txt
+YieldSystematics false
+Seed 42
+NumberRuns 100
+No_x_axis_tick_label true

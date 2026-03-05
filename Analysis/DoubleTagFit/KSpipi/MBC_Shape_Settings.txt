@@ -1,0 +1,47 @@
+KSpipi_DoubleTag_c -10.0
+KSpipi_DoubleTag_c_limL -100.0
+KSpipi_DoubleTag_c_limU -0.1
+
+KSpipi_DoubleTag_Mean1 0.0
+KSpipi_DoubleTag_Mean1_limL -0.0001
+KSpipi_DoubleTag_Mean1_limU 0.0001
+
+KSpipi_DoubleTag_Sigma1 0.0002
+KSpipi_DoubleTag_Sigma1_limL 0.00001
+KSpipi_DoubleTag_Sigma1_limU 0.001
+
+KSpipi_PeakingBackgrounds 2
+
+KSpipi_PeakingBackground0_SignalMode KKpipi
+KSpipi_PeakingBackground0_TagMode pipipipi
+KSpipi_PeakingBackground0_ReconstructedTagMode KSpipi
+
+KSpipi_PeakingBackground0_Correlated true
+
+KSpipi_PeakingBackground0_Shape DoubleGaussian
+file KSpipi_PeakingBackground0_FitSettings PeakingBackground0_FitSettings.txt
+
+KSpipi_PeakingBackground0_frac 0.860098
+KSpipi_PeakingBackground0_mu1 1.8652
+KSpipi_PeakingBackground0_mu2 1.8653
+KSpipi_PeakingBackground0_sigma1 0.00131953
+KSpipi_PeakingBackground0_sigma2 0.00546426
+
+KSpipi_PeakingBackground0_PlotFilename KKpipi_vs_pipipipi_to_KSpipi_DoubleTag_FitPlot.pdf
+
+KSpipi_PeakingBackground1_SignalMode KSKK
+KSpipi_PeakingBackground1_TagMode KSpipi
+KSpipi_PeakingBackground1_ReconstructedSignalMode KKpipi
+
+KSpipi_PeakingBackground1_Correlated true
+
+KSpipi_PeakingBackground1_Shape DoubleGaussian
+file KSpipi_PeakingBackground1_FitSettings PeakingBackground1_FitSettings.txt
+
+KSpipi_PeakingBackground1_frac 0.301133
+KSpipi_PeakingBackground1_mu1 1.86443
+KSpipi_PeakingBackground1_mu2 1.86514
+KSpipi_PeakingBackground1_sigma1 0.00933004
+KSpipi_PeakingBackground1_sigma2 0.00311911
+
+KSpipi_PeakingBackground1_PlotFilename KSKK_to_KKpipi_vs_KSpipi_DoubleTag_FitPlot.pdf

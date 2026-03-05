@@ -1,0 +1,23 @@
+SignalMode KKpipi
+TagMode KSpipi
+TagType DT
+Include_DeltaE_Cuts true
+TruthMatch false
+TreeName KSpipiDoubleTag
+Years 2010,2011,2022,2023,2024
+Datasets_to_include Data
+#Datasets_to_include Data,D0D0,D+D-,qq,RR1S,RR2S,ditau,nonDD
+file Datasets ${BES3_COMMON_INPUTS}/DataSets/DataSets.txt
+file LuminosityScale ${BES3_COMMON_INPUTS}/DataSets/LuminosityScale.txt
+file DataTypes ${BES3_COMMON_INPUTS}/DataSets/DataTypes.txt
+DeltaEFilePrefix ${BES3_COMMON_INPUTS}/DataSets/DeltaECuts
+OutputFilenamePrefix KKpipiDoubleTags_WithDeltaECuts
+
+Mode KSpipi
+SignalBin_variable SignalBin
+TagBin_variable TagBin
+Bin_reconstructed true
+Bin_truth false
+InputFilename KKpipiDoubleTags_WithDeltaECuts_Data20?.root
+OutputFilename KKpipi_vs_KSpipi_Binned.root
+file BinningScheme ${BES3_COMMON_INPUTS}/BinningScheme/BinningScheme_KKpipi.txt

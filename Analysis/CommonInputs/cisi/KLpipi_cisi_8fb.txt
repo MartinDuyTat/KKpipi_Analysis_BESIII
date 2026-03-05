@@ -1,0 +1,47 @@
+KLpipi_c1 0.781
+KLpipi_c1_err 0.017
+
+KLpipi_c2 0.717
+KLpipi_c2_err 0.029
+
+KLpipi_c3 0.269
+KLpipi_c3_err 0.028
+
+KLpipi_c4 -0.481
+KLpipi_c4_err 0.039
+
+KLpipi_c5 -0.913
+KLpipi_c5_err 0.017
+
+KLpipi_c6 -0.321
+KLpipi_c6_err 0.037
+
+KLpipi_c7 0.409
+KLpipi_c7_err 0.034
+
+KLpipi_c8 0.719
+KLpipi_c8_err 0.025
+
+KLpipi_s1 0.036
+KLpipi_s1_err 0.064
+
+KLpipi_s2 0.357
+KLpipi_s2_err 0.090
+
+KLpipi_s3 0.816
+KLpipi_s3_err 0.075
+
+KLpipi_s4 0.619
+KLpipi_s4_err 0.118
+
+KLpipi_s5 -0.082
+KLpipi_s5_err 0.055
+
+KLpipi_s6 -0.468
+KLpipi_s6_err 0.121
+
+KLpipi_s7 -0.667
+KLpipi_s7_err 0.096
+
+KLpipi_s8 -0.314
+KLpipi_s8_err 0.078

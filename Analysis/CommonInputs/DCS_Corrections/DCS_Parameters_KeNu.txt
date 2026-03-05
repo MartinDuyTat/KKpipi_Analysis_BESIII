@@ -1,0 +1,8 @@
+rD 0.0
+rD_err 0.0
+R 1.0
+R_err 0.0
+deltaD 0.0
+deltaD_err 0.0
+
+CorrelationMatrix 1.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,1.0

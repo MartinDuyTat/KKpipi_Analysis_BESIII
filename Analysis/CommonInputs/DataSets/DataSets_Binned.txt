@@ -1,0 +1,1 @@
+BinnedDataSet ${BES3_ANALYSIS_PATH}/Selection/WithDeltaECuts/DoubleTag/TAG/KKpipi_vs_TAG_Binned.root

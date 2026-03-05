@@ -1,0 +1,46 @@
+KSpipi_SingleTag_Yield 1200000
+KSpipi_SingleTag_Yield_limL 800000
+KSpipi_SingleTag_Yield_limU 1400000
+
+KSpipi_SingleTag_CombinatorialYield 650000
+KSpipi_SingleTag_CombinatorialYield_limL 500000
+KSpipi_SingleTag_CombinatorialYield_limU 700000
+
+KSpipi_SingleTag_c -12.0
+KSpipi_SingleTag_c_limL -20.0
+KSpipi_SingleTag_c_limU -0.01
+
+KSpipi_SingleTag_Mean1 0.0001
+KSpipi_SingleTag_Mean1_limL -0.002
+KSpipi_SingleTag_Mean1_limU 0.002
+
+KSpipi_SingleTag_Mean2 -0.0001
+KSpipi_SingleTag_Mean2_limL -0.002
+KSpipi_SingleTag_Mean2_limU 0.002
+
+KSpipi_SingleTag_Sigma1 0.0004
+KSpipi_SingleTag_Sigma1_limL 0.00005
+KSpipi_SingleTag_Sigma1_limU 0.008
+
+KSpipi_SingleTag_Sigma2 0.0003
+KSpipi_SingleTag_Sigma2_limL 0.00005
+KSpipi_SingleTag_Sigma2_limU 0.008
+
+KSpipi_PeakingBackgrounds 1
+
+KSpipi_PeakingBackground0_TagMode pipipipi
+KSpipi_PeakingBackground0_ReconstructedTagMode KSpipi
+KSpipi_PeakingBackground0_Shape DoubleCrystalBall
+file KSpipi_PeakingBackground0_FitSettings PeakingBackground0_FitSettings.txt
+
+KSpipi_PeakingBackground0_alpha1 -0.780773
+KSpipi_PeakingBackground0_alpha2 1.25358
+KSpipi_PeakingBackground0_frac 0.594346
+KSpipi_PeakingBackground0_mu1 1.86501
+KSpipi_PeakingBackground0_mu2 1.86501
+KSpipi_PeakingBackground0_n1 4.40213
+KSpipi_PeakingBackground0_n2 1.62481
+KSpipi_PeakingBackground0_sigma1 0.00147894
+KSpipi_PeakingBackground0_sigma2 0.00105646
+
+KSpipi_PeakingBackground0_PlotFilename pipipipitoKSpipi_Fit.pdf

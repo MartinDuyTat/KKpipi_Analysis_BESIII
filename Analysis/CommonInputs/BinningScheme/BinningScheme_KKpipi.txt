@@ -1,0 +1,3 @@
+NumberBins 4
+file cisi ${BES3_COMMON_INPUTS}/cisi/KKpipi_cisi.txt
+file Ki ${BES3_COMMON_INPUTS}/Ki/KKpipi_Ki.txt

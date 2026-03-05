@@ -1,0 +1,185 @@
+TagModes KSpipi,KSpipiPartReco,KLpipi,KK,KKPartReco,pipi,pipipi0,KSpi0pi0,KLpi0,KSpi0,KSpi0PartReco,KSeta,KSetaPrimepipieta,KSetaPrimerhogamma,KSpipipi0,Kpi,Kpipi0,Kpipipi,KeNu
+
+KK_FullLikelihood false
+KSpi0_FullLikelihood false
+pipipi0_FullLikelihood false
+
+KKPartReco_FullLikelihood false
+KSpi0PartReco_FullLikelihood false
+
+KSpipi_FullLikelihood true
+KSpipiPartReco_FullLikelihood true
+KLpipi_FullLikelihood true
+
+* Possible run modes: SingleFit, SingleToy, DumpGeneratorYields, DumpGeneratorYieldsForFeldmanCousins, FitFeldmanCousinsToy, FeldmanCousinsDataScan, RunFeldmanCousinsWithGamma, ManyGammaToys
+RunMode SingleFit
+Seed 42
+NumberRuns 100
+ToyNumber -1
+FitNumber -1
+
+* Specify which parameter to scan over with Feldman Cousins
+* Currently only scan over si works!
+* 1-4: si
+FeldmanCousins_Parameter 2
+FeldmanCousins_Increment 0.1
+FeldmanCousins_NumberIncrements 8
+FeldmanCousins_ToyName None
+FeldmanCousinsToyPath ../DoubleTagFit/TAG/FeldmanCousinsToys
+FeldmanCousinsDataScanFilename FeldmanCousinsDataScan
+
+FitResultsFile PreliminaryFitResults.root
+SystSeed 42
+
+* Possible systematics: STYield, KLpi0STYield, KeNuSTYield, ExternalStrongPhases, Efficiency, PeakingBackgrounds
+Systematics None
+
+RunMinos false
+
+SymmetricUncertainties false
+
+file BinningScheme ${BES3_COMMON_INPUTS}/BinningScheme/BinningScheme_KKpipi.txt
+
+Fix_si false
+
+FitDeltaKpi true
+GaussianConstrainDeltaKpi true
+
+c_min -2.0
+c_max +2.0
+s_min -2.0
+s_max +2.0
+
+PlotContours false
+PlotDeltaKpiContour false
+
+PlotBoundary 1.5
+DeltaKpiPlotBoundary_x 0.12
+DeltaKpiPlotBoundary_y 0.20
+
+ManyToysOutputFilename ToyOutput.root
+ManyFitsOutputFilename FitOutput.root
+
+Generator_BF_KKpipi 0.00287003
+Generator_c1 -0.216433
+Generator_c2 0.776425
+Generator_c3 0.855594
+Generator_c4 -0.376868
+Generator_s1 -0.455081
+Generator_s2 -0.164137
+Generator_s3 0.259488
+Generator_s4 0.469051
+* Generator_BF_KKpipi 0.0028
+*Generator_c1 -0.38
+*Generator_c2 0.80
+*Generator_c3 0.86
+*Generator_c4 -0.36
+*Generator_s1 -0.20
+*Generator_s2 -0.21
+*Generator_s3 0.54
+*Generator_s4 -0.40
+
+* From data fit
+Generator_R_M4 0.0875244
+Generator_R_M3 0.293637
+Generator_R_M2 0.399126
+Generator_R_M1 0.25176
+Generator_R_P1 0.119219
+Generator_R_P2 0.405938
+Generator_R_P3 0.815671
+
+* From model
+* Generator_R_M4 0.08637606
+* Generator_R_M3 0.297461766
+* Generator_R_M2 0.397873165
+* Generator_R_M1 0.266765301
+* Generator_R_P1 0.109972747
+* Generator_R_P2 0.400614079
+* Generator_R_P3 0.832886278
+
+* Generator_K1 0.031164
+* Generator_K2 0.101041
+* Generator_K3 0.125911
+* Generator_K4 0.0252633
+* Generator_Kbar1 0.103099
+* Generator_Kbar2 0.255377
+* Generator_Kbar3 0.271768
+* Generator_Kbar4 0.086376
+
+Generator_DeltaKpi 190.0
+Generator_rDKpi 0.05867
+
+GammaResultsFile B2Dh_D2KKpipi_BPGGSZ_BinYields_4Bins.root
+GammaFitResultsFilename PreliminaryFitResultsWithGamma.root
+cisiFixed true
+cisiAsymmetricUncertainties false
+GammaDeltaBContourScan false
+GammaNumberToys 10
+gamma_initial 65.0
+#gamma_initial 127.0
+deltaB_dk_initial 130.0
+rB_dk_initial 0.1
+#rBcosDeltaB_dk_initial -0.06
+rBcosDeltaB_dk_initial 0.02
+#rBsinDeltaB_dk_initial 0.08
+rBsinDeltaB_dk_initial 0.13
+deltaB_dpi_initial 310.0
+rB_dpi_initial 0.005
+FeldmanCousins_gamma_value 420
+#x_xi_initial 0.0025
+x_xi_initial -0.04
+#y_xi_initial -0.004
+y_xi_initial 0.04
+
+c1_fitted -0.19
+c1_fitted_err 0.13
+c2_fitted 0.82
+c2_fitted_err 0.05
+c3_fitted 0.86
+c3_fitted_err 0.05
+c4_fitted -0.35
+c4_fitted_err 0.13
+s1_fitted -0.19
+s1_fitted_plus_err 0.21
+s1_fitted_minus_err 0.62
+s2_fitted -0.23
+s2_fitted_plus_err 0.12
+s2_fitted_minus_err -0.23
+s3_fitted 0.56
+s3_fitted_plus_err 0.17
+s3_fitted_minus_err 0.35
+s4_fitted -0.59
+s4_fitted_plus_err 0.47
+s4_fitted_minus_err 0.18
+
+PredictedYieldsFile YieldsForToys.txt
+DT_ToyYieldDir ${BES3_ANALYSIS_PATH}/DoubleTagFit/TAG/ToyFitResults/
+DT_PeakingYieldDir ${BES3_ANALYSIS_PATH}/DoubleTagFit/TAG/PeakingBackgroundFitResults/
+
+file Mixing ${BES3_COMMON_INPUTS}/Mixing/MixingParameters.txt
+
+file KSpipi_BinningScheme ${BES3_COMMON_INPUTS}/BinningScheme/BinningScheme_KSpipi.txt
+file KSpipiPartReco_BinningScheme ${BES3_COMMON_INPUTS}/BinningScheme/BinningScheme_KSpipi.txt
+file KLpipi_BinningScheme ${BES3_COMMON_INPUTS}/BinningScheme/BinningScheme_KLpipi.txt
+
+file BranchingFractions ${BES3_COMMON_INPUTS}/PDG/BranchingFractions.txt
+file FPlus_TagModes ${BES3_COMMON_INPUTS}/FPlus/FPlus_TagModes.txt
+
+file ST_Efficiency ${BES3_COMMON_INPUTS}/Efficiencies/SingleTagEfficiencies.txt
+
+EffMatrix ${BES3_COMMON_INPUTS}/Efficiencies/EfficiencyMatrices/KKpipi_vs_TAG_EfficiencyMatrix.root
+
+ST_Yield ${BES3_ANALYSIS_PATH}/SingleTagFit/TAG/TAG_MBC_FitResults.txt
+
+DT_Yield ${BES3_ANALYSIS_PATH}/DoubleTagFit/TAG/KKpipi_vs_TAG_SignalYield.txt
+
+file Kpi_DCS_Parameters ${BES3_COMMON_INPUTS}/DCS_Corrections/DCS_Parameters_Kpi.txt
+file Kpipi0_DCS_Parameters ${BES3_COMMON_INPUTS}/DCS_Corrections/DCS_Parameters_Kpipi0.txt
+file Kpipipi_DCS_Parameters ${BES3_COMMON_INPUTS}/DCS_Corrections/DCS_Parameters_Kpipipi.txt
+file KeNu_DCS_Parameters ${BES3_COMMON_INPUTS}/DCS_Corrections/DCS_Parameters_KeNu.txt
+
+KSpipi_KLpipi_cisi_Correlation ${BES3_COMMON_INPUTS}/cisi/KSpipi_KLpipi_cisi_Correlation.txt
+
+*KSpipi_PeakingBackground_CovMatrix ${BES3_ANALYSIS_PATH}/DoubleTagFit/KSpipi/PeakingBackground_CovMatrix.root
+*KSpipiPartReco_PeakingBackground_CovMatrix ${BES3_ANALYSIS_PATH}/DoubleTagFit/KSpipiPartReco/PeakingBackground_CovMatrix.root
+*KLpipi_PeakingBackground_CovMatrix ${BES3_ANALYSIS_PATH}/DoubleTagFit/KLpipi/PeakingBackground_CovMatrix.root
