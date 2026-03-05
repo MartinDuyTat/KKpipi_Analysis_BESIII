@@ -49,7 +49,9 @@ SingleTagYield::SingleTagYield(TTree *DataTree,
   m_DataTree(DataTree),
   m_MCSignalTree(MCSignalTree),
   m_Settings(settings),
-  m_MBC("MBC", "", 1.83, 1.8865),
+  m_MBC("MBC", "",
+	settings.getD("FitRange_low"),
+	settings.getD("FitRange_high")),
   m_LuminosityWeight("LuminosityWeight", "", 1.0, 0.0, 10.0) {
   m_DataTree->SetBranchStatus("*", 0);
   m_DataTree->SetBranchStatus("MBC", 1);
@@ -191,7 +193,10 @@ void SingleTagYield::FitYield() {
     MassCutBinned = MassCut + "*LuminosityWeight";
     Variables.add(*InvMassVar);
   }
-  TH1D h1("h1", "h1", m_Settings.getI("Bins_in_fit"), 1.83, 1.8865);
+  TH1D h1("h1", "h1",
+	  m_Settings.getI("Bins_in_fit"),
+	  m_Settings.getD("FitRange_low"),
+	  m_Settings.getD("FitRange_high"));
   m_DataTree->Draw("MBC >> h1", MassCutBinned.c_str(), "goff");
   RooDataHist BinnedData("BinnedData", "BinnedData", RooArgList(m_MBC), &h1);
   RooDataSet Data("Data", "Data",
@@ -322,7 +327,8 @@ void SingleTagYield::PlotSingleTagYield(const RooDataSet &Data) const {
   Pad2.cd();
   RooPlot *PullFrame = m_MBC.frame();
   PullFrame->addObject(Pull, "P");
-  TLine *Line = new TLine(1.83, 0.0, 1.8865, 0.0);
+  TLine *Line = new TLine(m_Settings.getD("FitRange_low"), 0.0,
+			  m_Settings.getD("FitRange_high"), 0.0);
   PullFrame->addObject(Line);
   PullFrame->SetMinimum(-5);
   PullFrame->SetMaximum(5);

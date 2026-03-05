@@ -57,14 +57,14 @@ int main(int argc, char *argv[]) {
 			    std::string(OldDataBinCut.GetTitle())) +
       Utilities::SumWeights(&TruthChain,
 			    "ModelWeight_CPEven",
-			    std::string(NewDataBinCut.GetTitle()))*(13.0/5.0);
+			    std::string(NewDataBinCut.GetTitle()))*(17.0/5.0);
     const double Events_CPOdd =
       Utilities::SumWeights(&TruthChain,
 			    "ModelWeight_CPOdd",
 			    std::string(OldDataBinCut.GetTitle())) +
       Utilities::SumWeights(&TruthChain,
 			    "ModelWeight_CPOdd",
-			    std::string(NewDataBinCut.GetTitle()))*(13.0/5.0);
+			    std::string(NewDataBinCut.GetTitle()))*(17.0/5.0);
     const std::string WeightNameK0pipi = K0pipiQCMC ? 
       "ModelWeight_" + K0pipiMode + "_TagBin" + std::to_string(Bin.second) : "";
     const double Events_K0pipi =
@@ -73,12 +73,12 @@ int main(int argc, char *argv[]) {
 			    std::string(OldDataBinCut.GetTitle())) +
       Utilities::SumWeights(&TruthChain,
 			    WeightNameK0pipi,
-			    std::string(NewDataBinCut.GetTitle()))*(13.0/5.0);
+			    std::string(NewDataBinCut.GetTitle()))*(17.0/5.0);
     const double Events =
       Utilities::SumWeights(&TruthChain, "",
 			    std::string(OldDataBinCut.GetTitle())) +
       Utilities::SumWeights(&TruthChain, "",
-			    std::string(NewDataBinCut.GetTitle()))*(13.0/5.0);
+			    std::string(NewDataBinCut.GetTitle()))*(17.0/5.0);
     GeneratedEvents_CPEven.push_back(Events_CPEven);
     GeneratedEvents_CPOdd.push_back(Events_CPOdd);
     GeneratedEvents_K0pipi.push_back(Events_K0pipi);
@@ -128,7 +128,7 @@ int main(int argc, char *argv[]) {
 			 &TagBin_true);
   for(int i = 0; i < Chain.GetEntries(); i++) {
     Chain.GetEntry(i);
-    double LumiWeight = TMath::Abs(Run) < 50000 ? 1.0 : (13.0/5.0);
+    double LumiWeight = TMath::Abs(Run) < 50000 ? 1.0 : (17.0/5.0);
     auto RecBin_index =
       std::distance(BinCombinations.begin(),
 		    std::find(BinCombinations.begin(),

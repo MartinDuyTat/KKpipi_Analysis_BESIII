@@ -75,7 +75,7 @@ void BinnedFitModel::InitializeYields() {
     m_Yields.insert({
       SignalName,
       Unique::create<RooRealVar*>(SignalName.c_str(), "",
-				  10.0, 0.0, 1000.0)});
+				  10.0, 0.0, 2000.0)});
     m_SignalYields.add(*m_Yields.at(SignalName));
     for(int i = 0; i < PeakingBackgrounds; i++) {
       std::string Name = Mode + "_PeakingBackground";

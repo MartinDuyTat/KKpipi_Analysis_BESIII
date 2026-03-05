@@ -101,7 +101,9 @@ int main(int argc, char *argv[]) {
 	}
       }
     }
-    RooDataSet Data("Data", "", &Chain, Variables, Cut.c_str(), WeightName.c_str());
+    RooDataSet Data = WeightName == "" ?
+                      RooDataSet("Data", "", &Chain, Variables, Cut.c_str()) :
+                      RooDataSet("Data", "", &Chain, Variables, Cut.c_str(), WeightName.c_str());
     std::unique_ptr<FitShape> PDF;
     std::string PDFShape = settings["MBC_Shape"].get(Name + "_Shape");
     if(PDFShape == "DoubleGaussian") {
@@ -152,11 +154,11 @@ int main(int argc, char *argv[]) {
     std::string Mode = settings.get("Mode");
     std::string xAxisLabel;
     if(Mode.substr(0, 2) == "KL" || Mode == "KSpipiPartReco") {
-      xAxisLabel = "m_{miss}^{2} (GeV^{2})";
+      xAxisLabel = "M_{miss}^{2} (GeV^{2}/c^{4})";
     } else if(Mode == "KeNu") {
       xAxisLabel = "U_{miss} (GeV)";
     } else {
-      xAxisLabel = "m_{BC} (GeV)";
+      xAxisLabel = "M_{BC} (GeV/c^{2})";
     }
     if(TagType == "ST") {
       Frame->SetTitle((TagMode + " peaking background in " + RecTagMode + " single tag;" + xAxisLabel + ";Events").c_str());

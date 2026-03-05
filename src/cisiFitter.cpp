@@ -480,7 +480,8 @@ void cisiFitter::Plot_DeltaKpi(ROOT::Minuit2::Minuit2Minimizer &Minimiser,
   const double Boundary_y = m_Settings.getD("DeltaKpiPlotBoundary_y");
   Results.GetXaxis()->SetLimits(-Boundary_x, Boundary_x);
   Results.GetYaxis()->SetRangeUser(-Boundary_y, Boundary_y);
-  Results.SetMarkerStyle(8);
+  Results.SetMarkerStyle(29);
+  Results.SetMarkerSize(3);
   Results.GetYaxis()->SetTitleOffset(1.35);
   Results.GetXaxis()->SetTitleOffset(1.1);
   Results.GetXaxis()->SetLabelSize(0.035);
